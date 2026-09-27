@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "properties": {
+    "ratings": {
+      "type": "object",
+      "properties": {
+        "deploy_order": {"type": "string", "enum": ["none", "low", "medium", "high"]},
+        "rollback": {"type": "string", "enum": ["none", "low", "medium", "high"]},
+        "config_drift": {"type": "string", "enum": ["none", "low", "medium", "high"]},
+        "dependencies": {"type": "string", "enum": ["none", "low", "medium", "high"]},
+        "monitoring": {"type": "string", "enum": ["none", "low", "medium", "high"]}
+      },
+      "required": ["deploy_order", "rollback", "config_drift", "dependencies", "monitoring"],
+      "additionalProperties": false
+    },
+    "comments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tag": {"type": "string", "enum": ["deploy-order", "rollback", "config-drift", "dependencies", "monitoring", "history", "health", "freeze"]},
+          "severity": {"type": "string", "enum": ["low", "medium", "high"]},
+          "text": {"type": "string"},
+          "evidence": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["tag", "severity", "text", "evidence"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["ratings", "comments"],
+  "additionalProperties": false
+}

@@ -1,0 +1,86 @@
+{
+  "name": "Checkout (made-up system for CRA2)",
+  "note": "Synthetic. tier sets the risk thresholds; depends_on edges point at the services each one calls.",
+  "services": {
+    "checkout-service": {
+      "tier": "critical",
+      "depends_on": ["payment-gateway", "inventory-service", "auth-service"],
+      "status": "Healthy",
+      "freeze_window_active": false,
+      "rollback": "blue/green switch back to the previous release (about 2 min)",
+      "monitors": ["checkout p99 latency", "checkout error rate", "payment authorisation success rate"],
+      "config_source": "per-environment overrides in the config service, sometimes edited by hand during incidents",
+      "config_drift_prone": true
+    },
+    "payment-gateway": {
+      "tier": "critical",
+      "depends_on": ["notification-service"],
+      "status": "Degraded",
+      "freeze_window_active": false,
+      "rollback": "abort the canary; rolling back processor-facing changes may need the card processor to re-certify",
+      "monitors": ["authorisation success rate", "card-processor p99 latency", "connection pool saturation"],
+      "config_source": "per-region config files plus settings held by the card processor",
+      "config_drift_prone": true
+    },
+    "auth-service": {
+      "tier": "core",
+      "depends_on": [],
+      "status": "Healthy",
+      "freeze_window_active": true,
+      "rollback": "redeploy the previous image; tokens already issued stay valid until they expire",
+      "monitors": ["login success rate", "token refresh errors"],
+      "config_source": "infrastructure as code (single source)",
+      "config_drift_prone": false
+    },
+    "inventory-service": {
+      "tier": "core",
+      "depends_on": [],
+      "status": "Healthy",
+      "freeze_window_active": false,
+      "rollback": "redeploy the previous image; schema changes need a reverse migration",
+      "monitors": ["stock reservation errors", "nightly reconciliation drift"],
+      "config_source": "infrastructure as code (single source)",
+      "config_drift_prone": false
+    },
+    "order-service": {
+      "tier": "core",
+      "depends_on": ["checkout-service", "inventory-service"],
+      "status": "Healthy",
+      "freeze_window_active": false,
+      "rollback": "blue/green switch back (about 2 min); schema changes need a reverse migration",
+      "monitors": ["order create success rate", "order p99 latency"],
+      "config_source": "infrastructure as code (single source)",
+      "config_drift_prone": false
+    },
+    "notification-service": {
+      "tier": "standard",
+      "depends_on": [],
+      "status": "Healthy",
+      "freeze_window_active": false,
+      "rollback": "redeploy the previous image or scale back",
+      "monitors": ["queue lag", "email delivery rate"],
+      "config_source": "infrastructure as code (single source)",
+      "config_drift_prone": false
+    },
+    "web-frontend": {
+      "tier": "standard",
+      "depends_on": ["order-service", "auth-service"],
+      "status": "Healthy",
+      "freeze_window_active": false,
+      "rollback": "point the CDN back at the previous static bundle (about 5 min)",
+      "monitors": ["JS error rate", "checkout button click-through"],
+      "config_source": "infrastructure as code (single source)",
+      "config_drift_prone": false
+    },
+    "mobile-frontend": {
+      "tier": "standard",
+      "depends_on": ["order-service", "auth-service"],
+      "status": "Healthy",
+      "freeze_window_active": true,
+      "rollback": "turn the server-side flag off; app binaries already shipped cannot be rolled back",
+      "monitors": ["crash-free sessions", "in-app checkout success rate"],
+      "config_source": "remote config keyed by app version",
+      "config_drift_prone": true
+    }
+  }
+}

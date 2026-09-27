@@ -1,0 +1,989 @@
+[
+  {
+    "id": "CHG-01",
+    "title": "Cut checkout's payment timeout to 500 ms",
+    "change": {
+      "id": "CHG-01",
+      "service": "checkout-service",
+      "change_type": "Config change",
+      "summary": "Lower checkout-service's timeout for calls to payment-gateway from 5000 ms to 500 ms so checkout fails fast.",
+      "deploy_plan": "",
+      "rollback_plan": "",
+      "monitoring_plan": ""
+    },
+    "expected": {
+      "level": "high",
+      "route": "escalate-or-block",
+      "flags": [
+        "history",
+        "rollback"
+      ],
+      "cite_any": [
+        "CX-101",
+        "CX-102"
+      ]
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is high (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is escalate-or-block"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag history and rollback"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Cites CX-101 or CX-102"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-02",
+    "title": "Promo banner behind a flag",
+    "change": {
+      "id": "CHG-02",
+      "service": "web-frontend",
+      "change_type": "Feature flag rollout",
+      "summary": "Show a new promo banner on the cart page behind the promo_banner_v2 flag.",
+      "deploy_plan": "Flag to 5% of sessions, then 50%, then 100% over two days.",
+      "rollback_plan": "Turn promo_banner_v2 off.",
+      "monitoring_plan": "JS error rate and checkout button click-through on the rollout dashboard."
+    },
+    "expected": {
+      "level": "low",
+      "route": "auto-approve",
+      "flags": [
+        "rollback",
+        "monitoring"
+      ],
+      "cite_any": []
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is low (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is auto-approve"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag rollback and monitoring"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Every comment cites evidence from the input"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-03",
+    "title": "HTTP client major upgrade in payment-gateway",
+    "change": {
+      "id": "CHG-03",
+      "service": "payment-gateway",
+      "change_type": "Dependency upgrade",
+      "summary": "Upgrade the HTTP client library used for card-processor calls from 4.x to 5.0.",
+      "deploy_plan": "Canary on one pod, then all pods.",
+      "rollback_plan": "Redeploy the previous image.",
+      "monitoring_plan": ""
+    },
+    "expected": {
+      "level": "high",
+      "route": "escalate-or-block",
+      "flags": [
+        "history",
+        "monitoring"
+      ],
+      "cite_any": [
+        "CX-104"
+      ]
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is high (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is escalate-or-block"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag history and monitoring"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Cites CX-104"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-04",
+    "title": "Shorter access tokens during a freeze",
+    "change": {
+      "id": "CHG-04",
+      "service": "auth-service",
+      "change_type": "Config change",
+      "summary": "Shorten access-token lifetime from 60 to 30 minutes.",
+      "deploy_plan": "Apply in one region, then all regions.",
+      "rollback_plan": "Set the lifetime back to 60 minutes.",
+      "monitoring_plan": "Login success rate and token refresh errors."
+    },
+    "expected": {
+      "level": "high",
+      "route": "escalate-or-block",
+      "flags": [
+        "freeze"
+      ],
+      "cite_any": [
+        "CX-116"
+      ]
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is high (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is escalate-or-block"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag freeze"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Cites CX-116"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-05",
+    "title": "Add a nullable column to orders",
+    "change": {
+      "id": "CHG-05",
+      "service": "order-service",
+      "change_type": "Schema migration",
+      "summary": "Add a nullable gift_note column to the orders table; the next release starts writing it.",
+      "deploy_plan": "Run the migration first, deploy the code that writes the column a day later; no backfill.",
+      "rollback_plan": "The old code ignores the column; drop it with a reverse migration if needed.",
+      "monitoring_plan": "Order create success rate and migration lock wait time."
+    },
+    "expected": {
+      "level": "medium",
+      "route": "review",
+      "flags": [
+        "history"
+      ],
+      "cite_any": [
+        "CX-107"
+      ]
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is medium (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is review"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag history"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Cites CX-107"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-06",
+    "title": "Halve notification consumers to save cost",
+    "change": {
+      "id": "CHG-06",
+      "service": "notification-service",
+      "change_type": "Infra change",
+      "summary": "Reduce email queue consumer replicas from 6 to 3 to cut cost.",
+      "deploy_plan": "Scale down one replica at a time during off-peak hours.",
+      "rollback_plan": "Scale back to 6 replicas.",
+      "monitoring_plan": "Queue lag alert at 5 minutes."
+    },
+    "expected": {
+      "level": "medium",
+      "route": "review",
+      "flags": [
+        "history"
+      ],
+      "cite_any": [
+        "CX-111"
+      ]
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is medium (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is review"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag history"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Cites CX-111"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-07",
+    "title": "ORM minor upgrade in inventory",
+    "change": {
+      "id": "CHG-07",
+      "service": "inventory-service",
+      "change_type": "Dependency upgrade",
+      "summary": "Upgrade the ORM from 3.4 to 3.5.",
+      "deploy_plan": "Canary on 10% of pods for one hour.",
+      "rollback_plan": "Redeploy the previous image.",
+      "monitoring_plan": "Stock reservation errors and nightly reconciliation drift."
+    },
+    "expected": {
+      "level": "medium",
+      "route": "review",
+      "flags": [
+        "history"
+      ],
+      "cite_any": [
+        "CX-110"
+      ]
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is medium (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is review"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag history"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Cites CX-110"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-08",
+    "title": "New payment sheet on mobile during a freeze",
+    "change": {
+      "id": "CHG-08",
+      "service": "mobile-frontend",
+      "change_type": "Feature flag rollout",
+      "summary": "Enable the redesigned in-app payment sheet for 10% of users.",
+      "deploy_plan": "10% for a day, then 50%.",
+      "rollback_plan": "Turn the flag off server-side.",
+      "monitoring_plan": "Crash-free sessions by app version."
+    },
+    "expected": {
+      "level": "high",
+      "route": "escalate-or-block",
+      "flags": [
+        "freeze",
+        "history"
+      ],
+      "cite_any": [
+        "CX-114"
+      ]
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is high (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is escalate-or-block"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag freeze and history"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Cites CX-114"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-09",
+    "title": "Help-page copy fixes",
+    "change": {
+      "id": "CHG-09",
+      "service": "web-frontend",
+      "change_type": "Code deploy",
+      "summary": "Fix typos in the help page copy.",
+      "deploy_plan": "Normal release through the CDN.",
+      "rollback_plan": "Point the CDN back at the previous bundle.",
+      "monitoring_plan": "JS error rate."
+    },
+    "expected": {
+      "level": "low",
+      "route": "auto-approve",
+      "flags": [
+        "rollback"
+      ],
+      "cite_any": []
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is low (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is auto-approve"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag rollback"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Every comment cites evidence from the input"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-10",
+    "title": "Rotate checkout's payment API key",
+    "change": {
+      "id": "CHG-10",
+      "service": "checkout-service",
+      "change_type": "Secret rotation",
+      "summary": "Rotate the API key checkout-service uses to call payment-gateway.",
+      "deploy_plan": "Add the new key next to the old one, switch reads to the new key, revoke the old key after 24 hours.",
+      "rollback_plan": "Switch back to the old key until it is revoked.",
+      "monitoring_plan": "Payment authorisation success rate and 401 responses from payment-gateway."
+    },
+    "expected": {
+      "level": "medium",
+      "route": "review",
+      "flags": [
+        "health"
+      ],
+      "cite_any": []
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is medium (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is review"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag health"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Every comment cites evidence from the input"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-11",
+    "title": "Bigger card-processor connection pool",
+    "change": {
+      "id": "CHG-11",
+      "service": "payment-gateway",
+      "change_type": "Config change",
+      "summary": "Raise the card-processor connection pool from 100 to 150 connections.",
+      "deploy_plan": "Apply to one region, then the rest.",
+      "rollback_plan": "Set the pool back to 100.",
+      "monitoring_plan": "Connection pool saturation and card-processor p99 latency."
+    },
+    "expected": {
+      "level": "high",
+      "route": "escalate-or-block",
+      "flags": [
+        "history",
+        "config-drift"
+      ],
+      "cite_any": [
+        "CX-105"
+      ]
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is high (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is escalate-or-block"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag history and config-drift"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Cites CX-105"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-12",
+    "title": "Move orders to a new node pool",
+    "change": {
+      "id": "CHG-12",
+      "service": "order-service",
+      "change_type": "Infra change",
+      "summary": "Move order-service to a new node pool with a different instance type.",
+      "deploy_plan": "Rolling move, 25% of pods at a time.",
+      "rollback_plan": "",
+      "monitoring_plan": "Order p99 latency."
+    },
+    "expected": {
+      "level": "medium",
+      "route": "review",
+      "flags": [
+        "rollback"
+      ],
+      "cite_any": []
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is medium (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is review"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag rollback"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Every comment cites evidence from the input"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-13",
+    "title": "Drop a legacy stock column",
+    "change": {
+      "id": "CHG-13",
+      "service": "inventory-service",
+      "change_type": "Schema migration",
+      "summary": "Drop the legacy reserved_qty_old column from the stock table.",
+      "deploy_plan": "",
+      "rollback_plan": "",
+      "monitoring_plan": "Stock reservation errors."
+    },
+    "expected": {
+      "level": "high",
+      "route": "escalate-or-block",
+      "flags": [
+        "rollback",
+        "history"
+      ],
+      "cite_any": [
+        "CX-109"
+      ]
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is high (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is escalate-or-block"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag rollback and history"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Cites CX-109"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-14",
+    "title": "New sender name on order emails",
+    "change": {
+      "id": "CHG-14",
+      "service": "notification-service",
+      "change_type": "Config change",
+      "summary": "Change the sender display name on order confirmation emails.",
+      "deploy_plan": "Single config push.",
+      "rollback_plan": "Revert the sender name.",
+      "monitoring_plan": "Email delivery and bounce rates."
+    },
+    "expected": {
+      "level": "low",
+      "route": "auto-approve",
+      "flags": [],
+      "cite_any": []
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is low (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is auto-approve"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "Any 3 grounded comments (no specific area required)"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Every comment cites evidence from the input"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-15",
+    "title": "Frontend build tool major upgrade",
+    "change": {
+      "id": "CHG-15",
+      "service": "web-frontend",
+      "change_type": "Dependency upgrade",
+      "summary": "Upgrade the frontend build tool to the next major version.",
+      "deploy_plan": "Normal release.",
+      "rollback_plan": "Point the CDN back at the previous bundle.",
+      "monitoring_plan": ""
+    },
+    "expected": {
+      "level": "medium",
+      "route": "review",
+      "flags": [
+        "history",
+        "monitoring"
+      ],
+      "cite_any": [
+        "CX-112"
+      ]
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is medium (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is review"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag history and monitoring"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Cites CX-112"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-16",
+    "title": "Save card for next time",
+    "change": {
+      "id": "CHG-16",
+      "service": "checkout-service",
+      "change_type": "Feature flag rollout",
+      "summary": "Enable 'save card for next time' at checkout behind the save_card flag.",
+      "deploy_plan": "1% for a day, then 10%, 50% and 100% over a week, each stage after a canary review.",
+      "rollback_plan": "Turn the save_card flag off.",
+      "monitoring_plan": "Checkout error rate and payment authorisation success rate per stage."
+    },
+    "expected": {
+      "level": "medium",
+      "route": "review",
+      "flags": [
+        "history"
+      ],
+      "cite_any": [
+        "CX-103"
+      ]
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is medium (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is review"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag history"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Cites CX-103"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-17",
+    "title": "Structured logs in the email retry handler",
+    "change": {
+      "id": "CHG-17",
+      "service": "notification-service",
+      "change_type": "Code deploy",
+      "summary": "Add structured logging to the email retry handler.",
+      "deploy_plan": "Rolling deploy.",
+      "rollback_plan": "Redeploy the previous image.",
+      "monitoring_plan": "Email delivery rate and queue lag."
+    },
+    "expected": {
+      "level": "low",
+      "route": "auto-approve",
+      "flags": [],
+      "cite_any": []
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is low (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is auto-approve"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "Any 3 grounded comments (no specific area required)"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Every comment cites evidence from the input"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-18",
+    "title": "Low-stock warning behind a flag",
+    "change": {
+      "id": "CHG-18",
+      "service": "inventory-service",
+      "change_type": "Feature flag rollout",
+      "summary": "Add a low-stock warning field to the inventory API response behind a flag.",
+      "deploy_plan": "Flag on for internal callers first, then all callers.",
+      "rollback_plan": "Turn the flag off.",
+      "monitoring_plan": "Stock reservation errors and API error rate."
+    },
+    "expected": {
+      "level": "low",
+      "route": "auto-approve",
+      "flags": [],
+      "cite_any": []
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is low (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is auto-approve"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "Any 3 grounded comments (no specific area required)"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Every comment cites evidence from the input"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-19",
+    "title": "Longer stock-count cache",
+    "change": {
+      "id": "CHG-19",
+      "service": "inventory-service",
+      "change_type": "Config change",
+      "summary": "Raise the stock-count cache TTL from 30 s to 120 s.",
+      "deploy_plan": "",
+      "rollback_plan": "Set the TTL back to 30 s.",
+      "monitoring_plan": "Nightly reconciliation drift."
+    },
+    "expected": {
+      "level": "medium",
+      "route": "review",
+      "flags": [
+        "deploy-order"
+      ],
+      "cite_any": []
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is medium (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is review"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag deploy-order"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Every comment cites evidence from the input"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  },
+  {
+    "id": "CHG-20",
+    "title": "New NAT gateway for card-processor traffic",
+    "change": {
+      "id": "CHG-20",
+      "service": "payment-gateway",
+      "change_type": "Infra change",
+      "summary": "Move card-processor traffic to a new NAT gateway with new egress IP addresses.",
+      "deploy_plan": "",
+      "rollback_plan": "",
+      "monitoring_plan": ""
+    },
+    "expected": {
+      "level": "high",
+      "route": "escalate-or-block",
+      "flags": [
+        "rollback",
+        "history"
+      ],
+      "cite_any": [
+        "CX-106"
+      ]
+    },
+    "rubric": [
+      {
+        "check": "level",
+        "points": 4,
+        "criterion": "Level is high (1 point if one level higher: cautious; 0 if lower)"
+      },
+      {
+        "check": "route",
+        "points": 2,
+        "criterion": "Recommended route is escalate-or-block"
+      },
+      {
+        "check": "flags",
+        "points": 2,
+        "criterion": "The 3 comments flag rollback and history"
+      },
+      {
+        "check": "cite",
+        "points": 1,
+        "criterion": "Cites CX-106"
+      },
+      {
+        "check": "format",
+        "points": 1,
+        "criterion": "Exactly 3 comments, no approval language, advisory line present"
+      }
+    ]
+  }
+]
