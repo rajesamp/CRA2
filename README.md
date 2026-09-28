@@ -244,3 +244,28 @@ from the local synthetic benchmark.
 
 CRA2 is separate from [CRA](https://github.com/rajesamp/CRA). This repository's
 data and tests do not establish performance comparisons with that project.
+
+
+## Week 1 alignment and Gradio UI
+
+The additive [requirements](requirements.md) and [tasks](tasks.md) map upstream
+ChangeRiskAdvisor Week 1 tasks 1–11 to CRA2, with human acceptance recorded
+separately from implementation. Existing sections above and the core CLI are
+preserved. See the [team record](docs/team.md), [six-pager](docs/6-pager.md),
+[PR/FAQ](docs/pr-faq.md), and [alignment evidence](docs/evidence/week1-alignment.md).
+
+From the repository root, launch the optional UI in its separate environment:
+
+```sh
+uv sync --locked --project week1 --python 3.13
+uv run --project week1 python -m week1.setup_index --download-model
+CRA2_ENV_FILE=.env uv run --project week1 python -m week1.app
+```
+
+Open [CRA2 locally](http://127.0.0.1:7860). The explicit setup downloads a
+checksum-pinned local embedding model; runtime retrieval is local. Omit
+`CRA2_ENV_FILE=.env` and choose **Local evidence only** for use without Groq.
+Detailed setup, credential boundaries, and optional authenticated sharing are in
+[week1/README.md](week1/README.md). Current operational tools and persistent
+conversational memory remain Week 2 work. Team review, a teammate's fresh-clone
+run, public sharing, and a team-channel post require their own evidence.

@@ -1,0 +1,13 @@
+{
+  "pm-cx101-checkout-timeout": {"kind": "postmortem", "service": "checkout-service"},
+  "pm-cx102-checkout-retries": {"kind": "postmortem", "service": "checkout-service"},
+  "pm-cx104-payment-tls": {"kind": "postmortem", "service": "payment-gateway"},
+  "pm-cx107-order-index": {"kind": "postmortem", "service": "order-service"},
+  "pm-cx109-inventory-column": {"kind": "postmortem", "service": "inventory-service"},
+  "pm-cx115-auth-sessions": {"kind": "postmortem", "service": "auth-service"},
+  "rb-checkout-config-risk": {"kind": "runbook", "service": "checkout-service"},
+  "rb-similar-incidents": {"kind": "runbook", "service": null},
+  "rb-freeze-health-verification": {"kind": "runbook", "service": null},
+  "rb-dependency-verification": {"kind": "runbook", "service": "payment-gateway"},
+  "rb-team-advisory": {"kind": "runbook", "service": null}
+}
