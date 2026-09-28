@@ -10,8 +10,12 @@ analysis can add concerns when the rules are uncertain or `deep` mode is selecte
 A model response cannot lower the rule-based risk level. Freeze, degraded-service,
 and uncertainty floors also apply.
 
-The included checkout system, incidents, and evaluation cases are synthetic.
-Passing these cases is a calibration check, not evidence of production accuracy.
+The checkout catalog, 16 original incidents, and 20 evaluation cases are synthetic.
+An additional [30 sanitized incident samples](data/sample_incidents.json) were
+provided by the user for public GitHub distribution and Groq assessment context.
+Their original service/type labels and provenance are preserved separately from
+the synthetic fixtures. Passing the calibration cases is not evidence of
+production accuracy or successful retrieval of every sample.
 See the [code review](docs/evidence/code-review.md) for the overhaul findings and
 verification scope.
 
@@ -43,9 +47,9 @@ cp .env.example .env  # edit the key locally; never commit .env
 CRA2_ENV_FILE=.env uv run cra2 CHG-16 --mode auto
 ```
 
-`auto` and `deep` may send change details, catalog context, and related synthetic
-incidents to Groq. Use `fast` for an entirely local assessment. Review the data
-that will be shared before adapting this sample to real changes.
+`auto` and `deep` may send change details, catalog context, and up to five related
+incidents to Groq, including the sanitized user samples. Use `fast` for an entirely
+local assessment. Adding the incident samples did not make any live Groq calls.
 
 ## Input contract
 
@@ -87,7 +91,9 @@ a medium or high rule-based decision.
 
 Human-readable output contains the risk, score, route, three comments, and an
 advisory sentence. JSON also includes `system1_score`, `system1_level`,
-`risk_floor`, `uncertain`, `advisory`, and provider telemetry. The final level can
+`risk_floor`, `uncertain`, `advisory`, provider telemetry, and `incident_context`.
+The latter contains the selected incident records with their source dataset,
+same-service/analogy classification, and matching terms. The final level can
 be above the raw blended score's band because the risk floor is enforced.
 
 Evidence references link comments to change fields, catalog fields, dependency
@@ -99,6 +105,16 @@ and local output checks reduce but cannot eliminate prompt-injection risk.
 The [architecture](docs/architecture.md) describes scoring, routing, validation,
 cache behavior, and failure handling. [ADR-001](docs/adr/adr-001-groq.md) records
 the provisional Groq model choice and the evidence still needed.
+
+Incident retrieval searches 46 records and retains at most five. Same-service
+history ranks first, with matching normalized types preferred. Cross-service
+candidates rank by informative token overlap, with matching type and recency
+breaking ties. `Deployment` is compared as `Code deploy` while the stored label
+remains unchanged. Other-service or no-change incidents can supply an
+analogy when they share enough informative terms; an analogous incident never
+becomes evidence that the catalog service itself failed before. The 28 external
+service labels in the new samples do not create new catalog services. See the
+[data guide](data/README.md) for retrieval and provenance details.
 
 ## Repeatability and performance
 
@@ -114,10 +130,13 @@ cache between non-fast assessments. Automatic SDK retries are disabled, so an
 uncached assessment makes at most one SDK request attempt. Attempt telemetry
 is not proof that the provider received or billed a request.
 
-The regenerated [fast evaluation report](docs/evidence/evals-fast.md) contains
-local timing measurements and their exact UTC window. These timings exclude
-CLI startup and are not service-level guarantees. Live Groq quality, latency,
-usage, and costs have not been validated by this overhaul.
+The [enriched fast report](docs/evidence/evals-enriched-fast.md) checks the current
+46-incident corpus over five repeats of each calibration case and records the
+corpus size and hash. The checked-in [original fast report](docs/evidence/evals-fast.md) records the
+code-overhaul baseline before the additional incident samples. It retains its
+original timing measurements and UTC window; it is not evidence for the new
+retrieval behavior. Those timings exclude CLI startup and are not service-level
+guarantees. Live Groq quality, latency, usage, and costs remain unverified.
 
 ## Evaluate and test
 
@@ -176,7 +195,7 @@ requires updated evidence.
 | Path | Purpose |
 |---|---|
 | `cra2/` | Validation, rule scoring, Groq integration, routing, CLI, rules, prompts |
-| `data/` | Canonical synthetic catalog and incident files |
+| `data/` | Synthetic catalog/original incidents and separately sourced sanitized user incident samples |
 | `evals/` | Canonical calibration cases and rubric methodology |
 | `scripts/run_evals.py` | Repository evaluation runner and quality gate |
 | `tests/` | Offline regression, package-installation, and opt-in live checks |

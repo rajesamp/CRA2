@@ -7,10 +7,11 @@ import time
 import unicodedata
 
 from cra2 import config, system1
+from cra2.incidents import load_incidents, normalize_change_type, select_incidents
 
 RULES = json.loads((config.PKG_DIR / "rules.json").read_text())
 CATALOG = json.loads((config.DATA_DIR / "checkout_system.json").read_text())["services"]
-INCIDENTS = json.loads((config.DATA_DIR / "incidents.json").read_text())
+INCIDENTS = load_incidents(config.DATA_DIR)
 LEVELS, ADVISORY = (
     ["low", "medium", "high"],
     "This is advisory only. The decision to ship requires a human.",
@@ -68,14 +69,7 @@ def context(change: dict) -> dict:
         seen.update(new)
         down.update(new)
         todo.extend(sorted(new))
-    related = sorted(
-        (i for i in INCIDENTS if name == i["service"] or kind == i["change_type"]),
-        key=lambda i: (
-            i["service"] != name,
-            i["change_type"] != kind,
-            i["incident_id"],
-        ),
-    )[:5]
+    related = select_incidents(change, INCIDENTS)
     nearby, fields = (
         [name, *svc["depends_on"]],
         [*change, "deploy_plan", "rollback_plan", "monitoring_plan"],
@@ -93,7 +87,9 @@ def context(change: dict) -> dict:
         "related": related,
         "evidence": sorted(evidence),
         "repeats": [
-            i for i in related if i["service"] == name and i["change_type"] == kind
+            i
+            for i in related
+            if i["service"] == name and normalize_change_type(i["change_type"]) == kind
         ],
         "degraded": [s for s in nearby if CATALOG[s]["status"] != "Healthy"],
     }
@@ -201,6 +197,7 @@ def assess(change: dict, mode: str | None = None) -> dict:
         "risk_floor": floor,
         "uncertain": unsure,
         "advisory": ADVISORY,
+        "incident_context": ctx["related"],
         "system2_attempted": attempted,
         "system2_request_attempted": request_attempted,
         "system2_cache_hit": cache_hit,

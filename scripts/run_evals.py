@@ -5,6 +5,7 @@ Supply both token prices (USD per million) to estimate observed token cost.
 """
 
 import argparse
+import hashlib
 import json
 import math
 import re
@@ -13,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from cra2 import config, system2
-from cra2.advisor import ADVISORY, LEVELS, assess, context, render
+from cra2.advisor import ADVISORY, INCIDENTS, LEVELS, assess, context, render
 
 ROOT = Path(__file__).resolve().parent.parent
 CASES = json.loads((ROOT / "evals" / "cases.json").read_text(encoding="utf-8"))
@@ -164,6 +165,15 @@ def run(
     summary = {
         "UTC window": f"{started.isoformat(timespec='microseconds')} to {ended.isoformat(timespec='microseconds')}",
         "Cases / repeats / assessments": f"{len(rows)} / {repeat} / {len(all_runs)}",
+        "Incident corpus records (synthetic / sanitized samples)": (
+            f"{len(INCIDENTS)} ({sum(i['source_dataset'] == 'synthetic' for i in INCIDENTS)} / "
+            f"{sum(i['source_dataset'] == 'sanitized_samples' for i in INCIDENTS)})"
+        ),
+        "Incident corpus SHA256": hashlib.sha256(
+            json.dumps(
+                sorted(INCIDENTS, key=lambda i: i["incident_id"]), sort_keys=True
+            ).encode("utf-8")
+        ).hexdigest(),
         "Mean rubric score (all assessments)": f"{statistics.mean(totals):.2f} / 10",
         "Minimum rubric score": f"{min(totals):g} / 10",
         "Level correct (all assessments)": f"{sum(result['level'] == row['case']['expected']['level'] for row in rows for result in row['runs'])}/{len(all_runs)}",

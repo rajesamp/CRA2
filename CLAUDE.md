@@ -20,6 +20,11 @@
 - Keep policy weights and comment templates in `cra2/rules.json`.
 - Keep source data in `data/` and sample cases in `evals/`. The wheel build maps
   those canonical files into package resources; do not maintain duplicate copies.
+- Keep the 16 original synthetic incidents distinct from the 30 sanitized
+  user-provided samples in `data/sample_incidents.json`. Preserve source
+  provenance and original service/type labels; normalize aliases only for
+  retrieval. External service labels must not become invented catalog services
+  or same-service repeat-incident evidence. Related context stays capped at five.
 - Preserve lazy Groq loading for local assessments. Dotenv files require explicit
   `CRA2_ENV_FILE`; exported variables take precedence. Never commit credentials.
 - Temperature zero, a seed, and strict schema are consistency controls, not a

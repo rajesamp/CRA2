@@ -23,6 +23,7 @@ packages = ["cra2"]
 [tool.hatch.build.targets.wheel.force-include]
 "data/checkout_system.json" = "cra2/data/checkout_system.json"
 "data/incidents.json" = "cra2/data/incidents.json"
+"data/sample_incidents.json" = "cra2/data/sample_incidents.json"
 "evals/cases.json" = "cra2/evals/cases.json"
 
 [dependency-groups]

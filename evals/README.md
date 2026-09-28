@@ -4,6 +4,12 @@
 These cases informed the rule weights, so they are calibration fixtures. They
 are not a held-out test set or evidence of production accuracy.
 
+Incident context now includes the original 16 synthetic records and 30 separately
+stored, sanitized user-provided samples. These 46 incident records are context,
+not 46 evaluation cases. The 20 calibration inputs, expected answers, and rubrics
+remain the baseline; additional incident data does not justify changing expected
+answers to make a regression pass.
+
 Each case includes the structured `change`, `expected` level and route, desired
 comment tags (`flags`), acceptable incident citations (`cite_any`), and a
 10-point `rubric`.
@@ -30,6 +36,17 @@ risk (CHG-05, CHG-13, CHG-19). They do not cover live operational freshness or
 unseen production systems. Add independently labeled, unseen changes before
 making generalization claims.
 
+The added samples retain 28 external service labels. Retrieval can select
+cross-service analogies by change type or informative text overlap, but these
+matches must not trigger the same-service repeat-incident penalty. Regression
+coverage for selection order, bounded context, provenance, and this distinction
+is separate from the 20-case calibration score. Neither a passing score nor the
+presence of a sample proves that its most relevant incident will be retrieved.
+
+The checked-in code-review and fast-evaluation evidence describe the earlier
+overhaul and retain their original scope and UTC windows. They are historical
+evidence, not fresh measurements of the enlarged incident collection.
+
 ## Runner and quality gate
 
 ```sh
@@ -52,7 +69,10 @@ and creates parent directories as needed. CI uses a temporary path to avoid
 rewriting checked-in evidence on every test run.
 
 Reports include exact UTC run windows, all-repeat accuracy and scores, per-case
-score minima, and nearest-rank p50/p95 latency. Timing covers each in-process
+score minima, the incident corpus size and SHA256, and nearest-rank p50/p95 latency.
+The current [enriched fast report](../docs/evidence/evals-enriched-fast.md) identifies
+the 46-record corpus used in that run. The earlier report remains historical.
+Timing covers each in-process
 assessment, including failed provider calls, and excludes startup and report
 writing. Hardware, scheduling, and sample size affect timings. No samples means
 not measured, never an inferred zero latency.
@@ -62,6 +82,10 @@ not measured, never an inferred zero latency.
 `auto` and `deep` can send context to Groq and incur charges. They require an
 explicit mode selection in this runner. Provider caches are cleared before each
 non-fast assessment, so repeat measurements exercise fresh responses.
+Context may include selected sanitized user samples as well as synthetic
+incidents, with at most five related records per assessment. The user authorized
+the samples for this provider context; no live Groq calls were made for their
+addition.
 
 The report distinguishes System 2 selections, SDK request attempts, cache hits,
 and failures. An SDK attempt does not prove provider receipt. Usage is included
