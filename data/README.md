@@ -1,17 +1,21 @@
-# Data: a made-up checkout system
+# Synthetic checkout-system data
 
-All data here is synthetic and was written for CRA2. None of it comes from
-production systems, real incidents or customers.
+These fixtures were written for CRA2. They do not describe production systems,
+real incidents, or customers. The catalog is a static snapshot; CRA2 does not
+query live health, freeze windows, config state, or an incident service.
 
 | File | Contents |
 |---|---|
-| `checkout_system.json` | 8 services. Each has a tier (`critical`, `core` or `standard`, which sets the risk thresholds), `depends_on` edges, current health, freeze-window flag, usual rollback method, key monitors, and where its config comes from (with a drift-prone flag). |
-| `incidents.json` | 16 past incidents (`CX-101` to `CX-116`), each with service, date, change type, severity and root cause. |
+| `checkout_system.json` | Eight services with tier, direct dependencies, health, freeze state, rollback guidance, monitors, and config-source/drift fields |
+| `incidents.json` | Sixteen historical examples, `CX-101` through `CX-116`, with service, date, change type, severity, and root cause |
 
-State used by the eval cases: payment-gateway is **Degraded**, and auth-service
-and mobile-frontend are in a **freeze window**.
+The snapshot marks `payment-gateway` as **Degraded** and marks `auth-service`
+and `mobile-frontend` as being in a freeze window. The changed service and its
+**direct** dependencies are checked for degraded health. Health is not traversed
+recursively. The reverse dependency graph is traversed transitively to count
+services affected by a failure.
 
-Dependency graph (`A --> B` means A calls B):
+Here, `A --> B` means A calls B:
 
 ```mermaid
 flowchart LR
@@ -27,14 +31,28 @@ flowchart LR
     payment-gateway --> notification-service
 ```
 
-## Evidence keys
+## Evidence references
 
-Comments cite evidence with these keys, and CRA2 drops any System 2 comment
-that cites something it was not given:
+- `change:<field>` refers to a normalized change field. A missing plan is
+  represented by an empty string and can be cited as absent evidence.
+- `catalog:<service>.<field>` refers to the changed service or a direct
+  dependency included in context.
+- `graph:<service>.dependents` refers to transitive reverse dependencies;
+  `graph:<service>.depends_on` refers to direct outgoing dependencies.
+- An incident ID refers to one of at most five related incidents supplied to
+  the assessment. Related incidents share the service or change type and are
+  ordered by service match, type match, and incident ID. They are not ranked
+  by recency or semantic similarity.
 
-- `change:<field>`: a field of the change, such as `change:rollback_plan`.
-  Citing a missing plan is allowed.
-- `catalog:<service>.<field>`: a catalog fact about the changed service or one it
-  calls directly, such as `catalog:payment-gateway.status`.
-- `graph:<service>.dependents` or `graph:<service>.depends_on`: the dependency graph.
-- An incident ID such as `CX-105`: an incident with the same service or change type.
+System 2 comments with unknown references are discarded. Matching a reference
+to a supplied key is a structural check, not proof that the prose follows from
+the fact. A reviewer still needs to inspect the change and relevant evidence.
+
+## Editing and distribution
+
+Edit these canonical JSON files in the repository. The wheel build includes
+copies as `cra2/data/checkout_system.json` and `cra2/data/incidents.json`; normal
+installs do not depend on the working directory. Keep dependency names, service
+names, and incident IDs consistent, then run offline tests and the fast eval gate.
+New operational integrations would need freshness checks and their own tests;
+the synthetic snapshot provides neither.

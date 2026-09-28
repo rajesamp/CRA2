@@ -1,6 +1,7 @@
-"""Live checks against Groq: determinism and latency. Skipped unless GROQ_API_KEY is set.
+"""Opt-in live repeatability and latency probes, separate from offline regression tests.
 
-Run: uv run pytest -q tests/test_live_groq.py   (with GROQ_API_KEY in .env or the environment)
+Run: CRA2_RUN_LIVE_TESTS=1 uv run pytest -q tests/test_live_groq.py
+Set GROQ_API_KEY in the environment or select a dotenv file with CRA2_ENV_FILE.
 """
 
 import json
@@ -13,8 +14,20 @@ import pytest
 from cra2 import system2
 from cra2.advisor import assess
 
-CASES = {c["id"]: c for c in json.loads((Path(__file__).resolve().parent.parent / "evals" / "cases.json").read_text())}
-pytestmark = pytest.mark.skipif(not os.environ.get("GROQ_API_KEY"), reason="needs GROQ_API_KEY")
+CASES = {
+    c["id"]: c
+    for c in json.loads(
+        (Path(__file__).resolve().parent.parent / "evals" / "cases.json").read_text()
+    )
+}
+pytestmark = [
+    pytest.mark.live,
+    pytest.mark.skipif(
+        os.environ.get("CRA2_RUN_LIVE_TESTS") != "1"
+        or not os.environ.get("GROQ_API_KEY"),
+        reason="requires explicit CRA2_RUN_LIVE_TESTS=1 and GROQ_API_KEY",
+    ),
+]
 
 
 @pytest.mark.parametrize("case_id", ["CHG-01", "CHG-06", "CHG-16"])

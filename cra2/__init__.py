@@ -1,1 +1,1 @@
-"""CRA2: fast, deterministic, advisory-only change-risk assessment on Groq."""
+"""CRA2: advisory change-risk assessment using local rules and optional Groq analysis."""
