@@ -13,7 +13,7 @@
     },
     "expected": {
       "level": "high",
-      "route": "escalate-or-block",
+      "route": "priority-review",
       "flags": [
         "history",
         "rollback"
@@ -32,7 +32,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is escalate-or-block"
+        "criterion": "Recommended review route is priority-review"
       },
       {
         "check": "flags",
@@ -65,7 +65,7 @@
     },
     "expected": {
       "level": "low",
-      "route": "auto-approve",
+      "route": "routine-review",
       "flags": [
         "rollback",
         "monitoring"
@@ -81,7 +81,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is auto-approve"
+        "criterion": "Recommended review route is routine-review"
       },
       {
         "check": "flags",
@@ -114,7 +114,7 @@
     },
     "expected": {
       "level": "high",
-      "route": "escalate-or-block",
+      "route": "priority-review",
       "flags": [
         "history",
         "monitoring"
@@ -132,7 +132,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is escalate-or-block"
+        "criterion": "Recommended review route is priority-review"
       },
       {
         "check": "flags",
@@ -164,8 +164,8 @@
       "monitoring_plan": "Login success rate and token refresh errors."
     },
     "expected": {
-      "level": "high",
-      "route": "escalate-or-block",
+      "level": "medium",
+      "route": "focused-review",
       "flags": [
         "freeze"
       ],
@@ -177,12 +177,12 @@
       {
         "check": "level",
         "points": 4,
-        "criterion": "Level is high (1 point if one level higher: cautious; 0 if lower)"
+        "criterion": "Level is medium (1 point if one level higher: cautious; 0 if lower)"
       },
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is escalate-or-block"
+        "criterion": "Recommended review route is focused-review"
       },
       {
         "check": "flags",
@@ -215,7 +215,7 @@
     },
     "expected": {
       "level": "medium",
-      "route": "review",
+      "route": "focused-review",
       "flags": [
         "history"
       ],
@@ -232,7 +232,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is review"
+        "criterion": "Recommended review route is focused-review"
       },
       {
         "check": "flags",
@@ -265,7 +265,7 @@
     },
     "expected": {
       "level": "medium",
-      "route": "review",
+      "route": "focused-review",
       "flags": [
         "history"
       ],
@@ -282,7 +282,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is review"
+        "criterion": "Recommended review route is focused-review"
       },
       {
         "check": "flags",
@@ -315,7 +315,7 @@
     },
     "expected": {
       "level": "medium",
-      "route": "review",
+      "route": "focused-review",
       "flags": [
         "history"
       ],
@@ -332,7 +332,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is review"
+        "criterion": "Recommended review route is focused-review"
       },
       {
         "check": "flags",
@@ -364,8 +364,8 @@
       "monitoring_plan": "Crash-free sessions by app version."
     },
     "expected": {
-      "level": "high",
-      "route": "escalate-or-block",
+      "level": "low",
+      "route": "routine-review",
       "flags": [
         "freeze",
         "history"
@@ -378,12 +378,12 @@
       {
         "check": "level",
         "points": 4,
-        "criterion": "Level is high (1 point if one level higher: cautious; 0 if lower)"
+        "criterion": "Level is low (1 point if one level higher: cautious; 0 if lower)"
       },
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is escalate-or-block"
+        "criterion": "Recommended review route is routine-review"
       },
       {
         "check": "flags",
@@ -416,7 +416,7 @@
     },
     "expected": {
       "level": "low",
-      "route": "auto-approve",
+      "route": "routine-review",
       "flags": [
         "rollback"
       ],
@@ -431,7 +431,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is auto-approve"
+        "criterion": "Recommended review route is routine-review"
       },
       {
         "check": "flags",
@@ -464,7 +464,7 @@
     },
     "expected": {
       "level": "medium",
-      "route": "review",
+      "route": "focused-review",
       "flags": [
         "health"
       ],
@@ -479,7 +479,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is review"
+        "criterion": "Recommended review route is focused-review"
       },
       {
         "check": "flags",
@@ -512,7 +512,7 @@
     },
     "expected": {
       "level": "high",
-      "route": "escalate-or-block",
+      "route": "priority-review",
       "flags": [
         "history",
         "config-drift"
@@ -530,7 +530,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is escalate-or-block"
+        "criterion": "Recommended review route is priority-review"
       },
       {
         "check": "flags",
@@ -563,7 +563,7 @@
     },
     "expected": {
       "level": "medium",
-      "route": "review",
+      "route": "focused-review",
       "flags": [
         "rollback"
       ],
@@ -578,7 +578,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is review"
+        "criterion": "Recommended review route is focused-review"
       },
       {
         "check": "flags",
@@ -611,7 +611,7 @@
     },
     "expected": {
       "level": "high",
-      "route": "escalate-or-block",
+      "route": "priority-review",
       "flags": [
         "rollback",
         "history"
@@ -629,7 +629,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is escalate-or-block"
+        "criterion": "Recommended review route is priority-review"
       },
       {
         "check": "flags",
@@ -662,7 +662,7 @@
     },
     "expected": {
       "level": "low",
-      "route": "auto-approve",
+      "route": "routine-review",
       "flags": [],
       "cite_any": []
     },
@@ -675,7 +675,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is auto-approve"
+        "criterion": "Recommended review route is routine-review"
       },
       {
         "check": "flags",
@@ -708,7 +708,7 @@
     },
     "expected": {
       "level": "medium",
-      "route": "review",
+      "route": "focused-review",
       "flags": [
         "history",
         "monitoring"
@@ -726,7 +726,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is review"
+        "criterion": "Recommended review route is focused-review"
       },
       {
         "check": "flags",
@@ -759,7 +759,7 @@
     },
     "expected": {
       "level": "medium",
-      "route": "review",
+      "route": "focused-review",
       "flags": [
         "history"
       ],
@@ -776,7 +776,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is review"
+        "criterion": "Recommended review route is focused-review"
       },
       {
         "check": "flags",
@@ -809,7 +809,7 @@
     },
     "expected": {
       "level": "low",
-      "route": "auto-approve",
+      "route": "routine-review",
       "flags": [],
       "cite_any": []
     },
@@ -822,7 +822,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is auto-approve"
+        "criterion": "Recommended review route is routine-review"
       },
       {
         "check": "flags",
@@ -855,7 +855,7 @@
     },
     "expected": {
       "level": "low",
-      "route": "auto-approve",
+      "route": "routine-review",
       "flags": [],
       "cite_any": []
     },
@@ -868,7 +868,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is auto-approve"
+        "criterion": "Recommended review route is routine-review"
       },
       {
         "check": "flags",
@@ -901,7 +901,7 @@
     },
     "expected": {
       "level": "medium",
-      "route": "review",
+      "route": "focused-review",
       "flags": [
         "deploy-order"
       ],
@@ -916,7 +916,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is review"
+        "criterion": "Recommended review route is focused-review"
       },
       {
         "check": "flags",
@@ -949,7 +949,7 @@
     },
     "expected": {
       "level": "high",
-      "route": "escalate-or-block",
+      "route": "priority-review",
       "flags": [
         "rollback",
         "history"
@@ -967,7 +967,7 @@
       {
         "check": "route",
         "points": 2,
-        "criterion": "Recommended route is escalate-or-block"
+        "criterion": "Recommended review route is priority-review"
       },
       {
         "check": "flags",

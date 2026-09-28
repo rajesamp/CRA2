@@ -1,39 +1,100 @@
 {
-  "thresholds": {"critical": [0.20, 0.50], "core": [0.30, 0.60], "standard": [0.40, 0.70]},
-  "routes": {"low": "auto-approve", "medium": "review", "high": "escalate-or-block"},
+  "thresholds": {
+    "critical": [
+      0.2,
+      0.5
+    ],
+    "core": [
+      0.3,
+      0.6
+    ],
+    "standard": [
+      0.4,
+      0.7
+    ]
+  },
+  "routes": {
+    "low": "routine-review",
+    "medium": "focused-review",
+    "high": "priority-review"
+  },
   "system1": {
     "change_type": {
-      "Feature flag rollout": 0.10, "Code deploy": 0.15, "Secret rotation": 0.15, "Config change": 0.20,
-      "Dependency upgrade": 0.20, "Infra change": 0.20, "Schema migration": 0.30
+      "Feature flag rollout": 0.1,
+      "Code deploy": 0.15,
+      "Secret rotation": 0.15,
+      "Config change": 0.2,
+      "Dependency upgrade": 0.2,
+      "Infra change": 0.2,
+      "Schema migration": 0.3
     },
-    "change_type_default": 0.20,
-    "tier": {"critical": 0.10, "core": 0.05, "standard": 0.0},
+    "change_type_default": 0.2,
+    "tier": {
+      "critical": 0.1,
+      "core": 0.05,
+      "standard": 0.0
+    },
     "per_dependent": 0.02,
     "dependents_cap": 0.08,
-    "freeze": 0.30,
-    "no_rollback_plan": 0.20,
+    "freeze": 0,
+    "no_rollback_plan": 0.2,
     "per_repeat_incident": 0.15,
-    "repeat_cap": 0.30,
-    "no_monitoring_plan": 0.10,
-    "config_drift": 0.10,
+    "repeat_cap": 0.3,
+    "no_monitoring_plan": 0.1,
+    "config_drift": 0.1,
     "no_deploy_plan": 0.05,
     "degraded": 0.05,
     "confidence_margin": 0.05,
     "comments": {
-      "freeze": {"tag": "freeze", "text": "{name} is in a freeze window, so any change needs an explicit exception."},
-      "history": {"tag": "history", "text": "This kind of change has broken {name} before: {repeats}."},
-      "no_rollback": {"tag": "rollback", "text": "No rollback plan for a {tier}-tier service. The usual rollback is \"{rollback}\"; confirm it really undoes this change."},
-      "no_monitoring": {"tag": "monitoring", "text": "No monitoring plan. Watch {watch} through every rollout stage."},
-      "config_drift": {"tag": "config-drift", "text": "{name} config comes from {config_source}; diff staging and prod values before and after."},
-      "no_deploy_plan": {"tag": "deploy-order", "text": "No deploy plan, and {n_down} services sit downstream ({down}). Ship backward-compatible first and stage the rollout."},
-      "degraded": {"tag": "health", "text": "Degraded right now: {degraded}. A change on a degraded path hides the cause of the next failure."},
-      "rollback": {"tag": "rollback", "text": "Rollback plan: \"{rollback_plan}\". Rehearse it in staging and time it before the window."},
-      "monitoring": {"tag": "monitoring", "text": "Monitoring plan: \"{monitoring_plan}\". Check it covers {watch}."},
-      "dependencies": {"tag": "dependencies", "text": "Downstream services that feel a failure here: {down}."}
+      "freeze": {
+        "tag": "freeze",
+        "text": "A freeze is reported for {name}; applicability and any exception are unconfirmed. Ask the team to clarify."
+      },
+      "history": {
+        "tag": "history",
+        "text": "Same-service incidents in this change category: {repeats}. Check whether their failure mechanisms apply to this change."
+      },
+      "no_rollback": {
+        "tag": "rollback",
+        "text": "No rollback plan for a {tier}-tier service. The usual rollback is \"{rollback}\"; confirm it really undoes this change."
+      },
+      "no_monitoring": {
+        "tag": "monitoring",
+        "text": "No monitoring plan. Watch {watch} through every rollout stage."
+      },
+      "config_drift": {
+        "tag": "config-drift",
+        "text": "{name} config comes from {config_source}; diff staging and prod values before and after."
+      },
+      "no_deploy_plan": {
+        "tag": "deploy-order",
+        "text": "No deploy plan, and {n_down} services sit downstream ({down}). Consider compatibility checks and a staged rollout plan."
+      },
+      "degraded": {
+        "tag": "health",
+        "text": "Catalog reports degraded health: {degraded}. Verify current health and how existing symptoms could affect change monitoring."
+      },
+      "rollback": {
+        "tag": "rollback",
+        "text": "Rollback plan: \"{rollback_plan}\". Rehearse it in staging and time it before the window."
+      },
+      "monitoring": {
+        "tag": "monitoring",
+        "text": "Monitoring plan: \"{monitoring_plan}\". Check it covers {watch}."
+      },
+      "dependencies": {
+        "tag": "dependencies",
+        "text": "Downstream services that feel a failure here: {down}."
+      }
     }
   },
   "system2": {
-    "rating_value": {"none": 0.0, "low": 0.33, "medium": 0.67, "high": 1.0},
+    "rating_value": {
+      "none": 0.0,
+      "low": 0.33,
+      "medium": 0.67,
+      "high": 1.0
+    },
     "worst_weight": 0.6,
     "weight": 0.5
   }

@@ -123,7 +123,7 @@ def test_relevant_analogues_outrank_unrelated_deployment_history(
     assert matching["matched_terms"] == sorted(set(matching["matched_terms"]))
 
 
-def test_type_alias_changes_matching_without_rewriting_source():
+def test_type_alias_cannot_establish_cross_service_relevance():
     row = {
         **RECORD,
         "change_type": "Deployment",
@@ -131,11 +131,27 @@ def test_type_alias_changes_matching_without_rewriting_source():
     }
     before = deepcopy(row)
     selected = select_incidents({**CHANGE, "summary": "Violet marmalade."}, [row])
-    assert len(selected) == 1
-    assert selected[0]["change_type"] == "Deployment"
-    assert selected[0]["service"] == "external-system"
-    assert selected[0]["match_kind"] == "cross_service_analogue"
+    assert selected == []
     assert row == before
+
+
+def test_minor_copy_edit_does_not_fill_context_with_unrelated_deployments(incidents):
+    change = {
+        **CHANGE,
+        "summary": "Fix spelling in the email footer.",
+        "deploy_plan": "Canary the release.",
+        "rollback_plan": "Restore the earlier template.",
+        "monitoring_plan": "Watch email delivery rate.",
+    }
+    selected = select_incidents(change, incidents)
+    assert len(selected) < 5
+    assert all(
+        row["service"] == change["service"] or len(row["matched_terms"]) >= 2
+        for row in selected
+    )
+    assert not {"INC-8628", "INC-5162", "INC-6754", "INC-3334"} & {
+        row["incident_id"] for row in selected
+    }
 
 
 def test_foreign_payment_label_never_becomes_catalog_service_history(
@@ -187,11 +203,20 @@ def test_selection_is_bounded_stable_and_does_not_mutate_source(incidents):
     assert len(selected) <= 5
     assert len({row["incident_id"] for row in selected}) == len(selected)
     assert selected == select_incidents(CHANGE, list(reversed(incidents)))
-    assert len(select_incidents(CHANGE, incidents, limit=2)) == 2
+    assert select_incidents(CHANGE, incidents, limit=2) == selected[:2]
     assert incidents == before
     selected[0]["root_cause"] = "Caller mutation"
     selected[0]["matched_terms"].append("caller-mutation")
     assert incidents == before
+
+
+def test_selection_cap_does_not_force_or_exceed_requested_count():
+    history = [
+        {**RECORD, "incident_id": f"TEST-{index}", "service": CHANGE["service"]}
+        for index in range(8)
+    ]
+    assert len(select_incidents(CHANGE, history)) == 5
+    assert len(select_incidents(CHANGE, history, limit=2)) == 2
 
 
 @pytest.mark.parametrize("case", CASES, ids=[case["id"] for case in CASES])

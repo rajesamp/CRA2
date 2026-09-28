@@ -5,10 +5,12 @@ software change: a risk level, a recommended review route, and three comments
 with evidence references. Local rules run for every assessment; optional Groq
 analysis can add concerns when the rules are uncertain or `deep` mode is selected.
 
-**CRA2 never approves, blocks, merges, or deploys a change.** `auto-approve`,
-`review`, and `escalate-or-block` are route labels for a human to consider.
-A model response cannot lower the rule-based risk level. Freeze, degraded-service,
-and uncertainty floors also apply.
+**CRA2 never approves, rejects, blocks, merges, or deploys a change.** Its routes
+describe review attention: low → `routine-review`, medium → `focused-review`,
+high → `priority-review`. A model response cannot lower the rule-based risk level.
+Degraded-service, high-risk team settings, and uncertainty floors also apply.
+A reported freeze is explicitly **unconfirmed** and prompts a verification
+question; it does not itself add risk weight or force a high rating.
 
 The checkout catalog, 16 original incidents, and 20 evaluation cases are synthetic.
 An additional [30 sanitized incident samples](data/sample_incidents.json) were
@@ -65,12 +67,18 @@ local assessment. Adding the incident samples did not make any live Groq calls.
 }
 ```
 
-`service`, `change_type`, and `summary` are required, nonempty strings.
-`service` must appear in [the catalog](data/checkout_system.json); `change_type`
-must appear in [the rules](cra2/rules.json). `id` is optional. The three plan
+To assess a change, `service` must appear in [the catalog](data/checkout_system.json),
+`change_type` in [the rules](cra2/rules.json), and `summary` must describe a
+concrete modification. Missing/unknown service or type and missing/generic
+summaries return `status: "needs_clarification"` with targeted `questions`.
+The level, score, and route are null, and no model is called. A deterministic
+summary heuristic catches common vague requests; it cannot identify every vague
+or contradictory statement. `id` is optional. The three plan
 fields are optional strings; omitted, `null`, empty, or whitespace-only plans
-count as missing. Fields are trimmed, limited to 10,000 characters each, and
-unknown fields are rejected. CRA2 does not parse free-text requests.
+count as missing. String fields are trimmed and limited to 10,000 characters
+each. Wrong types and unknown fields are rejected. CRA2 does not parse free-text
+requests. Optional `settings` accepts only boolean `freeze_window_active` and
+`high_risk` values; team policy may override these request values.
 Input files and stdin are limited to 1,048,576 decoded Unicode characters.
 Duplicate JSON keys and excessive nesting are rejected. Invisible/control
 characters are rejected in fields except ordinary tabs and line breaks, so
@@ -80,18 +88,33 @@ invisible plan text cannot bypass a missing-plan rule.
 |---|---|---|
 | `fast` | Local rules only | Not needed |
 | `auto` (CLI default) | Rules; request System 2 only when uncertain | Needed only for selected requests |
-| `deep` | Rules; request System 2 for every assessment | Needed unless the response is already cached in this process |
+| `deep` | Rules; request System 2 for each assessable change | Needed unless the response is already cached in this process |
 
 Missing credentials, provider errors, and malformed replies fall back to local
-rules and produce an availability note. Only a confident low rule-based result
-can reach the `auto-approve` route. A successful model result still cannot lower
-a medium or high rule-based decision.
+rules and produce an availability note. A successful model result cannot lower
+a medium or high rule-based rating. All three routes remain review guidance.
+
+## Team settings and freeze verification
+
+The bundled [team settings](data/team_settings.json) mark `auth-service` as
+`high_risk`, which requires at least medium risk / focused review. Set
+`CRA2_TEAM_SETTINGS_FILE` to use another validated JSON policy file; it replaces
+the bundled file. Settings resolve in this order: catalog/default values,
+request `settings`, then explicitly configured team values. Team values win even
+when they are `false`. Conflicts between request and team settings are visible in
+`settings_conflicts`, with the effective value and its source.
+
+The `freeze` result reports `unconfirmed` when effective settings report an
+active freeze, otherwise `not_reported`. `not_reported` is not proof that no
+freeze exists. A freeze question can accompany `status: "assessed"`; the risk
+assessment proceeds using the other evidence. CRA2 has no live freeze calendar.
 
 ## Results and evidence
 
-Human-readable output contains the risk, score, route, three comments, and an
-advisory sentence. JSON also includes `system1_score`, `system1_level`,
-`risk_floor`, `uncertain`, `advisory`, provider telemetry, and `incident_context`.
+An assessed result contains risk, score, review route, three comments, questions,
+and an advisory sentence. JSON also includes `status`, `freeze`, `settings`,
+`settings_conflicts`, `system1_score`, `system1_level`, `risk_floor`, `uncertain`,
+`advisory`, provider telemetry, and `incident_context`.
 The latter contains the selected incident records with their source dataset,
 same-service/analogy classification, and matching terms. The final level can
 be above the raw blended score's band because the risk floor is enforced.
@@ -108,7 +131,8 @@ the provisional Groq model choice and the evidence still needed.
 
 Incident retrieval searches 46 records and retains at most five. Same-service
 history ranks first, with matching normalized types preferred. Cross-service
-candidates rank by informative token overlap, with matching type and recency
+candidates require at least two meaningful shared terms; a shared change type
+alone is insufficient. They rank by informative token overlap, with type and recency
 breaking ties. `Deployment` is compared as `Code deploy` while the stored label
 remains unchanged. Other-service or no-change incidents can supply an
 analogy when they share enough informative terms; an analogous incident never
@@ -130,19 +154,23 @@ cache between non-fast assessments. Automatic SDK retries are disabled, so an
 uncached assessment makes at most one SDK request attempt. Attempt telemetry
 is not proof that the provider received or billed a request.
 
-The [enriched fast report](docs/evidence/evals-enriched-fast.md) checks the current
-46-incident corpus over five repeats of each calibration case and records the
-corpus size and hash. The checked-in [original fast report](docs/evidence/evals-fast.md) records the
-code-overhaul baseline before the additional incident samples. It retains its
-original timing measurements and UTC window; it is not evidence for the new
-retrieval behavior. Those timings exclude CLI startup and are not service-level
-guarantees. Live Groq quality, latency, usage, and costs remain unverified.
+The [enriched fast report](docs/evidence/evals-enriched-fast.md) and
+[original fast report](docs/evidence/evals-fast.md) preserve earlier policy
+baselines and their UTC windows. They predate the review-only routes and freeze
+verification policy. New runs must record the current policy and data rather
+than overwrite those historical results. Timings exclude CLI startup and are
+not service-level guarantees. Live Groq quality, latency, usage, and costs remain
+unverified.
+The [current policy report](docs/evidence/evals-policy-fast.md) records the
+review-only routes, freeze questions, and settings behavior across all repeats,
+with hashes of the loaded incident corpus, rules, catalog, and team settings.
 
 ## Evaluate and test
 
 ```sh
 # Offline: every repeat must score 10/10 and give the same answer.
-uv run python scripts/run_evals.py --mode fast --repeat 5 --require-repeatable
+uv run python scripts/run_evals.py --mode fast --repeat 5 --require-repeatable \
+  --out /tmp/cra2-policy-fast.md
 
 # Explicit live checks: needs a key and can incur provider charges.
 CRA2_RUN_LIVE_TESTS=1 uv run pytest -q -m live
@@ -160,9 +188,11 @@ Reports include every repeat's score, observed levels, repeatability, timings,
 provider selection/attempt/cache/failure counts, and usage completeness.
 A report is written even when the quality gate fails. Exit status is `0` for
 pass, `1` for a gate failure, and `2` for invalid command options. The default
-gate requires at least 10/10 on **every** assessment and no unavailable requested
-System 2 result. `--min-score` changes the per-assessment threshold;
-`--require-repeatable` requires at least two repeats.
+gate requires at least 10/10 on **every** assessment, an assessed outcome for each
+calibration case, and no unavailable requested System 2 result. `--min-score`
+changes the per-assessment threshold; `--require-repeatable` requires at least
+two repeats and compares status, score, level, route, comments, questions, freeze
+state, effective settings, and surfaced conflicts.
 
 Both token prices are required for a token-cost estimate. Missing provider
 usage leaves a complete estimate unknown; a known-usage subtotal remains
@@ -178,6 +208,7 @@ explicitly selected dotenv file.
 | Variable | Default | Meaning |
 |---|---|---|
 | `CRA2_ENV_FILE` | unset | Explicit path to a readable UTF-8 dotenv file |
+| `CRA2_TEAM_SETTINGS_FILE` | bundled `data/team_settings.json` | Explicit replacement policy file with team and per-service boolean settings |
 | `GROQ_API_KEY` | unset | Provider credential; never include it in a change file |
 | `CRA2_MODEL` | `openai/gpt-oss-20b` | Model ID; changes require recorded evaluation |
 | `CRA2_MODE` | `auto` | `fast`, `auto`, or `deep`; CLI `--mode` overrides it |
@@ -200,6 +231,11 @@ requires updated evidence.
 | `scripts/run_evals.py` | Repository evaluation runner and quality gate |
 | `tests/` | Offline regression, package-installation, and opt-in live checks |
 | `docs/` | Architecture, ADR, review, and evaluation evidence |
+
+The [FAQ and deployment boundaries](docs/faq.md) describe clarification, settings,
+incident relevance, credential handling, and reproducibility. Hosting, multiuser
+authentication/authorization, ingress/egress controls, live configuration
+freshness, and postmortem integrations are not implemented.
 
 The next evidence needed is an authorized live Groq evaluation, a separate set
 of unseen labeled changes, and a selected Caveman project with provider-complete

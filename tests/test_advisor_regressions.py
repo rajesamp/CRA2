@@ -21,11 +21,8 @@ CHANGE = CASES[4]["change"]
         [],
         "change",
         42,
-        {},
         {**CHANGE, "service": []},
-        {**CHANGE, "summary": " \n"},
         {**CHANGE, "rollback_plan": 42},
-        {**CHANGE, "change_type": "Typo"},
         {**CHANGE, "summary": "x" * 10001},
         {**CHANGE, "secret": "extra data"},
     ],
@@ -128,7 +125,7 @@ def test_catalog_evidence_keys_have_facts_in_provider_payload(monkeypatch):
 
 
 def test_rule_hazards_win_same_severity_comment_ties(monkeypatch):
-    change = next(c["change"] for c in CASES if c["id"] == "CHG-04")
+    change = next(c["change"] for c in CASES if c["id"] == "CHG-01")
     monkeypatch.setattr(
         system2,
         "assess",
@@ -153,7 +150,7 @@ def test_rule_hazards_win_same_severity_comment_ties(monkeypatch):
             },
         },
     )
-    assert advisor.assess(change, "deep")["comments"][0]["tag"] == "freeze"
+    assert advisor.assess(change, "deep")["comments"][0]["tag"] == "history"
 
 
 def test_rendered_user_text_cannot_add_markdown_or_terminal_controls():

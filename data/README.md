@@ -13,6 +13,7 @@ configuration state, or an incident service.
 | `checkout_system.json` | Eight services with tier, direct dependencies, health, freeze state, rollback guidance, monitors, and config-source/drift fields |
 | `incidents.json` | Sixteen original synthetic historical examples, `CX-101` through `CX-116`, with service, date, change type, severity, and root cause |
 | `sample_incidents.json` | Thirty user-provided sanitized incident samples, retaining original service and change-type labels and source provenance |
+| `team_settings.json` | Bundled `sample-team` policy: `auth-service.high_risk = true`; unspecified team fields leave lower-precedence values intact |
 
 The new samples span **2022-11-30 through 2026-09-27** and contain 28 distinct
 external service labels. They cover eight deployment, seven infrastructure,
@@ -23,11 +24,19 @@ separately distinguishes the sample collection from synthetic history at runtime
 These labels do not create or map to catalog services, tiers, dependency edges,
 or health states. The catalog remains the same eight-service synthetic system.
 
-The snapshot marks `payment-gateway` as **Degraded** and marks `auth-service`
-and `mobile-frontend` as being in a freeze window. The changed service and its
+The snapshot marks `payment-gateway` as **Degraded** and reports active freeze
+flags for `auth-service` and `mobile-frontend`. These flags are unconfirmed
+reports, not current calendar checks; they produce verification questions without
+adding a risk weight or high floor. The changed service and its
 **direct** dependencies are checked for degraded health. Health is not traversed
 recursively. The reverse dependency graph is traversed transitively to count
 services affected by a failure.
+
+Team settings resolve after catalog/default and request values. Explicit team
+booleans, including `false`, win; conflicting request values are surfaced in the
+result. `high_risk = true` sets a medium minimum. `CRA2_TEAM_SETTINGS_FILE` selects
+a replacement policy file. The bundled team policy and catalog are static local
+examples, not a multiuser authorization system or live policy service.
 
 Here, `A --> B` means A calls B:
 
@@ -51,6 +60,9 @@ flowchart LR
   represented by an empty string and can be cited as absent evidence.
 - `catalog:<service>.<field>` refers to the changed service or a direct
   dependency included in context.
+- `team:<service>.<field>`, `change:settings.<field>`, and `default:<field>`
+  identify the source of an effective team/request/default setting. Conflicts
+  retain both the requested value and the effective team value.
 - `graph:<service>.dependents` refers to transitive reverse dependencies;
   `graph:<service>.depends_on` refers to direct outgoing dependencies.
 - An incident ID refers to one of at most five related records selected from
@@ -63,9 +75,10 @@ the fact. A reviewer still needs to inspect the change and relevant evidence.
 
 ## Bounded incident retrieval
 
-The candidate set includes an incident when its service matches exactly, its
-normalized change type matches, or its text shares at least two informative
-tokens with the change. Common filler words do not count as informative overlap.
+The candidate set includes exact-service history and cross-service incidents
+sharing at least two meaningful terms with the change. A matching normalized
+change type alone never qualifies an incident from another service. Common
+filler words do not count as informative overlap.
 Short technical terms such as `OOM`, `CPU`, `CDN`, `ACL`, and `503` remain useful
 matches. This is local lexical matching, not embeddings or model-based semantic
 search.
@@ -83,9 +96,9 @@ This lets a relevant capacity or no-change incident rank above an unrelated
 deployment incident from another service.
 
 The only type alias is `Deployment` → `Code deploy`, used for comparison without
-rewriting the stored sample. Other labels stay distinct. External or no-change
-categories without a matching type can enter through the two-token overlap
-rule; they are not silently reclassified as deployments.
+rewriting the stored sample. Other labels stay distinct. Every cross-service
+category, including deployment and no-change samples, needs the two-term overlap
+rule; samples are not silently reclassified as deployments.
 
 Cross-service matches are analogous history. They may inform a model's review,
 but they do not trigger System 1's same-service repeat-incident penalty or imply

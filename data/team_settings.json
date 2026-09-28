@@ -1,0 +1,8 @@
+{
+  "team": "sample-team",
+  "services": {
+    "auth-service": {
+      "high_risk": true
+    }
+  }
+}

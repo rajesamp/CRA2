@@ -2,6 +2,7 @@
 
 import json
 from copy import deepcopy
+from secrets import token_hex
 from types import SimpleNamespace
 
 import groq
@@ -318,7 +319,7 @@ def test_real_sdk_never_retries_a_failed_request(monkeypatch, status):
 
     def factory(**kwargs):
         return real_factory(
-            api_key="test",
+            api_key=token_hex(24),
             http_client=httpx.Client(transport=httpx.MockTransport(handler)),
             **kwargs,
         )
@@ -365,7 +366,7 @@ def test_real_sdk_malformed_http_envelopes_fail_cleanly(monkeypatch, body):
 
     def factory(**kwargs):
         return real_factory(
-            api_key="test",
+            api_key=token_hex(24),
             http_client=httpx.Client(transport=httpx.MockTransport(handler)),
             **kwargs,
         )

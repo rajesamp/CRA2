@@ -8,6 +8,7 @@ import importlib.util
 import json
 import time
 from pathlib import Path
+from secrets import token_hex
 from types import SimpleNamespace
 
 import groq
@@ -178,10 +179,12 @@ def test_system1_answers_in_well_under_a_millisecond():
     assert sorted(timings)[int(0.95 * len(timings))] < 1.0
 
 
-def test_freeze_window_is_high_without_calling_groq(fake):
-    client = fake()
+def test_freeze_is_reported_unconfirmed_with_separate_risk_assessment(fake):
+    fake()
     r = assess(CASES["CHG-04"]["change"], "auto")
-    assert r["level"] == "high" and r["path"] == "system1" and client.requests == []
+    assert r["freeze"]["status"] == "unconfirmed"
+    assert r["questions"] and r["status"] == "assessed"
+    assert r["system1_score"] < 0.60
 
 
 # --- System 2 (Groq) -------------------------------------------------------------------
@@ -243,7 +246,7 @@ def test_real_groq_sdk_sends_and_parses_the_request(monkeypatch):
         )
 
     sdk = groq.Groq(
-        api_key="test",
+        api_key=token_hex(24),
         max_retries=0,
         http_client=httpx.Client(transport=httpx.MockTransport(handler)),
     )
@@ -326,21 +329,23 @@ def test_unsure_change_fails_closed_when_groq_is_unavailable(monkeypatch):
     r = assess(UNSURE_LOW, "auto")
     assert (
         grade(r["system1_score"], "standard") == "low"
-    )  # System 1 alone would auto-approve...
+    )  # System 1 score alone is in the low band...
     assert (
-        r["level"] == "medium" and r["route"] == "review" and "unavailable" in r["note"]
+        r["level"] == "medium"
+        and r["route"] == "focused-review"
+        and "unavailable" in r["note"]
     )  # ...but it is unsure
 
 
-def test_groq_can_never_put_an_unsure_change_in_the_auto_approve_lane(fake):
+def test_groq_can_never_put_an_unsure_change_in_the_routine_review_band(fake):
     fake({**ANSWER, "ratings": dict.fromkeys(ANSWER["ratings"], "none")})
     r = assess(UNSURE_LOW, "auto")
     assert (
         r["path"] == "system2" and grade(r["score"], "standard") == "low"
     )  # the blended score says low...
     assert (
-        r["level"] == "medium" and r["route"] == "review"
-    )  # ...but only System 1 may auto-approve
+        r["level"] == "medium" and r["route"] == "focused-review"
+    )  # ...but uncertainty retains a medium floor
 
 
 # --- Prompt, schema, CLI, eval scorer ----------------------------------------------
@@ -373,7 +378,7 @@ def test_cli(capsys):
     main(["CHG-02", "--mode", "fast"])
     assert capsys.readouterr().out.strip().endswith(ADVISORY)
     main(["CHG-02", "--mode", "fast", "--json"])
-    assert json.loads(capsys.readouterr().out)["route"] == "auto-approve"
+    assert json.loads(capsys.readouterr().out)["route"] == "routine-review"
     with pytest.raises(SystemExit):
         main(["no-such-change.json"])
 
@@ -382,7 +387,7 @@ def test_eval_scorer_gives_full_marks_only_for_the_expected_answer():
     case = CASES["CHG-01"]
     r = assess(case["change"], "fast")
     assert sum(run_evals.mark(case, r).values()) == 10
-    lower = {**r, "level": "medium", "route": "review"}
+    lower = {**r, "level": "medium", "route": "focused-review"}
     assert (
         run_evals.mark(case, lower)["level"] == 0
         and run_evals.mark(case, lower)["route"] == 0

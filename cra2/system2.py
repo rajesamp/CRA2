@@ -15,6 +15,7 @@ from functools import cache
 import groq
 
 from cra2 import config
+from cra2.secrets import configure_sdk_logging, reject_credentials
 
 PROMPT = (config.PKG_DIR / "prompts" / "system_prompt.md").read_text(encoding="utf-8")
 SCHEMA = json.loads(
@@ -56,7 +57,42 @@ ERRORS = (System2Unavailable,)
 @cache
 def client() -> groq.Groq:
     # One SDK invocation must never silently become a retry loop.
-    return groq.Groq(timeout=config.TIMEOUT_S, max_retries=0)
+    configure_sdk_logging()
+    return groq.Groq(
+        timeout=config.TIMEOUT_S, max_retries=0, base_url="https://api.groq.com"
+    )
+
+
+def _protected_client():
+    configure_sdk_logging()
+    failure = None
+    try:
+        sdk = client()
+    except groq.GroqError:
+        failure = System2Unavailable("Groq client is unavailable")
+    if failure is not None:
+        # Raise after leaving the handler so the provider exception (which may
+        # contain authentication headers) is absent even from __context__.
+        raise failure from None
+    configure_sdk_logging()
+    return sdk
+
+
+def _reject_credentials(
+    value, credentials, *, request_attempted=False, tokens=None, groq_ms=None
+):
+    failure = None
+    try:
+        reject_credentials(value, additional=credentials)
+    except ValueError:
+        failure = System2Unavailable(
+            "Configured credentials were found in application data",
+            request_attempted=request_attempted,
+            tokens=tokens,
+            groq_ms=groq_ms,
+        )
+    if failure is not None:
+        raise failure from None
 
 
 def _validate(value, schema: dict, path: str = "response") -> None:
@@ -145,11 +181,8 @@ def _comment_allowed(comment: dict, evidence: set[str]) -> bool:
     )
 
 
-def _request(payload: str, settings: dict) -> dict:
-    try:
-        sdk = client()
-    except groq.GroqError as exc:
-        raise System2Unavailable("Groq client is unavailable") from exc
+def _request(payload: str, settings: dict, sdk, credentials) -> dict:
+    failure = None
     try:
         response = sdk.chat.completions.create(
             model=settings["model"],
@@ -171,12 +204,25 @@ def _request(payload: str, settings: dict) -> dict:
                 },
             },
         )
-    except (groq.GroqError, ValueError, RecursionError) as exc:
+    except (groq.GroqError, ValueError, RecursionError):
         # SDK decoding can raise ValueError for oversized JSON integers, as well
         # as its JSONDecodeError/UnicodeDecodeError subclasses. Keep this catch
         # at the provider boundary so local scoring defects still surface.
-        raise System2Unavailable("Groq request failed", request_attempted=True) from exc
+        failure = System2Unavailable("Groq request failed", request_attempted=True)
+    if failure is not None:
+        raise failure from None
     tokens, elapsed = _usage(response)
+    model, fingerprint = (
+        getattr(response, "model", None),
+        getattr(response, "system_fingerprint", None),
+    )
+    _reject_credentials(
+        [model, fingerprint],
+        credentials,
+        request_attempted=True,
+        tokens=tokens,
+        groq_ms=elapsed,
+    )
     try:
         choices = getattr(response, "choices", None)
         if not isinstance(choices, list) or len(choices) != 1:
@@ -186,6 +232,9 @@ def _request(payload: str, settings: dict) -> dict:
             raise ValueError("Completion was incomplete or refused")
         message = getattr(choice, "message", None)
         content = getattr(message, "content", None)
+        reject_credentials(
+            [content, getattr(message, "refusal", None)], additional=credentials
+        )
         if (
             getattr(message, "refusal", None)
             or not isinstance(content, str)
@@ -193,20 +242,19 @@ def _request(payload: str, settings: dict) -> dict:
         ):
             raise ValueError("Missing or oversized completion")
         out = json.loads(content, object_pairs_hook=_object, parse_constant=_nonfinite)
+        reject_credentials(out, additional=credentials)
         _validate(out, settings["schema"])
         evidence = set(json.loads(payload)["evidence_keys"])
         out["comments"] = [c for c in out["comments"] if _comment_allowed(c, evidence)]
-    except (ValueError, TypeError, KeyError, RecursionError) as exc:
-        raise System2Unavailable(
+    except (ValueError, TypeError, KeyError, RecursionError):
+        failure = System2Unavailable(
             "Invalid Groq assessment",
             request_attempted=True,
             tokens=tokens,
             groq_ms=elapsed,
-        ) from exc
-    model, fingerprint = (
-        getattr(response, "model", None),
-        getattr(response, "system_fingerprint", None),
-    )
+        )
+    if failure is not None:
+        raise failure from None
     return {
         "out": out,
         "model": model if isinstance(model, str) else None,
@@ -232,6 +280,10 @@ def call(payload: str) -> str:
         "prompt": PROMPT,
         "schema": SCHEMA,
     }
+    _reject_credentials([payload, settings], ())
+    sdk = _protected_client()
+    credentials = (getattr(sdk, "api_key", None),)
+    _reject_credentials([payload, settings], credentials)
     key = (payload, json.dumps(settings, sort_keys=True, allow_nan=False))
     with _CACHE_LOCK:
         stored = _RESULTS.get(key)
@@ -239,11 +291,17 @@ def call(payload: str) -> str:
             _RESULTS.move_to_end(key)
     if stored is not None:
         result = json.loads(stored)
+        try:
+            _reject_credentials(result, credentials)
+        except System2Unavailable:
+            with _CACHE_LOCK:
+                _RESULTS.pop(key, None)
+            raise
         result.update(
             tokens=[0, 0], groq_ms=None, cache_hit=True, request_attempted=False
         )
     else:
-        result = _request(payload, settings)
+        result = _request(payload, settings, sdk, credentials)
         with _CACHE_LOCK:
             _RESULTS[key] = json.dumps(result, allow_nan=False)
             _RESULTS.move_to_end(key)
