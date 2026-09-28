@@ -1,0 +1,35 @@
+name: week1
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.13"]
+    env:
+      GRADIO_ANALYTICS_ENABLED: "False"
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      GROQ_API_KEY: ""
+      CRA2_RUN_LIVE_TESTS: "0"
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install uv==0.8.17
+      - name: Install locked Week 1 dependencies
+        run: uv sync --locked --project week1 --python "${{ matrix.python-version }}"
+      - name: Offline Week 1 tests with injected models and providers
+        env:
+          UV_OFFLINE: "1"
+        run: uv run --locked --project week1 --python "${{ matrix.python-version }}" python -m pytest week1/tests -q
