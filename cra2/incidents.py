@@ -139,7 +139,7 @@ def select_incidents(change: dict, incidents: list[dict], limit: int = 5) -> lis
             normalize_change_type(incident["change_type"]) == change["change_type"]
         )
         overlap = query & _incident_terms(incident["service"], incident["root_cause"])
-        if not (same_service or same_type or len(overlap) >= 2):
+        if not (same_service or len(overlap) >= 2):
             continue
         group = 0 if same_service and same_type else 1 if same_service else 2
         rank = (

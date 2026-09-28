@@ -24,6 +24,7 @@ packages = ["cra2"]
 "data/checkout_system.json" = "cra2/data/checkout_system.json"
 "data/incidents.json" = "cra2/data/incidents.json"
 "data/sample_incidents.json" = "cra2/data/sample_incidents.json"
+"data/team_settings.json" = "cra2/data/team_settings.json"
 "evals/cases.json" = "cra2/evals/cases.json"
 
 [dependency-groups]

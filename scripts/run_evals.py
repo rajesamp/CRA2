@@ -14,7 +14,18 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from cra2 import config, system2
-from cra2.advisor import ADVISORY, INCIDENTS, LEVELS, assess, context, render
+from cra2.advisor import (
+    ADVISORY,
+    CATALOG,
+    INCIDENTS,
+    LEVELS,
+    RULES,
+    TEAM_SETTINGS,
+    assess,
+    context,
+    render,
+)
+from cra2.secrets import reject_credentials
 
 ROOT = Path(__file__).resolve().parent.parent
 CASES = json.loads((ROOT / "evals" / "cases.json").read_text(encoding="utf-8"))
@@ -28,6 +39,10 @@ def mark(case: dict, result: dict) -> dict:
     """Award rubric points, checking citation membership as well as presence."""
     expected = case["expected"]
     points = {item["check"]: item["points"] for item in case["rubric"]}
+    # Calibration cases require an assessment. A clarification is a valid API
+    # outcome, but cannot silently count as a correct risk answer for these cases.
+    if result.get("status") != "assessed":
+        return {check: 0 for check in points}
     got, want = LEVELS.index(result["level"]), LEVELS.index(expected["level"])
     comments = result["comments"]
     tags = {comment["tag"] for comment in comments}
@@ -113,14 +128,7 @@ def run(
             runs.append(assess(case["change"], mode))
         marks = [mark(case, result) for result in runs]
         totals = [sum(item.values()) for item in marks]
-        signatures = {
-            (
-                result["level"],
-                result["route"],
-                json.dumps(result["comments"], sort_keys=True),
-            )
-            for result in runs
-        }
+        signatures = {answer_signature(result) for result in runs}
         rows.append(
             {
                 "case": case,
@@ -174,14 +182,24 @@ def run(
                 sorted(INCIDENTS, key=lambda i: i["incident_id"]), sort_keys=True
             ).encode("utf-8")
         ).hexdigest(),
+        "Rules SHA256": hashlib.sha256(
+            json.dumps(RULES, sort_keys=True).encode("utf-8")
+        ).hexdigest(),
+        "Catalog SHA256": hashlib.sha256(
+            json.dumps(CATALOG, sort_keys=True).encode("utf-8")
+        ).hexdigest(),
+        "Team settings SHA256": hashlib.sha256(
+            json.dumps(TEAM_SETTINGS, sort_keys=True).encode("utf-8")
+        ).hexdigest(),
         "Mean rubric score (all assessments)": f"{statistics.mean(totals):.2f} / 10",
         "Minimum rubric score": f"{min(totals):g} / 10",
-        "Level correct (all assessments)": f"{sum(result['level'] == row['case']['expected']['level'] for row in rows for result in row['runs'])}/{len(all_runs)}",
-        "Route correct (all assessments)": f"{sum(result['route'] == row['case']['expected']['route'] for row in rows for result in row['runs'])}/{len(all_runs)}",
+        "Assessed / needs clarification": f"{sum(result.get('status') == 'assessed' for result in all_runs)} / {sum(result.get('status') == 'needs_clarification' for result in all_runs)}",
+        "Level correct (all assessments)": f"{sum(result.get('level') == row['case']['expected']['level'] for row in rows for result in row['runs'])}/{len(all_runs)}",
+        "Route correct (all assessments)": f"{sum(result.get('route') == row['case']['expected']['route'] for row in rows for result in row['runs'])}/{len(all_runs)}",
         "Citation rubric satisfied (all assessments)": f"{sum(item['cite'] == 1 for item in all_marks)}/{len(all_runs)}",
         "System 2 requested / SDK attempts / cache hits / failed": f"{len(requested)} / {len(attempts)} / {len(cached)} / {len(failed)}",
         "SDK attempts with known / missing token usage": f"{len(known_tokens)} / {missing_usage}",
-        f"Same level, route and comments across {repeat} repeats": f"{sum(row['same'] for row in rows)}/{len(rows)} cases"
+        f"Same decision context across {repeat} repeats": f"{sum(row['same'] for row in rows)}/{len(rows)} cases"
         if repeat > 1
         else "not assessed: one repeat",
         "Latency p50 / p95, no System 2 requested (ms)": _latency(
@@ -204,6 +222,22 @@ def run(
     return rows, summary
 
 
+def answer_signature(result: dict) -> str:
+    """Compare review meaning while excluding wall time and provider accounting."""
+    fields = (
+        "status",
+        "level",
+        "score",
+        "route",
+        "comments",
+        "questions",
+        "freeze",
+        "settings_conflicts",
+        "settings",
+    )
+    return json.dumps({field: result.get(field) for field in fields}, sort_keys=True)
+
+
 def gate_failures(
     rows: list, min_score: float = 10, require_repeatable: bool = False
 ) -> list[str]:
@@ -213,6 +247,10 @@ def gate_failures(
         for index, (result, total) in enumerate(
             zip(row["runs"], row["totals"]), start=1
         ):
+            if result.get("status") != "assessed":
+                failures.append(
+                    f"{case_id} repeat {index}: assessment needs clarification"
+                )
             if total < min_score:
                 failures.append(
                     f"{case_id} repeat {index}: score {total:g} < {min_score:g}"
@@ -231,13 +269,15 @@ def _cell(value: object) -> str:
 
 
 def report(mode: str, repeat: int, rows: list, summary: dict) -> str:
+    reject_credentials((config.MODEL, rows, summary))
     lines = [
         f"# Eval report: mode `{mode}`",
         "",
         f"Model setting: `{config.MODEL}` · seed {config.SEED} · temperature {config.TEMPERATURE}.",
         "",
         "All repeats contribute to quality and timing metrics. Provider response caches are cleared before each non-fast assessment.",
-        "This synthetic dataset was used to tune the rules; scores measure calibration, not performance on unseen changes.",
+        "These 20 synthetic change cases were used to tune the rules; selected context also includes approved sanitized incident samples. Scores measure calibration, not performance on unseen changes.",
+        "Repeatability compares status, score, level, review route, comments, questions, freeze status, effective settings, and surfaced conflicts.",
         "",
         "Latency covers the in-process assessment, including failed provider attempts; it excludes process startup and report generation.",
         "SDK attempts count client invocations, not proof of delivery to Groq. Token costs use supplied prices and observed usage only.",
@@ -248,12 +288,14 @@ def report(mode: str, repeat: int, rows: list, summary: dict) -> str:
         "|---|---|",
         *(f"| {_cell(key)} | {_cell(value)} |" for key, value in summary.items()),
         "",
-        "| Case | Title | Expected | Observed levels | Paths | Mean / min score | p50 / p95 ms | Same across repeats |",
+        "| Case | Title | Expected | Observed outcomes | Paths | Mean / min score | p50 / p95 ms | Same across repeats |",
         "|---|---|---|---|---|---|---|---|",
     ]
     for row in rows:
         case = row["case"]
-        levels = ", ".join(sorted({r["level"] for r in row["runs"]}, key=LEVELS.index))
+        levels = ", ".join(
+            sorted({r.get("level") or r.get("status", "invalid") for r in row["runs"]})
+        )
         paths = ", ".join(sorted({r["path"] for r in row["runs"]}))
         same = "not assessed" if row["same"] is None else "yes" if row["same"] else "NO"
         cells = [
@@ -267,7 +309,9 @@ def report(mode: str, repeat: int, rows: list, summary: dict) -> str:
             same,
         ]
         lines.append("| " + " | ".join(_cell(cell) for cell in cells) + " |")
-    return "\n".join(lines) + "\n"
+    content = "\n".join(lines) + "\n"
+    reject_credentials(content)
+    return content
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -319,19 +363,25 @@ def main(argv: list[str] | None = None) -> int:
         else "-" + re.sub(r"[^A-Za-z0-9_.-]+", "-", config.MODEL)
     )
     out = args.out or ROOT / "docs" / "evidence" / f"evals-{args.mode}{slug}.md"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    content = report(args.mode, args.repeat, rows, summary)
-    if failures:
-        content += (
-            "\n## Gate failures\n\n"
-            + "\n".join(f"- {item}" for item in failures)
-            + "\n"
+    try:
+        reject_credentials(str(out))
+        content = report(args.mode, args.repeat, rows, summary)
+        if failures:
+            content += (
+                "\n## Gate failures\n\n"
+                + "\n".join(f"- {item}" for item in failures)
+                + "\n"
+            )
+        console = (
+            "\n".join(f"{key}: {value}" for key, value in summary.items())
+            + f"\nwrote {out}"
         )
+        reject_credentials((content, console))
+    except ValueError:
+        parser.error("Evaluation output contains a configured credential")
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(content, encoding="utf-8")
-    print(
-        "\n".join(f"{key}: {value}" for key, value in summary.items())
-        + f"\nwrote {out}"
-    )
+    print(console)
     return 1 if failures else 0
 
 

@@ -31,7 +31,7 @@ def classify(change: dict, ctx: dict, w: dict) -> dict:
             svc["freeze_window_active"],
             w["freeze"],
             "freeze",
-            [f"catalog:{name}.freeze_window_active"],
+            [ctx["settings"]["sources"]["freeze_window_active"]],
         ),
         (
             repeats,
@@ -78,7 +78,7 @@ def classify(change: dict, ctx: dict, w: dict) -> dict:
         ),
         (True, 0, "dependencies", [f"graph:{name}.dependents"]),
     ]
-    fired = sorted((r for r in rules if r[0]), key=lambda r: -r[1])
+    fired = sorted((r for r in rules if r[0]), key=lambda r: (r[2] != "freeze", -r[1]))
     score = (
         w["change_type"][change["change_type"]]
         + w["tier"][svc["tier"]]

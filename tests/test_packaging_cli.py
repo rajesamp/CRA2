@@ -126,6 +126,7 @@ def test_dotenv_next_to_package_is_not_implicitly_loaded(tmp_path):
     package.mkdir(parents=True)
     (package / "__init__.py").write_text("", encoding="utf-8")
     (package / "config.py").write_bytes((ROOT / "cra2" / "config.py").read_bytes())
+    (package / "secrets.py").write_bytes((ROOT / "cra2" / "secrets.py").read_bytes())
     (package.parent / ".env").write_text("CRA2_SEED=invalid\n", encoding="utf-8")
     env = {
         key: value for key, value in os.environ.items() if not key.startswith("CRA2_")
@@ -172,3 +173,13 @@ def test_adversarial_json_is_a_bounded_usage_error(tmp_path, source, case):
     assert result.returncode == 2
     assert expected in result.stderr
     assert "Traceback" not in result.stderr
+
+
+def test_credential_cannot_be_used_as_model_id(tmp_path):
+    fake_key = "gsk_CRA2_FAKE_MODEL_ID_SENTINEL"
+    result = run_cli(
+        tmp_path, "CHG-02", settings={"GROQ_API_KEY": fake_key, "CRA2_MODEL": fake_key}
+    )
+    assert result.returncode == 2
+    assert fake_key not in result.stderr + result.stdout
+    assert "credentials" in result.stderr

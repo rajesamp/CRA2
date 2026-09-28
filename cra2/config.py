@@ -10,6 +10,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from cra2.secrets import reject_credentials
+
 PKG_DIR = Path(__file__).resolve().parent
 # Wheels bundle resources inside the package; editable checkouts use source data.
 DATA_DIR = PKG_DIR / "data" if (PKG_DIR / "data").is_dir() else PKG_DIR.parent / "data"
@@ -55,6 +57,7 @@ def _timeout() -> float:
 
 _load_environment()
 MODEL = os.environ.get("CRA2_MODEL", "openai/gpt-oss-20b").strip()
+reject_credentials(MODEL)
 if not MODEL:
     raise ValueError("CRA2_MODEL must be a nonempty model ID")
 SEED = _integer("CRA2_SEED", 7)

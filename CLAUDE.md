@@ -5,10 +5,17 @@
 - The product owner and demonstration persona is **Raj Sam**, a DevOps engineer.
   Keep that name consistent in synthetic examples and documentation.
 - CRA2 is advisory. Route labels must never become deployment authorization.
-  Keep the advisory sentence in both rendered and JSON results.
+  Use only `routine-review`, `focused-review`, and `priority-review`. Keep the
+  advisory sentence in both rendered and JSON results.
 - System 1 establishes a minimum risk level. System 2 may raise the final level
-  but cannot lower that floor, remove freeze/degraded safeguards, or place an
-  uncertain change into the low route.
+  but cannot lower that floor or remove degraded/high-risk/uncertainty safeguards.
+- A reported active freeze is unconfirmed until independently checked. Keep its
+  verification question visible; do not add a freeze risk weight or high floor.
+- Missing/unknown service/type and missing/generic summary require targeted
+  clarification, null risk/route, and no model call. Wrong shapes remain input
+  errors. Do not claim the deterministic heuristic catches every vague request.
+- Resolve setting precedence as catalog/default → request → explicit team policy.
+  Surface request/team conflicts; preserve boolean false as an explicit override.
 - Groq is the only implemented provider. An uncached System 2 assessment makes
   at most one SDK request attempt; automatic retries are disabled. Distinguish
   cache hits, selected requests, attempted requests, and failed requests.
@@ -25,6 +32,8 @@
   provenance and original service/type labels; normalize aliases only for
   retrieval. External service labels must not become invented catalog services
   or same-service repeat-incident evidence. Related context stays capped at five.
+  Cross-service candidates need at least two meaningful shared terms; type alone
+  is insufficient. Keep retrieval relevance separate from proven causation.
 - Preserve lazy Groq loading for local assessments. Dotenv files require explicit
   `CRA2_ENV_FILE`; exported variables take precedence. Never commit credentials.
 - Temperature zero, a seed, and strict schema are consistency controls, not a
@@ -50,6 +59,10 @@ expected cases merely to hide a regression. Add focused regression tests when
 fixing policy, validation, packaging, or accounting behavior. Regenerate checked-in
 evidence deliberately after the final implementation, retaining measurement
 scope and limitations.
+Keep historical evidence reports intact when policy changes; write a new report
+and record the changed expectations and policy/configuration used. Repeated
+answers must agree on questions, freeze state, settings, and conflicts as well
+as score, level, route, and comments.
 
 Live tests are a separate action: both `CRA2_RUN_LIVE_TESTS=1` and a Groq key are
 required. They send data and may incur charges. Normal offline verification must
