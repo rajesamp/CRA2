@@ -95,6 +95,19 @@ def _reject_credentials(
         raise failure from None
 
 
+def _provider_schema(schema: dict) -> dict:
+    """Omit Groq's rejected uniqueItems keyword; retain it in local validation."""
+    projected = {key: value for key, value in schema.items() if key != "uniqueItems"}
+    if "properties" in projected:
+        projected["properties"] = {
+            name: _provider_schema(child)
+            for name, child in projected["properties"].items()
+        }
+    if "items" in projected:
+        projected["items"] = _provider_schema(projected["items"])
+    return projected
+
+
 def _validate(value, schema: dict, path: str = "response") -> None:
     """Validate the deliberately small JSON-schema vocabulary in our contract.
 
@@ -199,7 +212,7 @@ def _request(payload: str, settings: dict, sdk, credentials) -> dict:
                 "type": "json_schema",
                 "json_schema": {
                     "name": "assessment",
-                    "schema": settings["schema"],
+                    "schema": settings["provider_schema"],
                     "strict": True,
                 },
             },
@@ -279,6 +292,7 @@ def call(payload: str) -> str:
         "timeout": config.TIMEOUT_S,
         "prompt": PROMPT,
         "schema": SCHEMA,
+        "provider_schema": _provider_schema(SCHEMA),
     }
     _reject_credentials([payload, settings], ())
     sdk = _protected_client()
