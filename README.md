@@ -1,46 +1,57 @@
 # CRA2 — ChangeRiskAdvisor 2
 
-Pre-deployment change-risk advisor for Raj Sam, a DevOps engineer. Give it a
-structured change and it returns:
+CRA2 gives Raj Sam, a DevOps engineer, an advisory assessment of a structured
+software change: a risk level, a recommended review route, and three comments
+with evidence references. Local rules run for every assessment; optional Groq
+analysis can add concerns when the rules are uncertain or `deep` mode is selected.
 
-- a risk **level** (low / medium / high) from a 0–1 score and per-system thresholds,
-- a **recommended route**: auto-approve, review, or escalate-or-block,
-- the **top 3 comments**, each grounded in the change, the system, or a past incident.
+**CRA2 never approves, blocks, merges, or deploys a change.** `auto-approve`,
+`review`, and `escalate-or-block` are route labels for a human to consider.
+A model response cannot lower the rule-based risk level. Freeze, degraded-service,
+and uncertainty floors also apply.
 
-It is fast and deterministic. A rule-based classifier (System 1) answers most
-changes in about 0.05 ms. Only changes it is unsure about go to a single Groq
-call (System 2), with temperature 0, a fixed seed, a pinned model and a strict
-JSON schema.
+The included checkout system, incidents, and evaluation cases are synthetic.
+Passing these cases is a calibration check, not evidence of production accuracy.
+See the [code review](docs/evidence/code-review.md) for the overhaul findings and
+verification scope.
 
-**Advisory only.** CRA2 never approves, blocks, merges or deploys anything. The
-route is a recommendation, and a human makes the call. Only the deterministic
-System 1 can recommend the auto-approve lane: a change it is unsure about is
-always held for at least review, whatever the model says.
+## Run locally
 
-## Run it locally
-
-You need [uv](https://docs.astral.sh/uv/getting-started/installation/) (it
-installs Python 3.13 for you) and, for System 2, a Groq API key from
-[console.groq.com/keys](https://console.groq.com/keys).
+The package supports Python 3.10 and later. The repository's `.python-version`
+selects Python 3.13 for [uv](https://docs.astral.sh/uv/).
 
 ```sh
 git clone https://github.com/rajesamp/CRA2.git
 cd CRA2
-uv sync
-
-uv run cra2 CHG-02 --mode fast        # no key needed: System 1 only
-cp .env.example .env                  # then set GROQ_API_KEY in .env
-uv run cra2 CHG-16                    # auto: this change is borderline, so Groq is asked
-uv run cra2 my-change.json --json     # your own change, full JSON result
-uv run pytest -q                      # offline tests; the live Groq tests run when a key is set
+uv sync --locked
+uv run cra2 CHG-02 --mode fast
+uv run cra2 my-change.json --mode fast --json
+uv run cra2 - --mode fast < my-change.json
+uv run pytest -q -m "not live"
 ```
 
-`CHG-01` to `CHG-20` are the eval cases in [evals/cases.json](evals/cases.json).
-A change file looks like this:
+`CHG-01` through `CHG-20` select the bundled sample cases. Normal wheel installs
+include the sample cases, catalog, incidents, rules, and prompt assets, so the
+CLI can run outside a source checkout. The evaluation report script itself is
+repository tooling.
+
+For Groq, export `GROQ_API_KEY` before starting CRA2, or explicitly select a
+dotenv file. An arbitrary `.env` in the current directory is not loaded.
+
+```sh
+cp .env.example .env  # edit the key locally; never commit .env
+CRA2_ENV_FILE=.env uv run cra2 CHG-16 --mode auto
+```
+
+`auto` and `deep` may send change details, catalog context, and related synthetic
+incidents to Groq. Use `fast` for an entirely local assessment. Review the data
+that will be shared before adapting this sample to real changes.
+
+## Input contract
 
 ```json
 {
-  "id": "CHG-19",
+  "id": "MY-CHANGE-01",
   "service": "inventory-service",
   "change_type": "Config change",
   "summary": "Raise the stock-count cache TTL from 30 s to 120 s.",
@@ -50,138 +61,131 @@ A change file looks like this:
 }
 ```
 
-`service` is one of the eight services in
-[data/checkout_system.json](data/checkout_system.json). `change_type` is one of
-the types in [cra2/rules.json](cra2/rules.json). An empty plan counts as missing.
+`service`, `change_type`, and `summary` are required, nonempty strings.
+`service` must appear in [the catalog](data/checkout_system.json); `change_type`
+must appear in [the rules](cra2/rules.json). `id` is optional. The three plan
+fields are optional strings; omitted, `null`, empty, or whitespace-only plans
+count as missing. Fields are trimmed, limited to 10,000 characters each, and
+unknown fields are rejected. CRA2 does not parse free-text requests.
+Input files and stdin are limited to 1,048,576 decoded Unicode characters.
+Duplicate JSON keys and excessive nesting are rejected. Invisible/control
+characters are rejected in fields except ordinary tabs and line breaks, so
+invisible plan text cannot bypass a missing-plan rule.
 
-Output:
-
-```
-**Risk: MEDIUM** (score 0.38, core tier) · recommended route: **review**
-_system1 · 0.165 ms_
-
-1. [deploy-order] No deploy plan, and 4 services sit downstream (checkout-service, mobile-frontend, order-service, web-frontend). Ship backward-compatible first and stage the rollout. (change:deploy_plan, graph:inventory-service.dependents)
-2. [rollback] Rollback plan: "Set the TTL back to 30 s". Rehearse it in staging and time it before the window. (change:rollback_plan)
-3. [monitoring] Monitoring plan: "Nightly reconciliation drift". Check it covers stock reservation errors, nightly reconciliation drift. (change:monitoring_plan, catalog:inventory-service.monitors)
-
-This is advisory only. The decision to ship requires a human.
-```
-
-| Mode (`--mode` or `CRA2_MODE`) | What runs | Needs a key |
+| Mode | Behavior | Groq key |
 |---|---|---|
-| `fast` | System 1 only | No |
-| `auto` (default) | System 1, plus one Groq call when System 1 is unsure | Only for unsure changes |
-| `deep` | System 1 and a Groq call for every change | Yes |
+| `fast` | Local rules only | Not needed |
+| `auto` (CLI default) | Rules; request System 2 only when uncertain | Needed only for selected requests |
+| `deep` | Rules; request System 2 for every assessment | Needed unless the response is already cached in this process |
 
-## Architecture
+Missing credentials, provider errors, and malformed replies fall back to local
+rules and produce an availability note. Only a confident low rule-based result
+can reach the `auto-approve` route. A successful model result still cannot lower
+a medium or high rule-based decision.
 
-```mermaid
-flowchart TB
-    IN["Change in"] --> CL["Classify: tier, dependents, health, freeze, past incidents"]
-    CL --> S1["System 1: rule-based score 0–1 (~0.05 ms)"]
-    S1 --> Q{"Unsure? within 0.05 of a threshold"}
-    Q -- no --> TH
-    Q -- yes --> S2["System 2: one Groq call, temp 0, seed, pinned model, strict JSON"]
-    S2 --> GF["Grounding filter"] --> TH["Thresholds by system tier + floors: freeze, degraded, unsure"]
-    S2 -. "error or no key: System 1's answer stands" .-> TH
-    TH --> RT["Route: auto-approve / review / escalate-or-block"]
-    RT --> OUT["Top 3 comments + advisory line"]
-```
+## Results and evidence
 
-The HLD, with the component diagram, request flow, scoring formulas,
-thresholds table, determinism, grounding and failure modes, is in
-[docs/architecture.md](docs/architecture.md). Why Groq, and which model is
-pinned: [docs/adr/adr-001-groq.md](docs/adr/adr-001-groq.md).
+Human-readable output contains the risk, score, route, three comments, and an
+advisory sentence. JSON also includes `system1_score`, `system1_level`,
+`risk_floor`, `uncertain`, `advisory`, and provider telemetry. The final level can
+be above the raw blended score's band because the risk floor is enforced.
 
-## Latency
+Evidence references link comments to change fields, catalog fields, dependency
+relationships, or supplied incidents. References are checked against allowed
+keys. This verifies citation membership; it cannot prove that a model's prose
+correctly interprets the cited fact. Input text is untrusted, and the prompt
+and local output checks reduce but cannot eliminate prompt-injection risk.
 
-The earlier builds ran an agent loop: two to four model calls in sequence per
-question, a growing prompt, and vector search (on a local 7B model in the
-Ollama build). CRA2 makes zero model calls for most changes and exactly one
-for the rest:
+The [architecture](docs/architecture.md) describes scoring, routing, validation,
+cache behavior, and failure handling. [ADR-001](docs/adr/adr-001-groq.md) records
+the provisional Groq model choice and the evidence still needed.
 
-| Path | Latency | Source |
-|---|---|---|
-| System 1, per assessment | 0.047 ms p50, 0.082 ms p95 | measured, [docs/evidence/evals-fast.md](docs/evidence/evals-fast.md) |
-| Whole `cra2` CLI process (Python start-up included) | about 50 ms | measured |
-| System 2, one Groq call | not measured yet | Pending: run the live evals below. `tests/test_live_groq.py` fails if a call takes 5 s or more. |
-| Same change asked again (same process) | microseconds | cache |
+## Repeatability and performance
 
-In the eval set, 18 of 20 changes never need Groq.
+System 1 is deterministic for fixed normalized input, rules, and catalog data;
+elapsed time is not deterministic. Temperature zero, a fixed seed, a selected
+model ID, and strict JSON schema improve System 2 consistency but do not
+establish deterministic model answers. A model ID is not an immutable backend
+version. The backend fingerprint is recorded when available.
 
-## Deterministic answers
+System 2 has a bounded in-process cache. A cache hit avoids a new SDK request;
+it does not demonstrate fresh-response repeatability. Evaluations clear that
+cache between non-fast assessments. Automatic SDK retries are disabled, so an
+uncached assessment makes at most one SDK request attempt. Attempt telemetry
+is not proof that the provider received or billed a request.
 
-The same change gives the same level and the same three comments:
+The regenerated [fast evaluation report](docs/evidence/evals-fast.md) contains
+local timing measurements and their exact UTC window. These timings exclude
+CLI startup and are not service-level guarantees. Live Groq quality, latency,
+usage, and costs have not been validated by this overhaul.
 
-- System 1 is plain arithmetic, so it is deterministic by construction.
-- System 2 uses temperature 0, `seed`, a pinned model, low reasoning effort, and
-  a strict JSON schema. Groq's `system_fingerprint` is recorded on each call.
-- Comments are ranked in a stable order.
-
-Regression tests: `tests/test_cra2.py` runs offline against a stand-in client.
-`tests/test_live_groq.py` asks Groq five times with the cache cleared and
-expects identical answers.
-
-## Evals
-
-[evals/cases.json](evals/cases.json) holds 20 changes to a made-up checkout
-system. They cover all eight services, seven change types, 5 low, 8 medium and
-7 high expected levels, freeze windows, a degraded dependency, missing
-rollback, monitoring or deploy plans, and config drift. Each case has the
-structured change, the expected answer, and a 10-point marking rubric (see
-[evals/README.md](evals/README.md)).
+## Evaluate and test
 
 ```sh
-uv run python scripts/run_evals.py --mode fast                  # System 1 only, no key
-uv run python scripts/run_evals.py --mode deep --repeat 5 \
-    --price-in <USD per 1M in> --price-out <USD per 1M out>     # Groq on every case, 5x each
+# Offline: every repeat must score 10/10 and give the same answer.
+uv run python scripts/run_evals.py --mode fast --repeat 5 --require-repeatable
+
+# Explicit live checks: needs a key and can incur provider charges.
+CRA2_RUN_LIVE_TESTS=1 uv run pytest -q -m live
+
+# Explicit live evaluation; replace price placeholders with verified USD/1M rates.
+uv run python scripts/run_evals.py --mode deep --repeat 5 --min-score 9 \
+  --require-repeatable --price-in INPUT_RATE --price-out OUTPUT_RATE
 ```
 
-The report goes to `docs/evidence/`. It covers rubric score, level and route
-accuracy, System 2 call rate, determinism across repeats, latency p50/p95, token
-use, and cost per 1,000 assessments.
+Live tests require both `CRA2_RUN_LIVE_TESTS=1` and `GROQ_API_KEY`. If the key is
+in `.env`, also set `CRA2_ENV_FILE=.env` explicitly. The runner defaults to
+`fast` even though the assessment CLI defaults to `auto`.
 
-## Configuration (`.env`)
+Reports include every repeat's score, observed levels, repeatability, timings,
+provider selection/attempt/cache/failure counts, and usage completeness.
+A report is written even when the quality gate fails. Exit status is `0` for
+pass, `1` for a gate failure, and `2` for invalid command options. The default
+gate requires at least 10/10 on **every** assessment and no unavailable requested
+System 2 result. `--min-score` changes the per-assessment threshold;
+`--require-repeatable` requires at least two repeats.
 
-| Variable | Default | Notes |
+Both token prices are required for a token-cost estimate. Missing provider
+usage leaves a complete estimate unknown; a known-usage subtotal remains
+explicitly partial. These estimates are not invoices or Caveman measured
+costs, verified savings, or inferred headroom. See [eval methodology](evals/README.md).
+
+## Configuration
+
+Settings are captured when `cra2.config` is first imported. Set environment
+variables before starting the process. Exported values override values from an
+explicitly selected dotenv file.
+
+| Variable | Default | Meaning |
 |---|---|---|
-| `GROQ_API_KEY` | — | Needed for `auto` (unsure changes only) and `deep` |
-| `CRA2_MODEL` | `openai/gpt-oss-20b` | Pinned. Change it only after an eval run. It must support strict JSON schema output. |
-| `CRA2_MODE` | `auto` | `fast`, `auto` or `deep` |
-| `CRA2_SEED` | `7` | Fixed sampling seed |
-| `CRA2_TIMEOUT_S` | `10` | Groq request timeout, with 1 retry |
-| `CRA2_MAX_TOKENS` | `1024` | Cap on reasoning plus answer tokens |
+| `CRA2_ENV_FILE` | unset | Explicit path to a readable UTF-8 dotenv file |
+| `GROQ_API_KEY` | unset | Provider credential; never include it in a change file |
+| `CRA2_MODEL` | `openai/gpt-oss-20b` | Model ID; changes require recorded evaluation |
+| `CRA2_MODE` | `auto` | `fast`, `auto`, or `deep`; CLI `--mode` overrides it |
+| `CRA2_SEED` | `7` | Integer sampling seed; repeatability is best effort |
+| `CRA2_TIMEOUT_S` | `10` | Positive finite SDK request timeout; no automatic retries |
+| `CRA2_MAX_TOKENS` | `1024` | Positive completion-token cap |
+| `CRA2_RUN_LIVE_TESTS` | unset | Set to `1` to enable tests that call Groq |
 
-Risk rules (thresholds per tier, routes, System 1 weights and comment wording)
-live in [cra2/rules.json](cra2/rules.json), so you can tune them without
-touching code.
+Risk thresholds, weights, and comment templates live in `cra2/rules.json`.
+Changing catalog state, rules, or prompts changes the assessment policy and
+requires updated evidence.
 
-## Layout
+## Repository layout and remaining work
 
-| Path | Contents |
+| Path | Purpose |
 |---|---|
-| `cra2/` | The package (193 lines of Python): `config.py`, `system1.py`, `system2.py`, `advisor.py`, `__main__.py`, plus `rules.json` and `prompts/` |
-| `data/` | The made-up checkout system: service catalog and 16 past incidents |
-| `evals/` | 20 eval cases with expected answers and rubrics |
-| `scripts/run_evals.py` | Eval runner and report writer |
-| `tests/` | Offline tests and live Groq tests |
-| `docs/` | Architecture (HLD), ADRs, eval evidence |
+| `cra2/` | Validation, rule scoring, Groq integration, routing, CLI, rules, prompts |
+| `data/` | Canonical synthetic catalog and incident files |
+| `evals/` | Canonical calibration cases and rubric methodology |
+| `scripts/run_evals.py` | Repository evaluation runner and quality gate |
+| `tests/` | Offline regression, package-installation, and opt-in live checks |
+| `docs/` | Architecture, ADR, review, and evaluation evidence |
 
-## To do
+The next evidence needed is an authorized live Groq evaluation, a separate set
+of unseen labeled changes, and a selected Caveman project with provider-complete
+trace and ledger data. No cross-project cost or model-speed claims can be made
+from the local synthetic benchmark.
 
-- **Live Groq run.** Add a key, run the deep evals with `--repeat 5` and
-  `tests/test_live_groq.py`, then record the results and confirm the model pin
-  in ADR-001.
-- **Latency regression after a merged change.** A function was added, merged
-  and pushed, and latency then rose. This is tracked as a to-do, not an eval case.
-- **Unseen eval cases.** System 1's weights were tuned with the 20 current
-  cases in view. New cases are the real test of how well it generalises.
-- **Free-text input.** Turn a plain-language change request into the
-  structured change.
-- **Optional web form.** It was left out to keep the package small.
-
-## Relation to CRA
-
-CRA2 is a separate repository and does not change
-[rajesamp/CRA](https://github.com/rajesamp/CRA). Its data, incidents and eval
-cases were written for CRA2.
+CRA2 is separate from [CRA](https://github.com/rajesamp/CRA). This repository's
+data and tests do not establish performance comparisons with that project.

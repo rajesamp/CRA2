@@ -12,14 +12,27 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.13"]
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
         with:
-          python-version: "3.13"
+          python-version: ${{ matrix.python-version }}
       - run: pip install uv==0.8.17
-      - run: uv sync --locked
-      - name: Offline tests (live Groq tests skip without a key)
-        run: uv run pytest -q
-      - name: Evals in fast mode (System 1 only)
-        run: uv run python scripts/run_evals.py --mode fast --out "$RUNNER_TEMP/evals-fast.md"
+      - run: uv sync --locked --python "${{ matrix.python-version }}"
+      - name: Offline tests
+        run: uv run --python "${{ matrix.python-version }}" pytest -q -m "not live"
+      - name: Fast calibration gate (all repeats)
+        run: uv run --python "${{ matrix.python-version }}" python scripts/run_evals.py --mode fast --repeat 5 --require-repeatable --min-score 10 --out "$RUNNER_TEMP/evals-fast.md"
+      - name: Build and install wheel into an isolated environment
+        env:
+          UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/cra2-wheel-env
+        run: |
+          uv build --wheel
+          uv sync --locked --no-dev --no-install-project --python "${{ matrix.python-version }}"
+          uv pip install --python "$UV_PROJECT_ENVIRONMENT/bin/python" --no-deps dist/*.whl
+      - name: Smoke test installed CLI outside the checkout
+        working-directory: ${{ runner.temp }}
+        run: '"$RUNNER_TEMP/cra2-wheel-env/bin/cra2" CHG-02 --mode fast --json'
