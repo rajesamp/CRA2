@@ -382,3 +382,77 @@ def test_real_sdk_malformed_http_envelopes_fail_cleanly(monkeypatch, body):
     finally:
         system2.client().close()
         system2.client.cache_clear()
+
+
+@pytest.mark.parametrize("duplicate_evidence", [False, True])
+def test_real_sdk_uses_compatible_schema_and_keeps_local_uniqueness(
+    monkeypatch, duplicate_evidence
+):
+    """Emulate the observed Groq rejection without relaxing our local contract."""
+    placeholder_key = "gsk_unit_test_schema_projection_no_network"
+    monkeypatch.setenv("GROQ_API_KEY", placeholder_key)
+    original_schema = deepcopy(system2.SCHEMA)
+    expected_provider_schema = deepcopy(original_schema)
+    del expected_provider_schema["properties"]["comments"]["items"]["properties"][
+        "evidence"
+    ]["uniqueItems"]
+    answer = deepcopy(ANSWER)
+    if duplicate_evidence:
+        answer["comments"][0]["evidence"] *= 2
+    requests = []
+
+    def handler(request):
+        body = json.loads(request.content)
+        requests.append(body)
+        structured = body["response_format"]["json_schema"]
+        if "uniqueItems" in json.dumps(structured["schema"]):
+            return httpx.Response(
+                400,
+                json={
+                    "error": {
+                        "message": "uniqueItems is not supported [unsupported_uniqueItems]"
+                    }
+                },
+            )
+        assert structured["strict"] is True
+        assert structured["schema"] == expected_provider_schema
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-schema-compatibility",
+                "object": "chat.completion",
+                "created": 0,
+                "model": config.MODEL,
+                "system_fingerprint": "fp_projection",
+                "choices": [
+                    {
+                        "index": 0,
+                        "finish_reason": "stop",
+                        "message": {"role": "assistant", "content": json.dumps(answer)},
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 900,
+                    "completion_tokens": 250,
+                    "total_tokens": 1150,
+                },
+            },
+        )
+
+    with groq.Groq(
+        api_key=placeholder_key,
+        max_retries=0,
+        http_client=httpx.Client(transport=httpx.MockTransport(handler)),
+    ) as sdk:
+        monkeypatch.setattr(system2, "client", lambda: sdk)
+        if duplicate_evidence:
+            with pytest.raises(system2.System2Unavailable) as caught:
+                system2.assess(PAYLOAD, WEIGHTS)
+            assert caught.value.request_attempted
+            assert caught.value.tokens == [900, 250]
+            assert not system2._RESULTS
+        else:
+            result = system2.assess(PAYLOAD, WEIGHTS)
+            assert result["score"] == 0.81 and result["request_attempted"]
+        assert len(requests) == 1
+    assert system2.SCHEMA == original_schema

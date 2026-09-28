@@ -45,6 +45,19 @@ repeatability. Confirm model availability and compatible request parameters
 against the provider's [model documentation](https://console.groq.com/docs/models)
 when changing the integration.
 
+On 2026-09-28, a live `openai/gpt-oss-20b` request returned HTTP 400:
+`uniqueItems is not supported [unsupported_uniqueItems]`, identifying the
+schema path `/properties/comments/items/properties/evidence`. The restriction
+is an observed API result, not a claim drawn from the documentation's strict-mode
+support table. No successful live assessment follows from that rejected request.
+
+The compatibility decision is to omit only `uniqueItems` from the schema sent to
+Groq, retain `strict: true`, and keep the full schema for local validation.
+Duplicate evidence entries therefore remain invalid locally. The projection
+must not mutate the original schema or relax other request constraints. A
+successful bounded live check remains separate evidence from this implementation
+change; the provisional model-selection criteria below are unchanged.
+
 A single optional request avoids an agent tool loop within CRA2, and local rules
 allow operation without a key. No controlled comparison with other providers or
 prior CRA implementations has been performed in this review. Claims that one
@@ -69,6 +82,7 @@ provider performance.
 | Offline behavior and malformed-response regressions | Covered by repository tests; see [review report](../evidence/code-review.md) |
 | Earlier rule calibration and repeatability | Historical fast report; evaluate current policy separately |
 | Current review-policy calibration | [Policy report](../evidence/evals-policy-fast.md), offline; no live provider evidence |
+| Live schema compatibility | HTTP 400 `unsupported_uniqueItems` observed; provider-only projection added, one projected-schema live assessment succeeded; full live evaluation remains pending |
 | Live Groq rubric quality and fresh-response repeatability | Not measured |
 | Live Groq latency and complete token usage | Not measured |
 | Provider list-price cost using complete usage and verified prices | Not measured |

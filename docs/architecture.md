@@ -177,6 +177,20 @@ model uses low reasoning effort with reasoning excluded from the reply.
 Automatic SDK retries are disabled. Cache hits and missing credentials can
 mean no SDK request attempt at all.
 
+Groq's [structured-output documentation](https://console.groq.com/docs/structured-outputs)
+lists `openai/gpt-oss-20b` as supporting strict mode. A live request on 2026-09-28
+nevertheless returned HTTP 400 with `unsupported_uniqueItems` for
+`/properties/comments/items/properties/evidence`. This keyword restriction was
+observed from the API response; model-level strict support does not establish
+support for every JSON Schema keyword.
+
+CRA2 projects the provider-facing schema by omitting only `uniqueItems`, while
+preserving strict mode and the other constraints. The original local schema is
+unchanged: evidence uniqueness is still checked locally before a response is
+used or cached. A single bounded live assessment succeeded with this projection.
+That confirms compatibility for that request, not model quality or fresh-response
+repeatability.
+
 Local validation rejects missing/extra response fields, invalid rating enums,
 wrong types, oversized strings/arrays, duplicate JSON keys, nonfinite numbers,
 empty choices, refusals, and incomplete completions. Provider schema support
