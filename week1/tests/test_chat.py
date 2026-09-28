@@ -408,7 +408,7 @@ def test_history_request_returns_cited_incident_text_without_a_model_assessment(
     assert not fake.review_calls
     assert fake.hits[0]["text"] in answer
     assert fake.hits[0]["chunk_id"] in answer
-    assert "similarity does not establish" in answer
+    assert "a match does not prove the same failure will recur" in answer
     assert "**Risk indication:" not in answer
 
 
@@ -656,5 +656,69 @@ def test_source_heading_is_quoted_as_text_not_a_chat_heading():
     fake = FakePipeline(hits=[document])
     answer, trace = fake.respond()
     assert trace["status"] == "assessed"
-    assert "> \\# Historical incident: timeout failure" in answer
+    assert "- Checkout timeout incident (pm-cx101:chunk-1)" in answer
     assert "> # Historical" not in answer
+
+
+def test_concise_recorded_facts_keep_numbers_and_negation_and_full_trace():
+    document = hit()
+    document["text"] = (
+        "# Incident summary ## Recorded facts "
+        "Timeout changed from **4 seconds to 400 milliseconds**. "
+        "Shoppers were charged but no order was created. "
+        "The fixture does not record recovery. ## Suggested checks "
+        "Ask about rollback and monitoring."
+    )
+    answer, trace = FakePipeline(hits=[document]).respond()
+    assert "- Timeout changed from 4 seconds to 400 milliseconds." in answer
+    assert "Shoppers were charged but no order was created." in answer
+    assert "The fixture" not in answer and "Ask about rollback" not in answer
+    assert answer.count(document["chunk_id"]) == 1
+    assert "Retrieved sources" not in answer
+    assert trace["retrieved"][0]["text"] == document["text"]
+
+
+def test_incident_root_cause_without_period_is_preserved():
+    document = hit(kind="incident")
+    document["text"] = (
+        "# Incident CX-101 Service: checkout-service Root cause: Charges without orders"
+    )
+    answer, _ = FakePipeline(hits=[document]).respond()
+    assert "- Charges without orders (pm-cx101:chunk-1)" in answer
+    assert "Service:" not in answer
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "# Summary ## Recorded facts The timeout did not",
+        "# Summary ## Recorded facts " + "word " * 60 + "failed.",
+    ],
+)
+def test_incomplete_or_long_facts_use_source_title_without_truncation(text):
+    document = hit()
+    document["text"] = text
+    answer, trace = FakePipeline(hits=[document]).respond()
+    assert "- Checkout timeout incident (pm-cx101:chunk-1)" in answer
+    assert text not in answer
+    assert trace["retrieved"][0]["text"] == text
+
+
+def test_continuation_fragment_is_not_published_as_a_fact():
+    document = hit(chunk_id="pm-cx101#chunk-002")
+    document["text"] = "1 to 5 while staging remained at 1."
+    answer, _ = FakePipeline(
+        hits=[document], comments=[comment(evidence=[document["chunk_id"]])]
+    ).respond()
+    assert document["text"] not in answer
+    assert "Checkout timeout incident" in answer
+
+
+def test_duplicate_excerpt_is_shown_once():
+    first, second = hit(), hit(chunk_id="pm-cx101:chunk-2")
+    answer, trace = FakePipeline(
+        hits=[first, second],
+        comments=[comment(evidence=[first["chunk_id"], second["chunk_id"]])],
+    ).respond()
+    assert answer.count(first["text"]) == 1
+    assert len(trace["retrieved"]) == 2
