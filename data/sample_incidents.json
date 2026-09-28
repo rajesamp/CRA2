@@ -1,0 +1,272 @@
+[
+  {
+    "incident_id": "INC-4913",
+    "service": "payment",
+    "date": "2022-11-30",
+    "change_type": "Deployment",
+    "severity": "SEV1",
+    "root_cause": "Slow database queries caused payment API timeout errors",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-8971",
+    "service": "payment",
+    "date": "2023-04-07",
+    "change_type": "Deployment",
+    "severity": "SEV2",
+    "root_cause": "Performance issues with booked offers leading to test failures",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-6131",
+    "service": "redis",
+    "date": "2026-04-27",
+    "change_type": "Infra change",
+    "severity": "SEV3",
+    "root_cause": "Redis cluster state transitioned to fail due to a network partition or lost master node",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-2973",
+    "service": "platform-services",
+    "date": "2026-05-14",
+    "change_type": "Capacity",
+    "severity": "SEV4",
+    "root_cause": "Database pod OOM eviction led to application pod restarts and \"503\" errors",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-2168",
+    "service": "core-app",
+    "date": "2026-04-21",
+    "change_type": "Config change",
+    "severity": "SEV1",
+    "root_cause": "Traffic spike overwhelmed application configuration limits",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-2270",
+    "service": "cassandra",
+    "date": "2026-04-24",
+    "change_type": "Infra change",
+    "severity": "SEV3",
+    "root_cause": "High disk utilization on the Cassandra node",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-9111",
+    "service": "funder",
+    "date": "2026-07-06",
+    "change_type": "Third-party dependency",
+    "severity": "SEV3",
+    "root_cause": "Database thread contention",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-7626",
+    "service": "smoke-test",
+    "date": "2026-03-01",
+    "change_type": "No change",
+    "severity": "SEV3",
+    "root_cause": "The payment batch closure check failed due to an early payment request not being processed",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-6920",
+    "service": "onboarding",
+    "date": "2026-09-15",
+    "change_type": "Config change",
+    "severity": "SEV1",
+    "root_cause": "The cookie banner was not handled by the synthetic test script",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-6095",
+    "service": "web-portal",
+    "date": "2026-07-06",
+    "change_type": "Infra change",
+    "severity": "SEV1",
+    "root_cause": "Database thread contention",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-2159",
+    "service": "tracker",
+    "date": "2026-07-13",
+    "change_type": "Capacity",
+    "severity": "SEV1",
+    "root_cause": "Downstream processing backlog left invoices stuck in submission",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-4031",
+    "service": "ticket-management",
+    "date": "2026-09-09",
+    "change_type": "Third-party dependency",
+    "severity": "SEV1",
+    "root_cause": "Invoice update errors filled the dead-letter queue",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-8628",
+    "service": "payment-integration",
+    "date": "2026-09-22",
+    "change_type": "Deployment",
+    "severity": "SEV4",
+    "root_cause": "Removal of base code caused a configuration drift with metrics",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-5792",
+    "service": "all-components",
+    "date": "2026-08-05",
+    "change_type": "Config change",
+    "severity": "SEV3",
+    "root_cause": "The presence of \"zombie\" jobs in the synthetic monitoring infrastructure caused login failures",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-5162",
+    "service": "camunda-cockpit",
+    "date": "2026-07-16",
+    "change_type": "Deployment",
+    "severity": "SEV4",
+    "root_cause": "ACL issue on kafka topic",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-1115",
+    "service": "offer",
+    "date": "2026-04-20",
+    "change_type": "Config change",
+    "severity": "SEV3",
+    "root_cause": "Consumer pods were not processing messages efficiently due to configuration issues",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-3184",
+    "service": "sap",
+    "date": "2026-06-28",
+    "change_type": "Infra change",
+    "severity": "SEV3",
+    "root_cause": "The database runs hot often due to high CPU usage from specific services or queries",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-6754",
+    "service": "supplier-information-management",
+    "date": "2026-07-14",
+    "change_type": "Deployment",
+    "severity": "SEV4",
+    "root_cause": "Data-dense influx caused the process.output queue to become elevated due to insufficient consumer",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-9821",
+    "service": "settings",
+    "date": "2026-06-09",
+    "change_type": "Deployment",
+    "severity": "SEV4",
+    "root_cause": "Infrastructure tooling misconfiguration broke settings service startup",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-4215",
+    "service": "elasticsearch",
+    "date": "2026-07-05",
+    "change_type": "Infra change",
+    "severity": "SEV1",
+    "root_cause": "[EU,NA] Elasticsearch service unavailable",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-1200",
+    "service": "datastax",
+    "date": "2026-04-24",
+    "change_type": "Config change",
+    "severity": "SEV3",
+    "root_cause": "Rolling restart of database pods after a memory limit increase",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-9265",
+    "service": "net-service",
+    "date": "2026-06-05",
+    "change_type": "Deployment",
+    "severity": "SEV4",
+    "root_cause": "Kafka TimeoutException in the net-service component",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-3334",
+    "service": "mysql",
+    "date": "2026-07-06",
+    "change_type": "Deployment",
+    "severity": "SEV3",
+    "root_cause": "Severe InnoDB thread contention due to high query load and potential long-running queries holding locks",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-9531",
+    "service": "pod-con",
+    "date": "2026-07-27",
+    "change_type": "No change",
+    "severity": "SEV1",
+    "root_cause": "Document processing workers stalled and stopped consuming jobs",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-2147",
+    "service": "finance-program",
+    "date": "2026-03-24",
+    "change_type": "Capacity",
+    "severity": "SEV3",
+    "root_cause": "finance-program-db disk resize",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-5626",
+    "service": "funding-request",
+    "date": "2026-09-27",
+    "change_type": "Config change",
+    "severity": "SEV2",
+    "root_cause": "latency and memory bloat in funding-request API",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-4351",
+    "service": "platform-services",
+    "date": "2026-04-27",
+    "change_type": "No change",
+    "severity": "SEV1",
+    "root_cause": "A single malformed invoice blocked the outbound processing queue",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-8007",
+    "service": "message",
+    "date": "2026-04-27",
+    "change_type": "Config change",
+    "severity": "SEV2",
+    "root_cause": "message-announcement-message-creator high load",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-2843",
+    "service": "cloudflare",
+    "date": "2025-12-15",
+    "change_type": "Infra change",
+    "severity": "SEV1",
+    "root_cause": "CDN provider incident degraded platform availability across regions",
+    "source": "internal"
+  },
+  {
+    "incident_id": "INC-7945",
+    "service": "remittance",
+    "date": "2026-07-28",
+    "change_type": "Infra change",
+    "severity": "SEV3",
+    "root_cause": "Remittance and core app databases hit high disk usage",
+    "source": "internal"
+  }
+]

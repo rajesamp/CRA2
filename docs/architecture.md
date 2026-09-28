@@ -4,6 +4,9 @@ CRA2 is a synchronous Python library and CLI over a static, synthetic checkout
 system. It validates a structured change, computes a rule score, optionally
 requests a Groq assessment, applies risk floors, and returns three comments.
 It performs no deployment, approval, blocking, or repository mutation.
+Incident context combines 16 original synthetic records with 30 sanitized
+user-provided samples. The external samples retain their original labels and
+provenance; they do not expand the synthetic service catalog.
 
 ## Pipeline
 
@@ -31,6 +34,7 @@ flowchart TD
 | `cra2/__main__.py` | Read a sample ID, UTF-8 JSON file, or stdin; report argument/input errors |
 | `cra2/config.py` | Validate environment settings; opt in to a selected dotenv file; locate packaged/source resources |
 | `cra2/advisor.py` | Input validation, context, selection gate, risk floors, comment ordering, results, rendering |
+| `cra2/incidents.py` | Load and validate both incident sources; rank and annotate up to five related records |
 | `cra2/system1.py` | Deterministic rule scoring and evidence-linked comment templates |
 | `cra2/system2.py` | Groq request, response validation, output hygiene, usage accounting, bounded cache |
 | `cra2/rules.json` | Thresholds, weights, route labels, and local comment wording |
@@ -54,9 +58,31 @@ and newlines. The CLI caps file/stdin input at 1,048,576 decoded Unicode
 characters and rejects duplicate JSON keys and excessive nesting.
 
 Context contains the service record, transitive reverse dependents, and at most
-five incidents matching the service or change type. Incidents are sorted by
-service match, type match, and ID. The changed service and its direct outgoing
-dependencies are checked for degraded health; this check is not recursive.
+five incidents selected from the combined 46-record collection. A candidate
+matches the exact service, matches the normalized change type, or shares at
+least two informative tokens with the change. Ranking prefers exact service,
+with matching normalized type first within same-service history. Cross-service
+candidates rank by greater informative token overlap, then matching normalized
+type, then newer date with a stable incident-ID tie-break. Short technical terms
+such as `OOM`, `CPU`, `CDN`, `ACL`, and `503` are retained. The only comparison
+alias is `Deployment` → `Code deploy`;
+stored labels remain unchanged. This local lexical retrieval uses no embeddings
+or provider request.
+
+Cross-service records provide analogous history. They cannot establish a
+same-service repeat-incident signal, fabricate catalog facts, or create a new
+service that the CLI accepts. External and no-change types without a type match
+need sufficient informative overlap to enter the candidate set. The collection
+contains 28 external sample service labels; the catalog still has eight services.
+
+The selected records are returned as `incident_context` and included in provider
+context, capped at five. Each is annotated with `source_dataset` (`synthetic` or
+`sanitized_samples`), `match_kind` (`same_service_history` or
+`cross_service_analogue`), and `matched_terms`. The annotations explain selection
+and provenance without asserting that analogous services share an incident.
+
+The changed service and its direct outgoing dependencies are checked for degraded
+health; this check is not recursive.
 Graph traversal handles cycles without counting the changed service as its own
 dependent. The static fixture is not live operational state.
 
@@ -64,6 +90,8 @@ The model receives the normalized change, primary and direct-dependency catalog
 records, related incidents, dependent names, degraded names, allowed evidence
 keys, and System 1 signals. A Groq request sends this context off the local
 machine. `fast` mode never selects this path.
+The user authorized the sanitized samples for public GitHub and provider context.
+Adding them did not involve any live Groq calls.
 
 ## Scoring and policy floors
 
@@ -74,7 +102,7 @@ capped at 1.0 and rounded to two decimals.
 | Rule | Weight |
 |---|---|
 | Changed service in freeze window | 0.30 |
-| Same-service, same-type incident | 0.15 each, capped at 0.30 |
+| Same-service incident with matching normalized type | 0.15 each, capped at 0.30; cross-service analogies add no repeat penalty |
 | Missing rollback plan | 0.20 |
 | Missing monitoring plan | 0.10 |
 | Config change on a drift-prone service | 0.10 |
@@ -169,9 +197,11 @@ builds a wheel and checks the installed CLI outside the checkout. CI targets
 Python 3.10 and 3.13 and runs a five-repeat fast calibration gate. The gate scores
 every repeat; one good first response cannot hide later regressions.
 
-The [fast report](evidence/evals-fast.md) records a local run and its UTC window.
-Its latency excludes CLI startup and is not an operational guarantee. The
-20-case dataset informed the weights; unseen-change quality remains unmeasured.
+The [fast report](evidence/evals-fast.md) preserves the local code-overhaul run
+and its UTC window, before incident enrichment. Its latency excludes CLI startup
+and is not an operational guarantee or a benchmark of the enlarged incident set.
+The 20-case dataset informed the weights; adding incident context does not add
+labeled evaluation cases. Unseen-change quality remains unmeasured.
 Live Groq tests require explicit opt-in and credentials, and live provider
 quality, latency, cost, and repeatability remain unverified by the offline suite.
 No Caveman project telemetry was available for this review; repository metrics

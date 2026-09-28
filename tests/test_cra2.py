@@ -115,7 +115,9 @@ def fake(monkeypatch):
 
 def test_data_is_consistent():
     assert all(d in CATALOG for s in CATALOG.values() for d in s["depends_on"])
-    assert all(i["service"] in CATALOG for i in INCIDENTS)
+    assert all(
+        i["service"] in CATALOG for i in INCIDENTS if i["source_dataset"] == "synthetic"
+    )
     assert len({i["incident_id"] for i in INCIDENTS}) == len(INCIDENTS)
     for c in CASES.values():
         assert c["change"]["service"] in CATALOG
