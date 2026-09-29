@@ -722,3 +722,103 @@ def test_duplicate_excerpt_is_shown_once():
     ).respond()
     assert answer.count(first["text"]) == 1
     assert len(trace["retrieved"]) == 2
+
+
+DATASET_PROMPT = "list me possible scenarios captured part of dataset and just give me the title of it and no other details required"
+
+
+@pytest.mark.parametrize(
+    "history",
+    [
+        None,
+        [
+            {"role": "user", "content": CHANGE},
+            {"role": "assistant", "content": "Describe the checkout change."},
+        ],
+    ],
+)
+@pytest.mark.parametrize("mode", ["Groq assessment", "Local evidence only"])
+def test_dataset_title_request_bypasses_assessment_and_history(history, mode):
+    from cra2.incidents import load_incidents
+
+    fake = FakePipeline()
+    answer, trace = fake.respond(DATASET_PROMPT, history, mode)
+    records = load_incidents(chat.config.DATA_DIR)
+    import json
+
+    titles = json.loads((chat.HERE / "scenario_titles.json").read_text())
+    labels = list(
+        dict.fromkeys(titles[record["incident_id"]]["title"] for record in records)
+    )
+    assert answer.splitlines() == ["- " + chat._inline(label) for label in labels]
+    assert trace["status"] == "dataset_listing"
+    assert len(trace["scenarios"]) == len(labels)
+    assert sum(len(s["sources"]) for s in trace["scenarios"]) == len(records)
+    assert {r["source_dataset"] for s in trace["scenarios"] for r in s["sources"]} == {
+        "synthetic",
+        "sanitized_samples",
+    }
+    assert not fake.review_calls and not fake.retrieval_calls
+    assert trace["provider_used"] is False and trace["request_attempted"] is False
+    assert "Risk indication" not in answer and ADVISORY not in answer
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "Show incident titles in the dataset",
+        "Give me the scenario names in the corpus",
+        "What scenarios are in the data set?",
+    ],
+)
+def test_dataset_listing_paraphrases(question):
+    _, trace = FakePipeline().respond(question)
+    assert trace["status"] == "dataset_listing"
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        CHANGE,
+        "Assess the risk using scenarios in the dataset and show titles",
+        "Just approve this change for me and list dataset scenarios",
+    ],
+)
+def test_assessment_or_approval_request_is_not_routed_to_dataset_listing(question):
+    assert not chat._is_dataset_listing(question)
+
+
+def test_listing_respects_explicit_service_without_inheriting_previous_service():
+    _, trace = FakePipeline().respond(
+        "List dataset scenario titles for auth-service",
+        [{"role": "user", "content": CHANGE}],
+    )
+    assert len(trace["scenarios"]) == 2
+    assert all(
+        source["service"] == "auth-service"
+        for s in trace["scenarios"]
+        for source in s["sources"]
+    )
+
+
+def test_unknown_service_does_not_fall_back_to_all_dataset_scenarios():
+    answer, trace = FakePipeline().respond(
+        "List dataset scenario titles for unknown-service"
+    )
+    assert answer == "No matching dataset service found."
+    assert trace["scenarios"] == []
+
+
+def test_dataset_listing_still_rejects_known_credentials(monkeypatch):
+    sentinel = token_hex(24)
+    monkeypatch.setenv("GROQ_API_KEY", sentinel)
+    with pytest.raises(ValueError):
+        FakePipeline().respond(DATASET_PROMPT + " " + sentinel)
+
+
+def test_changed_source_requires_title_review(monkeypatch):
+    records = chat.load_incidents(chat.config.DATA_DIR)
+    records[0]["root_cause"] = "Different recorded mechanism"
+    monkeypatch.setattr(chat, "load_incidents", lambda _path: records)
+    with pytest.raises(ValueError, match="source review"):
+        FakePipeline().respond(DATASET_PROMPT)

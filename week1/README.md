@@ -73,3 +73,9 @@ The offline regression suite uses injected embeddings/providers and needs no mod
 Answers show short cited evidence bullets. Full retrieved passages remain in **Retrieved evidence and assessment status**. Long or incomplete extracts use the source title instead of truncating a fact. Model prose is still excluded.
 
 [ADR-002](../docs/adr/adr-002-session-history.md) proposes a viewer for earlier turns in the current session. It is deferred beyond Week 1; history storage and restoration are not implemented.
+
+## Browse dataset scenarios
+
+Ask `List scenarios in the dataset; titles only.` to browse the canonical incident records without a model call or vector search. This request does not inherit a service from earlier chat turns. An explicit known service name filters the list.
+
+The incident schema has no title field. Short labels in `scenario_titles.json` describe the recorded root causes; source hashes require label review when those facts change. Identical labels appear once. Source IDs and provenance stay in the details panel; the answer contains only the labels, with no risk rating or advisory footer.

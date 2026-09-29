@@ -1,11 +1,13 @@
 """Week 1 free-text RAG adapter; no operational tools or persistent chat memory."""
 
+import hashlib
+import json
 import os
 import re
 import unicodedata
 from pathlib import Path
 
-from cra2 import system2
+from cra2 import config, system2
 from cra2.advisor import (
     _GENERIC_TERMS,
     ADVISORY,
@@ -15,6 +17,7 @@ from cra2.advisor import (
     TEAM_SETTINGS,
     _inline,
 )
+from cra2.incidents import load_incidents
 from cra2.secrets import reject_credentials
 from cra2.team_settings import resolve_settings
 from week1 import provider
@@ -99,6 +102,96 @@ def _evidence_list(hits):
     return "**Evidence · historical/sample**\n\n" + "\n".join(bullets)
 
 
+def _is_dataset_listing(question):
+    """Recognize explicit corpus browsing separately from change assessment."""
+    text = question.lower()
+    return (
+        bool(re.search(r"\b(?:dataset|data set|corpus)\b", text))
+        and bool(re.search(r"\b(?:scenarios?|incidents?)\b", text))
+        and bool(
+            re.search(
+                r"\b(?:list|show|give)\b|\b(?:what|which)\s+(?:scenarios?|incidents?)\b",
+                text,
+            )
+        )
+        and not re.search(
+            r"\b(?:assess|risk|risky|approve|authorize|deploy|merge|block|remember)\b",
+            text,
+        )
+    )
+
+
+def _dataset_titles(question):
+    # Curated labels are bound to the canonical facts; reject stale mappings.
+    records = load_incidents(config.DATA_DIR)
+    guard(records)
+    titles = json.loads((HERE / "scenario_titles.json").read_text(encoding="utf-8"))
+    guard(titles)
+    if set(titles) != {record["incident_id"] for record in records}:
+        raise ValueError("Scenario titles do not match the incident corpus")
+    for record in records:
+        entry = titles[record["incident_id"]]
+        if (
+            entry["root_cause_sha256"]
+            != hashlib.sha256(record["root_cause"].encode()).hexdigest()
+            or not isinstance(entry["title"], str)
+            or not entry["title"].strip()
+            or len(entry["title"]) > 120
+        ):
+            raise ValueError("Scenario title requires source review")
+    services = set(CATALOG) | {record["service"] for record in records}
+    requested = {
+        name
+        for name in services
+        if re.search(
+            r"(?<![a-z0-9-])" + re.escape(name) + r"(?![a-z0-9-])", question.lower()
+        )
+    }
+    if (
+        re.search(r"\b[a-z0-9-]+-(?:service|gateway)\b", question.lower())
+        and not requested
+    ):
+        return "No matching dataset service found.", {
+            "status": "dataset_listing",
+            "retrieved": [],
+            "provider_used": False,
+            "request_attempted": False,
+            "scenarios": [],
+        }
+    scenarios = {}
+    for record in records:
+        if requested and record["service"] not in requested:
+            continue
+        title = titles[record["incident_id"]]["title"]
+        filename = (
+            "incidents.json"
+            if record["source_dataset"] == "synthetic"
+            else "sample_incidents.json"
+        )
+        scenarios.setdefault(title, []).append(
+            {
+                "incident_id": record["incident_id"],
+                "service": record["service"],
+                "source_dataset": record["source_dataset"],
+                "source": "data/" + filename + "#" + record["incident_id"],
+            }
+        )
+    answer = "\n".join("- " + _inline(title).replace("#", "\\#") for title in scenarios)
+    trace = {
+        "status": "dataset_listing",
+        "provider_used": False,
+        "request_attempted": False,
+        "retrieved": [],
+        "source_scope": "Canonical synthetic incidents and sanitized samples; no live system lookup",
+        "title_basis": "Curated scenario titles checked against source hashes; identical labels grouped",
+        "scenarios": [
+            {"title": title, "sources": sources} for title, sources in scenarios.items()
+        ],
+    }
+    guard([answer, trace])
+    return answer or "No matching scenarios found.", trace
+
+
 def _clarify(text):
     return text + "\n\n" + ADVISORY, {"status": "needs_clarification", "retrieved": []}
 
@@ -126,6 +219,8 @@ def respond(
         return _clarify("Please remove control characters from the request.")
     if mode not in {"Groq assessment", "Local evidence only"}:
         return _clarify("Choose Groq assessment or Local evidence only.")
+    if _is_dataset_listing(question):
+        return _dataset_titles(question)
     names = _services(question)
     if len(names) > 1:
         return _clarify(

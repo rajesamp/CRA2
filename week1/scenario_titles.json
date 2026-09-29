@@ -1,0 +1,186 @@
+{
+  "CX-101": {
+    "title": "Checkout payment timeout reduction",
+    "root_cause_sha256": "74c73f683cc522e984e7c7337c66021b5b2af33340fbebe4a2cafb1c5702ed1e"
+  },
+  "CX-102": {
+    "title": "Production-only retry increase",
+    "root_cause_sha256": "1f70d22a2d7ee863ec725fd11ee2381ce88290ef20d5bbcdceae1f08290472d5"
+  },
+  "CX-103": {
+    "title": "Gift-card rollout before canary completion",
+    "root_cause_sha256": "a0cfebc6c217c46147df9987e07b76bc95278e39b8a49232cdb1d35d66731fc9"
+  },
+  "CX-104": {
+    "title": "TLS upgrade removes a required cipher",
+    "root_cause_sha256": "1b423e6fcced3c617cb802e8fe97a314e6ae3cb0b6fa351824e77b0917baa91a"
+  },
+  "CX-105": {
+    "title": "Regional fraud-threshold configuration drift",
+    "root_cause_sha256": "c4d1b827d4c2d6f672b7df9e44db0cb1982b2679126b5276922dac40589d5e16"
+  },
+  "CX-106": {
+    "title": "NAT gateway migration without processor allow-list updates",
+    "root_cause_sha256": "724474ffedc539d480cc3fdfe97769a9038c9d202def171b14d766a2ad81b958"
+  },
+  "CX-107": {
+    "title": "Orders index build locks writes",
+    "root_cause_sha256": "7ee0faf68e51eaafbcabc64a0a811a25959f046ac73c84a39aef8c70fbedc65c"
+  },
+  "CX-108": {
+    "title": "Split-shipment rollout produces duplicate requests",
+    "root_cause_sha256": "4a95a143e8300cbfd637acc3cbeb617f6b6acb78e21f935fbf4c68c1898dd41b"
+  },
+  "CX-109": {
+    "title": "Column rename breaks an existing caller",
+    "root_cause_sha256": "047eb94a9462e348752825b41b6168e46096cfb8b4eb587efbab9ce7dcfb70ac"
+  },
+  "CX-110": {
+    "title": "JSON upgrade changes decimal serialization",
+    "root_cause_sha256": "f2061f92cc340dccac86cffae88368d07f7aacc3cf89628b070ceb35b0ab02ba"
+  },
+  "CX-111": {
+    "title": "Spot-worker preemption interrupts email delivery",
+    "root_cause_sha256": "fc9dee51d893c1832b4c1d5edd80a8a113b3eb1364a2e852c750b5c4edba89e7"
+  },
+  "CX-112": {
+    "title": "UI framework upgrade causes duplicate submissions",
+    "root_cause_sha256": "78aa6ee1689242f17c6550b019f9889a9a3ab83a91b3d09c5639e050ab838a99"
+  },
+  "CX-113": {
+    "title": "CDN caching exposes another shopper's name",
+    "root_cause_sha256": "cf5afcfec75e06f4a719f3f3e177d022b0d7bc222893422c3ed15c334fed988b"
+  },
+  "CX-114": {
+    "title": "Feature flag enabled on incompatible app versions",
+    "root_cause_sha256": "c4d7556272fe5e5058f464204fb053a0e0018aa80df79fccaa85f6fc9f79f50d"
+  },
+  "CX-115": {
+    "title": "Session-store migration omits live sessions",
+    "root_cause_sha256": "94a19c91b7069da48c085bbb2efa3c58eae61b8b4acdb1fa29c3e6ce2dcbff9f"
+  },
+  "CX-116": {
+    "title": "Zero clock-skew tolerance rejects tokens",
+    "root_cause_sha256": "eba8756ae1e6e6eaab67583847e54c61cb136653cb2a7bb49bd3b6fae2878dc3"
+  },
+  "INC-4913": {
+    "title": "Payment API timeouts from slow database queries",
+    "root_cause_sha256": "9f9e71853376fcf3a7c80f460ddfc88362399b96c6168898fd24a018a128c1e3"
+  },
+  "INC-8971": {
+    "title": "Booked-offer performance issues cause test failures",
+    "root_cause_sha256": "ecd6852c45ad34ea036cd413ac7d40fd74c051555151322cd226e8a2c95107f5"
+  },
+  "INC-6131": {
+    "title": "Redis cluster failure",
+    "root_cause_sha256": "870198124f289d8e250e7afa70de5d9b69df43fd8bb139234c11a1110df986ca"
+  },
+  "INC-2973": {
+    "title": "Database pod OOM eviction and application restarts",
+    "root_cause_sha256": "d1ac5b685ade6e2023e3234eaa6d448d84d8d81ee9e2a8ba6d8cbac829632798"
+  },
+  "INC-2168": {
+    "title": "Traffic spike exceeds application limits",
+    "root_cause_sha256": "5a3018861d14d44063799794a4d5669e2b3be07c44a341dfcbd2caed51b8a535"
+  },
+  "INC-2270": {
+    "title": "High Cassandra disk utilization",
+    "root_cause_sha256": "00734e5725681576c2b6fa5a1d3b58f7389fb9f6112d8f751f6556d24531a6f7"
+  },
+  "INC-9111": {
+    "title": "Database thread contention",
+    "root_cause_sha256": "8e631e3d6d35b5084e653ad98f685673face0c9fe1d10b05792819d35c06090b"
+  },
+  "INC-7626": {
+    "title": "Unprocessed payment prevents batch closure",
+    "root_cause_sha256": "e80f8ca429f3d9b352947fc9b15603a7d619b8ad9bfdc720433aa5792dd68021"
+  },
+  "INC-6920": {
+    "title": "Cookie banner breaks a synthetic test",
+    "root_cause_sha256": "958f161611231e4e98387100960a0585ba0901677fc1519d165bdf1a4727468d"
+  },
+  "INC-6095": {
+    "title": "Database thread contention",
+    "root_cause_sha256": "8e631e3d6d35b5084e653ad98f685673face0c9fe1d10b05792819d35c06090b"
+  },
+  "INC-2159": {
+    "title": "Processing backlog stalls invoice submissions",
+    "root_cause_sha256": "7431422af7c22339c3dccef4946f0054d71f1552eae1f45213d7070539557191"
+  },
+  "INC-4031": {
+    "title": "Invoice update errors fill the dead-letter queue",
+    "root_cause_sha256": "16b2735681171ba1a4ffb6c63fba6ff92a2f09500db5e941e0a57e022b93d9f1"
+  },
+  "INC-8628": {
+    "title": "Base-code removal causes metrics configuration drift",
+    "root_cause_sha256": "b27cc4f75cbb0b63fc97957fddc3a5215c28c184c2e1f7d0f98d6a226ae4be8a"
+  },
+  "INC-5792": {
+    "title": "Zombie monitoring jobs cause login failures",
+    "root_cause_sha256": "fc2e12b052f3c85a582517ce4b860134dd42f0adc3c67b4ae9acf563458b49f2"
+  },
+  "INC-5162": {
+    "title": "Kafka topic ACL issue",
+    "root_cause_sha256": "8b70eaf231385f983b99a68ae5db75ce355d496a1bf805cba89fa046df48c65b"
+  },
+  "INC-1115": {
+    "title": "Consumer configuration slows message processing",
+    "root_cause_sha256": "8b16e816515b5e04b93e7e9ac40b68b3ea36cb2cf26f2fc27fc7cf5079be1647"
+  },
+  "INC-3184": {
+    "title": "High database CPU usage",
+    "root_cause_sha256": "06ddd4c33097b14ce6a000c9bd6c57c9fac5c1ad00e51d3df4e975f7eb69b921"
+  },
+  "INC-6754": {
+    "title": "Insufficient consumption increases the processing queue",
+    "root_cause_sha256": "b678fb28225fc756d3c181d19becf7c3d6cad48de23fa1b84d1160e98f20429c"
+  },
+  "INC-9821": {
+    "title": "Infrastructure configuration breaks settings-service startup",
+    "root_cause_sha256": "625902c0fc33b2e518a9259b645749d543c714b8c908421f9c7f4a1eb3a6bbcc"
+  },
+  "INC-4215": {
+    "title": "Elasticsearch service unavailable",
+    "root_cause_sha256": "e8bea864540f93d9197d84e61226d631ba3856ae589f3e79b039652d41965c15"
+  },
+  "INC-1200": {
+    "title": "Database pod restart after a memory-limit increase",
+    "root_cause_sha256": "3a07bb7faa3a9de29f5451c12e2f1b613d9a6cdcf35535a95d6679e072e07eb7"
+  },
+  "INC-9265": {
+    "title": "Kafka timeout in net-service",
+    "root_cause_sha256": "1978b4bbace3afb8f66af0618ee2b127c901f36a30bb6a23d2cc7fdfb827b67e"
+  },
+  "INC-3334": {
+    "title": "InnoDB thread contention under high query load",
+    "root_cause_sha256": "00071f07e09d82e164bfb284288eb8884d4a9895a6951b022ab8fed4a8581638"
+  },
+  "INC-9531": {
+    "title": "Document workers stop consuming jobs",
+    "root_cause_sha256": "fedcad2acd5201bbe1e6151e2223e9fd52321341bf6549164a0c096e40e9da43"
+  },
+  "INC-2147": {
+    "title": "Finance database disk resize",
+    "root_cause_sha256": "0a1d8951457c9914231a5aab5962bb1a38217a1dedc23b5ae0e2b63e8afb4f43"
+  },
+  "INC-5626": {
+    "title": "Funding-request API latency and memory bloat",
+    "root_cause_sha256": "08925440f7ace4bc9c607291a4c68e34723f85997741c0005c34611cd93cce68"
+  },
+  "INC-4351": {
+    "title": "Malformed invoice blocks the outbound queue",
+    "root_cause_sha256": "0a9e316c29527f77cbea2510fd492fe526823b692ccbf59111d2ad096b57dd69"
+  },
+  "INC-8007": {
+    "title": "Message-creator high load",
+    "root_cause_sha256": "18b146c5d4571093080c0c39664d045a4be590dfa3c3566d81cdf62363bd04ce"
+  },
+  "INC-2843": {
+    "title": "CDN provider incident reduces platform availability",
+    "root_cause_sha256": "a9088fd9a0b1b0d233706ccd40c919189b424c43e4c6000518672f273086bbbf"
+  },
+  "INC-7945": {
+    "title": "High disk usage in remittance and core databases",
+    "root_cause_sha256": "dec42ed6cb8f2c5aad09691de8d0cc7c08c20cd28cc1af298557cf592fabc77c"
+  }
+}
