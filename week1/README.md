@@ -67,3 +67,9 @@ uv run --project week1 python -m week1.setup_index
 ```
 
 The offline regression suite uses injected embeddings/providers and needs no model download or API key. Actual BGE retrieval, Groq examples, UI screenshot, and their limits are recorded separately in [retrieval evidence](../docs/evidence/week1-retrieval.md) and [demo evidence](../docs/evidence/week1-demo.md). The [team record](../docs/team.md) keeps genuine reviews, read confirmations, and teammate fresh-clone proof pending until supplied.
+
+## Concise evidence and future history
+
+Answers show short cited evidence bullets. Full retrieved passages remain in **Retrieved evidence and assessment status**. Long or incomplete extracts use the source title instead of truncating a fact. Model prose is still excluded.
+
+[ADR-002](../docs/adr/adr-002-session-history.md) proposes a viewer for earlier turns in the current session. It is deferred beyond Week 1; history storage and restoration are not implemented.

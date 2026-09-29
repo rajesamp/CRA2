@@ -57,9 +57,46 @@ def _specific_change(text, service):
     return bool(re.search(_SPECIFIC, text.lower())) and len(details) >= 2
 
 
-def _excerpt(text):
-    # Chunks may begin with Markdown headings; quote their literal source text.
-    return _inline(text).replace("#", "\\#")
+def _evidence_list(hits):
+    """Show bounded, literal facts; retain full passages in the evidence trace."""
+    bullets = []
+    seen = set()
+    for hit in hits:
+        text = hit["text"]
+        brief = ""
+        if hit.get("kind") == "incident" and "Root cause:" in text:
+            brief = text.split("Root cause:", 1)[1].strip()
+        elif "## Recorded facts" in text:
+            facts = text.split("## Recorded facts", 1)[1]
+            # The corpus separates recorded facts from unknowns and review checks.
+            brief = re.split(r"\s+(?=The fixture\b|##\s)", facts.strip(), maxsplit=1)[0]
+            if not brief.endswith((".", "!", "?")):
+                brief = ""  # A chunk boundary may cut a sentence short.
+        elif (
+            not text.startswith("#")
+            and not re.search(r"#chunk-(?!001$)\d+$", hit["chunk_id"])
+            and hit.get("kind") != "runbook"
+        ):
+            brief = text if text.endswith((".", "!", "?")) else ""
+        # Never truncate a fact mid-sentence or remove its qualifiers.
+        if len(brief.split()) > 55:
+            brief = ""
+        brief = brief.replace("**", "")
+        label = brief or hit.get("title", hit["doc_id"])
+        if hit.get("kind") == "runbook":
+            label = "Guidance: " + label
+        identity = (hit["doc_id"], label)
+        if identity in seen:
+            continue
+        seen.add(identity)
+        bullets.append(
+            "- "
+            + _inline(label).replace("#", "\\#")
+            + " ("
+            + _inline(hit["chunk_id"])
+            + ")"
+        )
+    return "**Evidence · historical/sample**\n\n" + "\n".join(bullets)
 
 
 def _clarify(text):
@@ -132,6 +169,7 @@ def respond(
             for h in hits
         ],
     }
+    display_hits = hits
     lower = question.lower()
     policy = None
     if service:
@@ -172,12 +210,8 @@ def respond(
     ):
         historical = [h for h in hits if h.get("kind") in {"incident", "postmortem"}]
         if historical:
-            answer = (
-                "Retrieved historical candidates for comparison; similarity does not establish that the proposed change has the same failure mode.\n\n"
-                + "\n\n".join(
-                    f"{_inline(h['text'])} — {h['chunk_id']}" for h in historical
-                )
-            )
+            answer = "Past incidents for comparison; a match does not prove the same failure will recur."
+            display_hits = historical
             trace["status"] = "history_only"
         else:
             answer = "The retrieved guidance contains no incident or postmortem supporting this comparison. Please describe the failure mechanism or change in more detail."
@@ -190,7 +224,7 @@ def respond(
         )
         trace["status"] = "needs_clarification"
     elif mode == "Local evidence only":
-        answer = "Retrieved history for human review is shown below. Local evidence mode does not generate a model risk indication; compare the actual failure mechanisms with your proposed change."
+        answer = "Local evidence only; no model risk indication."
         trace["status"] = "evidence_only"
     else:
         payload = {
@@ -243,7 +277,7 @@ def respond(
                 answer = (
                     "**Risk indication: "
                     + level.upper()
-                    + "** — based on retained evidence-linked concerns and the configured high-risk floor. This is an uncalibrated historical assessment, not a forecast of current service health.\n\n"
+                    + "** — uncalibrated historical assessment. Current health is unverified."
                 )
                 cited = {key for comment in comments for key in comment["evidence"]}
                 excerpts = sorted(
@@ -254,12 +288,8 @@ def respond(
                         hit["chunk_id"],
                     ),
                 )
-                answer += "The model suggests review attention and selects citations. The passages below are source excerpts; its free-form prose is not displayed because citation checks cannot establish factual accuracy.\n\n"
-                answer += "\n\n".join(
-                    f"**Evidence: {hit['chunk_id']}**\n\n> {_excerpt(hit['text'])}"
-                    for hit in excerpts
-                )
-                answer += "\n\n**Questions for human review**\n1. Does the actual proposed change reproduce the mechanism in the cited history?\n2. What evidence verifies the relevant recovery and monitoring checks before a human decision?"
+                display_hits = excerpts
+                answer += "\n\n**Review questions**\n\n- Does this change repeat the cited failure mechanism?\n- How will recovery and monitoring be verified?"
                 trace.update(
                     status="assessed",
                     provider_used=True,
@@ -291,11 +321,8 @@ def respond(
             + policy["sources"]["freeze_window_active"]
             + "."
         )
-    if hits:
-        answer += "\n\n**Retrieved sources**\n" + "\n".join(
-            f"- {h['chunk_id']}: {_inline(h.get('title', h['doc_id']))} ({_inline(h['source'])})"
-            for h in hits
-        )
+    if display_hits:
+        answer += "\n\n" + _evidence_list(display_hits)
     answer += "\n\n" + ADVISORY
     guard([answer, trace])
     return answer, trace
