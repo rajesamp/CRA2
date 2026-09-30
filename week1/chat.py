@@ -20,7 +20,7 @@ from cra2.advisor import (
 from cra2.incidents import load_incidents
 from cra2.secrets import reject_credentials
 from cra2.team_settings import resolve_settings
-from week1 import provider
+from week1 import provider, routing
 from week1.retrieval import search
 
 HERE = Path(__file__).resolve().parent
@@ -103,25 +103,11 @@ def _evidence_list(hits):
 
 
 def _is_dataset_listing(question):
-    """Recognize explicit corpus browsing separately from change assessment."""
-    text = question.lower()
-    return (
-        bool(re.search(r"\b(?:dataset|data set|corpus)\b", text))
-        and bool(re.search(r"\b(?:scenarios?|incidents?)\b", text))
-        and bool(
-            re.search(
-                r"\b(?:list|show|give)\b|\b(?:what|which)\s+(?:scenarios?|incidents?)\b",
-                text,
-            )
-        )
-        and not re.search(
-            r"\b(?:assess|risk|risky|approve|authorize|deploy|merge|block|remember)\b",
-            text,
-        )
-    )
+    decision = routing.task(question)
+    return bool(decision and decision["kind"] == "browse")
 
 
-def _dataset_titles(question):
+def _dataset_titles(question, decision=None):
     # Curated labels are bound to the canonical facts; reject stale mappings.
     records = load_incidents(config.DATA_DIR)
     guard(records)
@@ -139,29 +125,28 @@ def _dataset_titles(question):
             or len(entry["title"]) > 120
         ):
             raise ValueError("Scenario title requires source review")
+    decision = decision or routing.task(question)
     services = set(CATALOG) | {record["service"] for record in records}
-    requested = {
-        name
-        for name in services
-        if re.search(
-            r"(?<![a-z0-9-])" + re.escape(name) + r"(?![a-z0-9-])", question.lower()
+    requested, unresolved = routing.service_scope(decision["text"], services)
+    if unresolved:
+        answer, trace = _clarify(
+            "Unknown or unsupported dataset service filter: "
+            + ", ".join(_inline(name) for name in unresolved)
+            + ". Specify exact dataset service names."
         )
-    }
-    if (
-        re.search(r"\b[a-z0-9-]+-(?:service|gateway)\b", question.lower())
-        and not requested
-    ):
-        return "No matching dataset service found.", {
-            "status": "dataset_listing",
-            "retrieved": [],
-            "provider_used": False,
-            "request_attempted": False,
-            "scenarios": [],
-        }
+        trace.update(
+            unresolved_scope=unresolved,
+            scenarios=[],
+            provider_used=False,
+            request_attempted=False,
+        )
+        guard([answer, trace])
+        return answer, trace
+    selected = [
+        record for record in records if not requested or record["service"] in requested
+    ]
     scenarios = {}
-    for record in records:
-        if requested and record["service"] not in requested:
-            continue
+    for record in selected:
         title = titles[record["incident_id"]]["title"]
         filename = (
             "incidents.json"
@@ -177,13 +162,42 @@ def _dataset_titles(question):
             }
         )
     answer = "\n".join("- " + _inline(title).replace("#", "\\#") for title in scenarios)
+    if decision["operation"] == "count":
+        if re.search(r"\b(?:distinct|unique)\b", decision["text"]):
+            answer = f"{len(scenarios)} distinct scenario titles."
+        else:
+            answer = f"{len(selected)} incident records."
+    elif decision["fields"] != ["title"]:
+        labels = {
+            "incident_id": "Incident ID",
+            "service": "Service",
+            "root_cause": "Root cause",
+            "severity": "Severity",
+        }
+        answer = "\n".join(
+            "- "
+            + "; ".join(
+                _inline(titles[record["incident_id"]]["title"])
+                if field == "title"
+                else labels[field] + ": " + _inline(record[field])
+                for field in decision["fields"]
+            )
+            for record in selected
+        )
     trace = {
-        "status": "dataset_listing",
+        "status": "dataset_count"
+        if decision["operation"] == "count"
+        else "dataset_listing",
         "provider_used": False,
         "request_attempted": False,
         "retrieved": [],
         "source_scope": "Canonical synthetic incidents and sanitized samples; no live system lookup",
         "title_basis": "Curated scenario titles checked against source hashes; identical labels grouped",
+        "operation": decision["operation"],
+        "requested_fields": decision["fields"],
+        "record_count": len(selected),
+        "distinct_title_count": len(scenarios),
+        "service_filter": sorted(requested),
         "scenarios": [
             {"title": title, "sources": sources} for title, sources in scenarios.items()
         ],
@@ -219,8 +233,23 @@ def respond(
         return _clarify("Please remove control characters from the request.")
     if mode not in {"Groq assessment", "Local evidence only"}:
         return _clarify("Choose Groq assessment or Local evidence only.")
-    if _is_dataset_listing(question):
-        return _dataset_titles(question)
+    decision = routing.task(question)
+    if decision:
+        if decision["kind"] == "browse":
+            return _dataset_titles(question, decision)
+        if decision["kind"] == "clarify":
+            return _clarify(decision["question"])
+        if decision["kind"] == "help":
+            return (
+                "CRA2 reviews proposed changes using historical incidents, postmortems, and runbooks. Ask for dataset titles, counts, or incident fields, or describe one exact catalog service and the planned change. Current operational state and persistent preferences are deferred beyond Week 1.\n\n"
+                + ADVISORY,
+                {
+                    "status": "help",
+                    "retrieved": [],
+                    "provider_used": False,
+                    "request_attempted": False,
+                },
+            )
     names = _services(question)
     if len(names) > 1:
         return _clarify(
@@ -244,9 +273,16 @@ def respond(
                 prior.append(content[:MAX_QUESTION])
     # A named unknown service must not silently inherit the last known service.
     mentions_unknown = (
-        re.search(r"\b[a-z0-9-]+-(?:service|gateway)\b", question.lower()) and not names
+        re.search(r"\b[a-z0-9-]+-(?:service|gateway|api)\b", question.lower())
+        and not names
     )
-    if not service and prior and not mentions_unknown:
+    continuation = bool(re.search(_SPECIFIC, question.lower())) and bool(
+        re.search(
+            r"\b(?:change|changing|set|increase|reduce|same|that|this|it)\b",
+            question.lower(),
+        )
+    )
+    if not service and prior and not mentions_unknown and continuation:
         service = _service(prior[-1])
     query = question + (" " + service if service and service not in question else "")
     hits = (retriever or search)(query, index_path, limit=3, service=service)
