@@ -79,3 +79,13 @@ Answers show short cited evidence bullets. Full retrieved passages remain in **R
 Ask `List scenarios in the dataset; titles only.` to browse the canonical incident records without a model call or vector search. This request does not inherit a service from earlier chat turns. An explicit known service name filters the list.
 
 The incident schema has no title field. Short labels in `scenario_titles.json` describe the recorded root causes; source hashes require label review when those facts change. Identical labels appear once. Source IDs and provenance stay in the details panel; the answer contains only the labels, with no risk rating or advisory footer.
+
+## Routing update — 2026-09-30
+
+Dataset tasks are parsed before service history or retrieval. `Show all incident titles` and `List risk scenarios in the dataset, titles only` list all 45 distinct titles from 46 records. A negated assessment instruction does not turn a listing into an assessment. A negated listing followed by a help request returns help.
+
+`How many scenarios are in the dataset?` counts incident records: 46. Request `distinct scenario titles` for the grouped-title count: 45. Counts use canonical records, never a model estimate. Explicit service filters apply to both operations.
+
+Ask for title, incident ID, service, root cause, or severity. Requested detail comes directly from canonical fields; title-only requests stay concise. Conflicting operations/fields and unsupported filters ask for clarification. Unknown service names, including a known-plus-unknown combination, never silently widen the query or drop the unknown filter. The supported filter syntax is exact service names after `for`, separated by `and`, `or`, or commas.
+
+The local rule parser covers these tested forms, not unrestricted natural-language understanding. Historical comparison and change assessment retain their evidence and advisory safeguards. A service may carry into a specific follow-up change; an unrelated message does not inherit it. No new classifier API is involved. See [verification](../docs/evidence/week1-routing-closeout.md).

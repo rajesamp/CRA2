@@ -28,3 +28,9 @@ Status distinguishes an artifact from its human acceptance: **implemented** mean
 ## Append-only delivery rule
 
 Files that existed at baseline `6adb5664ba974b590a9bd8e4c40242a02d740404` keep their full original content. The README may gain a final Week 1 section. New files can supply missing capabilities; the root package, root dependency lock, existing tests, and historical evidence are not rewritten. Verification compares baseline bytes and checks that every changed pre-existing file begins with its complete baseline content.
+
+## Owner close-out — 2026-09-30
+
+**Week 1 engineering delivery: complete.** The owner requested milestone closure after fixing the routing defects. [Close-out evidence](docs/evidence/week1-routing-closeout.md) records the fixes, 402 core and 262 Week 1 passing offline tests, and the repeated core evaluation. Dataset routing now handles the reported negation, scope, count, and field-projection failures without a classifier API.
+
+The original table remains the historical acceptance record. Owner closure does not attest that teammates performed reviews, a fresh-clone run, or public sharing/channel posting. Keep those confirmations as follow-up evidence. The weekly status sheet update is a separate action at the maintained sheet's actual location.

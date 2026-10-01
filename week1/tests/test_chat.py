@@ -805,7 +805,9 @@ def test_unknown_service_does_not_fall_back_to_all_dataset_scenarios():
     answer, trace = FakePipeline().respond(
         "List dataset scenario titles for unknown-service"
     )
-    assert answer == "No matching dataset service found."
+    assert "unknown-service" in answer
+    assert trace["status"] == "needs_clarification"
+    assert trace["unresolved_scope"] == ["unknown-service"]
     assert trace["scenarios"] == []
 
 
