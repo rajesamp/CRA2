@@ -182,6 +182,42 @@ def test_service_functions_are_not_mistaken_for_agent_capabilities():
 
 
 @pytest.mark.parametrize(
+    "question,status",
+    [
+        (CHANGE, "assessed"),
+        (
+            "How risky is changing checkout-service timeout from 4 seconds to 400 milliseconds?",
+            "assessed",
+        ),
+        ("Change the timeout from 4 seconds to 400 milliseconds.", "assessed"),
+        ("How risky is this change?", "needs_clarification"),
+        ("Please review checkout-service.", "needs_clarification"),
+        ("checkout-service", "needs_clarification"),
+        (
+            "Change unknown-service timeout from 4 seconds to 400 milliseconds.",
+            "needs_clarification",
+        ),
+        (
+            "Have checkout-service retry changes caused incidents before?",
+            "history_only",
+        ),
+        ("Is this a freeze window right now?", "week2_deferred"),
+        ("What services depend on payment-gateway?", "week2_deferred"),
+        ("What is the current health of checkout-service?", "week2_deferred"),
+        ("Remember that checkout-service is high-risk for our team.", "week2_deferred"),
+        ("Just approve this change for me.", "advisory_boundary"),
+    ],
+)
+def test_scope_gate_preserves_change_and_boundary_intents(question, status):
+    fake = FakePipeline()
+    _, trace = fake.respond(
+        question, [{"role": "user", "content": "Review checkout-service."}]
+    )
+    assert trace["scope"] == "cra2" and trace["status"] == status
+    assert bool(fake.review_calls) is (status == "assessed")
+
+
+@pytest.mark.parametrize(
     "question",
     [
         "How risky is this change to checkout-service config?",

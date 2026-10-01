@@ -95,3 +95,11 @@ The local rule parser covers these tested forms, not unrestricted natural-langua
 Ask `List the top 5 capabilities of this agent` or `What can you do?` for five concise capability labels. Requests for one to five items are supported. These answers describe implemented Week 1 behavior and bypass incident retrieval, service history, and Groq. General onboarding questions such as `Who are you?` and `How do I use this agent?` return usage guidance. Mixed help/assessment requests ask which task to perform.
 
 The mentor's capabilities request exposed a missing help form after the previous routing fixes. The [regression record](../docs/evidence/week1-capabilities-routing.md) documents the failure and verification; the historical close-out report remains unchanged.
+
+## Question scope — 2026-09-30
+
+The chat classifies the active request as `cra2` or `non_cra2` before service history, incident retrieval, or Groq. Supported CRA2 tasks include dataset browsing, agent help, change review, historical comparison, and existing advisory/Week 2 boundary questions. A recognized CRA2 task takes precedence over unrelated chatter; unrelated content is not answered. Vague change questions still ask for clarification.
+
+Unsupported account questions such as `what is the username of this app?` and unrelated requests receive only: `Not really a CRA2-related question. See the CRA2 GitHub repository.` The repository text links to this project. No username is inferred from GitHub, environment variables, or chat history. The trace reports `scope: non_cra2`, no evidence, and no provider attempt.
+
+This local rule check covers tested forms, not unrestricted language classification. Credential and input validation still run first. See [scope verification](../docs/evidence/week1-question-scope.md).
