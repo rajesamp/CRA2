@@ -62,3 +62,16 @@ the fixture current production evidence. Unknown active incidents and freshness
 stay unknown. Advisory behavior, evidence grounding, credential protection,
 team-policy precedence, and configurable `week1/responses.json` answers remain
 required. Jev integration is outside scope.
+
+<!-- Week 2 tasks 13–14: executable local tools and actual verification. -->
+## Week 2 tools delivered — 2026-09-30
+
+| # | Delivery | Evidence |
+|---|---|---|
+| 13 | `check_system_health` implemented with validated snapshot facts and safe errors | [Known/unknown-service calls and test log](docs/evidence/week2-tools.md) |
+| 14 | `get_dependency_graph` implemented with both directions and cycle-safe traversal | [Known/unknown-service calls and test log](docs/evidence/week2-tools.md) |
+
+Both functions are callable from [the shared Week 2 module](week2/tools.py).
+No dependency or existing runtime file changed. Task 15's MCP/agent wiring,
+tasks 16–17's persistent memory, and task 18's UI trace remain pending their
+discussion and evidence. Week 1 human acceptance remains pending.

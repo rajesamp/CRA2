@@ -132,3 +132,17 @@ Those checks preserve Week 1 behavior; they do not establish Week 2 tool,
 memory, or UI acceptance. Task 12 adds documentation and Week 2 comments above
 its signatures and tracking sections, with no runtime code changes. Jev remains
 outside scope. Weeks 3–4 remain deferred.
+
+<!-- Week 2 tasks 13–14: latest implementation status, preserving earlier snapshots. -->
+## CRA2 health and dependency tools — 30 Sep 2026
+
+**Tasks 13 and 14: executable local tools implemented and verified.**
+[Recorded calls and tests](evidence/week2-tools.md) show known/unknown-service
+behavior. The shared module is 165 lines, with Week 2 comments and no new
+dependencies. It labels fixture facts as synthetic snapshots; active incidents,
+freshness, and current freeze applicability are not invented.
+
+Verification: 100 focused tool tests, 502 total core tests (four live tests
+excluded), 494 Week 1 tests, and 100/100 repeated fast evaluations passed.
+MCP/chat integration remains task 15; memory and the UI trace remain tasks
+16–18. Week 1 human acceptance and Jev's exclusion remain unchanged.
