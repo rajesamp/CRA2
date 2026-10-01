@@ -6,6 +6,8 @@ and filters ask for clarification rather than silently changing the request.
 
 import re
 
+from week1 import responses
+
 _NEGATED = r"(?:do\s+not|don't|don’t|never)"
 CHANGE_DETAILS = r"\b(?:timeout|retry|retries|cache|ttl|column|token|cipher|pool|nat|logging|flag|version|sender|worker|consumer|index|session|certificate)\b"
 
@@ -78,8 +80,9 @@ def classify_scope(question, decision, services):
     return "non_cra2"
 
 
-def task(question):
+def task(question, catalog=None):
     """Return a browsing/help decision, clarification, or the assessment path."""
+    catalog = catalog if catalog is not None else responses.load()
     text = active_request(question)
     browse = bool(re.search(r"\b(?:incidents?|scenarios?)\b", text)) and bool(
         re.search(
@@ -150,12 +153,12 @@ def task(question):
     if help_request and (assessment or operational):
         return {
             "kind": "clarify",
-            "question": "Choose one task: learn what CRA2 can do or review a proposed change. CRA2 cannot approve or execute changes.",
+            "question": responses.message(catalog, "help_or_change"),
         }
     if browse and (assessment or operational or help_request):
         return {
             "kind": "clarify",
-            "question": "Choose one task: browse the dataset or review a proposed change. CRA2 provides advice; a human makes the decision.",
+            "question": responses.message(catalog, "browse_or_change"),
         }
     if help_request:
         if capabilities:
@@ -163,7 +166,8 @@ def task(question):
                 r"\b(?:top|first|list(?: me)?|show(?: me)?|give(?: me)?)\s+(\d+|one|two|three|four|five)\b",
                 text,
             )
-            count = 5
+            total = len(catalog["capabilities"])
+            count = total
             if requested:
                 value = requested[1]
                 count = (
@@ -171,10 +175,20 @@ def task(question):
                     if value.isdigit()
                     else {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}[value]
                 )
-                if not 1 <= count <= 5:
+                if not 1 <= count <= total:
                     return {
                         "kind": "clarify",
-                        "question": "CRA2 has five implemented capability groups. Request one to five, or ask for the full list.",
+                        "question": responses.message(
+                            catalog,
+                            "capability_limit",
+                            total={
+                                1: "one",
+                                2: "two",
+                                3: "three",
+                                4: "four",
+                                5: "five",
+                            }.get(total, str(total)),
+                        ),
                     }
             return {"kind": "help", "topic": "capabilities", "count": count}
         return {"kind": "help"}
@@ -184,7 +198,7 @@ def task(question):
         ):
             return {
                 "kind": "clarify",
-                "question": "What would you like CRA2 to do: browse incidents or review a proposed change?",
+                "question": responses.message(catalog, "missing_task"),
             }
         return None
     if re.search(
@@ -192,7 +206,7 @@ def task(question):
     ):
         return {
             "kind": "clarify",
-            "question": "For dataset browsing, specify exact service names. Describe the change separately to compare relevant historical incidents.",
+            "question": responses.message(catalog, "dataset_service_filter"),
         }
     operation = (
         "count" if re.search(r"\b(?:count|how many|number of)\b", text) else "list"
@@ -214,19 +228,19 @@ def task(question):
     if re.search(r"\b(?:dates?|owners?|impact|duration|timestamps?)\b", text):
         return {
             "kind": "clarify",
-            "question": "Choose supported dataset fields: title, incident ID, service, root cause, or severity.",
+            "question": responses.message(catalog, "dataset_fields"),
         }
     if re.search(r"\b(?:titles?|names?)\s+only\b", text) and any(
         f != "title" for f in fields
     ):
         return {
             "kind": "clarify",
-            "question": "Do you want titles only, or titles with the additional incident fields?",
+            "question": responses.message(catalog, "title_or_fields"),
         }
     if operation == "count" and re.search(r"\b(?:list|show|give|enumerate)\b", text):
         return {
             "kind": "clarify",
-            "question": "Would you like a count or a list of the dataset records?",
+            "question": responses.message(catalog, "count_or_list"),
         }
     return {
         "kind": "browse",
