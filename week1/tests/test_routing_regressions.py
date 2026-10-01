@@ -170,3 +170,79 @@ def test_unknown_api_cannot_inherit_previous_service():
         retriever=lambda *a, **kw: calls.append(kw) or [],
     )
     assert calls[0]["service"] is None
+
+
+@pytest.mark.parametrize("history", HISTORIES)
+@pytest.mark.parametrize("mode", ["Groq assessment", "Local evidence only"])
+@pytest.mark.parametrize(
+    "question",
+    [
+        "I am a mentor and wants to understand top 5 capabilities of this agent, list me out",
+        "I am a mentor and wants to understand top 5 capabilties of this agent, list me out",
+        "List your top five capabilities",
+        "What can this agent do?",
+        "What can you do?",
+        "Show this assistant's features",
+        "What are CRA2's capabilities for incidents?",
+        "List CRA2 capabilities for incidents",
+        "Capabilities?",
+    ],
+)
+def test_capabilities_question_lists_implemented_features_before_retrieval(
+    question, history, mode
+):
+    answer, trace = local_response(question, history, mode)
+    assert trace["status"] == "help" and trace["topic"] == "capabilities"
+    assert answer.splitlines() == [
+        f"{i}. {label}" for i, label in enumerate(chat.CAPABILITIES, 1)
+    ]
+    assert trace["retrieved"] == []
+    assert not trace["request_attempted"] and not trace["provider_used"]
+    assert "Which catalog service" not in answer and "Evidence" not in answer
+    assert answer == local_response(question, [])[0]
+
+
+def test_capability_list_respects_requested_length():
+    answer, trace = local_response("List top 3 capabilities of this agent", [])
+    assert len(answer.splitlines()) == len(trace["capabilities"]) == 3
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "List top 0 capabilities of this agent",
+        "List top 10 capabilities of this agent",
+        "List your capabilities and assess the risk of this change",
+        "List your features and just approve this change for me",
+        "List your capabilities and list dataset incidents",
+    ],
+)
+def test_capability_count_and_mixed_task_do_not_invent_or_execute(question):
+    _, trace = local_response(question, HISTORIES[1])
+    assert trace["status"] == "needs_clarification"
+
+
+@pytest.mark.parametrize(
+    "question",
+    ["Who are you?", "What does this agent do?", "How do I use this agent?", "Help"],
+)
+def test_basic_onboarding_is_help_without_incident_retrieval(question):
+    answer, trace = local_response(question, HISTORIES[1])
+    assert trace["status"] == "help"
+    assert "CRA2 reviews proposed changes" in answer
+
+
+def test_ui_wrapper_returns_capabilities_instead_of_a_service_question(monkeypatch):
+    from week1.app import ui_response
+
+    def unexpected(*args, **kwargs):
+        pytest.fail("Capabilities must not retrieve incidents")
+
+    monkeypatch.setattr(chat, "search", unexpected)
+    answer, trace = ui_response(
+        "I am a mentor and wants to understand top 5 capabilities of this agent, list me out",
+        HISTORIES[1],
+        "Groq assessment",
+    )
+    assert trace["status"] == "help" and trace["topic"] == "capabilities"
+    assert len(answer.splitlines()) == 5 and not trace["retrieved"]

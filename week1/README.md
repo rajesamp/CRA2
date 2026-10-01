@@ -89,3 +89,9 @@ Dataset tasks are parsed before service history or retrieval. `Show all incident
 Ask for title, incident ID, service, root cause, or severity. Requested detail comes directly from canonical fields; title-only requests stay concise. Conflicting operations/fields and unsupported filters ask for clarification. Unknown service names, including a known-plus-unknown combination, never silently widen the query or drop the unknown filter. The supported filter syntax is exact service names after `for`, separated by `and`, `or`, or commas.
 
 The local rule parser covers these tested forms, not unrestricted natural-language understanding. Historical comparison and change assessment retain their evidence and advisory safeguards. A service may carry into a specific follow-up change; an unrelated message does not inherit it. No new classifier API is involved. See [verification](../docs/evidence/week1-routing-closeout.md).
+
+## Agent capabilities and help — 2026-09-30
+
+Ask `List the top 5 capabilities of this agent` or `What can you do?` for five concise capability labels. Requests for one to five items are supported. These answers describe implemented Week 1 behavior and bypass incident retrieval, service history, and Groq. General onboarding questions such as `Who are you?` and `How do I use this agent?` return usage guidance. Mixed help/assessment requests ask which task to perform.
+
+The mentor's capabilities request exposed a missing help form after the previous routing fixes. The [regression record](../docs/evidence/week1-capabilities-routing.md) documents the failure and verification; the historical close-out report remains unchanged.
