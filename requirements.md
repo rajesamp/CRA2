@@ -46,3 +46,32 @@ See [tasks](tasks.md), [Week 1 launch instructions](week1/README.md), and the [a
 W1-R01 applies to CRA2 change requests, not every message entered into chat. Classify supported CRA2 tasks before consulting history or evidence. Preserve valid help, dataset queries, change clarification, historical comparison, and advisory/Week 2 boundaries. A recognized CRA2 task takes precedence over unrelated chatter without answering the unrelated portion.
 
 Unrelated or unsupported questions, including an app-username request, receive one fixed response with the CRA2 GitHub link and no further answer, incident evidence, or model request. Scope cannot be inferred from an earlier service discussion or a bare mention of CRA2. W1-R07 credential checks continue to run before classification; the app must not discover or disclose usernames or secrets to answer account questions. [Verification](docs/evidence/week1-question-scope.md) records the tested forms and limitations. This adds no Week 2 implementation.
+
+<!-- Week 2 tasks 12–18: newly authorized requirements; preserve Week 1 history. -->
+## Week 2 scope addition — 2026-09-30
+
+The owner authorized Week 2 tasks 12–18. Discuss each task in sequence before
+implementing it. The earlier Week 2 deferral remains a historical boundary;
+this section governs the continuation. Week 1 human acceptance remains pending.
+
+| ID | Requirement | Acceptance evidence |
+|---|---|---|
+| W2-R01 | Define read-only health/freeze and dependency tool inputs, outputs, errors, and examples | Task 12: [tool contracts](docs/tools.md), examples checked against canonical fixtures |
+| W2-R02 | Health tool returns recorded health and freeze state for a known service, with clear unknown-service/source errors | Task 13: actual test log; historical incidents never become active incidents |
+| W2-R03 | Dependency tool returns validated direct/transitive callers and dependencies, with explicit graph direction | Task 14: actual test log, including known/unknown services |
+| W2-R04 | Agent calls both allow-listed tools through MCP and grounds its response in returned facts | Task 15: actual round-trip trace, finite deadline, protected failure behavior, and required metadata screening |
+| W2-R05 | Document persistent high-risk service preferences and freeze-policy notes; verify write/read | Task 16: schema and actual readback log; policy notes are distinct from observed freeze state |
+| W2-R06 | Recall the same team's risk preference automatically in a separate session | Task 17: two-session transcripts; preserve explicit team-policy precedence and risk floors |
+| W2-R07 | Show actual tool calls and recalled settings in an expandable Gradio trace | Task 18: expanded-panel screenshot; no secrets, raw SDK objects, or fabricated traces |
+
+The existing fixture is a synthetic snapshot with unknown observation time.
+An actual tool call permits citing its recorded contents, not asserting current
+production health, an active incident, or a verified freeze calendar. Freeze
+reports remain unconfirmed/not-reported; active incidents remain unknown until
+a separately reviewed source supplies that information.
+
+All Week 1 safeguards remain required: advisory-only output, evidence-grounded
+assessments, credential protection before tools/models and on outputs, supported
+question scope, and configurable answers in `week1/responses.json`. No Jev,
+production connector, deployment authority, Week 3–4 implementation, or inferred
+human acceptance is included.
