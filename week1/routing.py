@@ -44,19 +44,83 @@ def task(question):
             text,
         )
     )
-    help_request = bool(
+    agent = r"(?:cra2|change risk advisor|(?:this|the)\s+(?:agent|assistant)|you|your)"
+    capability_word = (
+        r"(?:capabilit(?:y|ies)|capabilties|capabilites|features?|functions?)"
+    )
+    capabilities = bool(
         re.search(
-            r"\b(?:explain|describe)\s+(?:what\s+)?cra2\b|"
-            r"\bwhat\s+(?:does|can|is)\s+cra2\b|\bhow\s+(?:do i |to )?use\s+cra2\b",
+            r"\b"
+            + agent
+            + r"(?:'s)?\s+(?:(?:top|main|key|core|first|one|two|three|four|five|\d+)\s+)*"
+            + capability_word
+            + r"\b|\b"
+            + capability_word
+            + r"\s+(?:of|for|in)\s+"
+            + agent
+            + r"\b|\b"
+            + capability_word
+            + r"\s+(?:do|can)\s+you\s+(?:have|offer)\b",
             text,
         )
+        or re.fullmatch(r"\s*(?:what are the )?" + capability_word + r"[?!. ]*", text)
     )
+    capabilities = capabilities or bool(
+        re.search(r"\bwhat\s+can\s+" + agent + r"\s+do\b", text)
+    )
+    if capabilities:
+        # Incident nouns can describe a feature's subject. Require a separate
+        # browsing command before treating that feature question as two tasks.
+        browse = bool(
+            re.search(
+                r"\b(?:and|also|then)\s+(?:list|show|give|count)\b.{0,60}\b(?:incidents?|scenarios?)\b",
+                text,
+            )
+        )
+    help_request = (
+        bool(
+            re.search(
+                r"\b(?:explain|describe)\s+(?:what\s+)?cra2\b|"
+                r"\bwhat\s+(?:does|can|is)\s+cra2\b|\bhow\s+(?:do i |to )?use\s+"
+                + agent
+                + r"\b|"
+                r"\bwho\s+are\s+you\b|\bwhat\s+(?:is|does)\s+(?:this|the)\s+(?:agent|assistant)\b|"
+                r"^\s*(?:help|about cra2)[?!. ]*$",
+                text,
+            )
+        )
+        or capabilities
+    )
+    if help_request and (assessment or operational):
+        return {
+            "kind": "clarify",
+            "question": "Choose one task: learn what CRA2 can do or review a proposed change. CRA2 cannot approve or execute changes.",
+        }
     if browse and (assessment or operational or help_request):
         return {
             "kind": "clarify",
             "question": "Choose one task: browse the dataset or review a proposed change. CRA2 provides advice; a human makes the decision.",
         }
     if help_request:
+        if capabilities:
+            requested = re.search(
+                r"\b(?:top|first|list(?: me)?|show(?: me)?|give(?: me)?)\s+(\d+|one|two|three|four|five)\b",
+                text,
+            )
+            count = 5
+            if requested:
+                value = requested[1]
+                count = (
+                    int(value)
+                    if value.isdigit()
+                    else {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}[value]
+                )
+                if not 1 <= count <= 5:
+                    return {
+                        "kind": "clarify",
+                        "question": "CRA2 has five implemented capability groups. Request one to five, or ask for the full list.",
+                    }
+            return {"kind": "help", "topic": "capabilities", "count": count}
         return {"kind": "help"}
     if not browse:
         if re.search(

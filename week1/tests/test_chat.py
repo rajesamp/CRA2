@@ -172,6 +172,15 @@ def test_concrete_change_passes_only_retrieved_evidence_to_provider():
     assert "uncalibrated historical assessment" in answer
 
 
+def test_service_functions_are_not_mistaken_for_agent_capabilities():
+    fake = FakePipeline()
+    _, trace = fake.respond(
+        "Can you assess the risk of changing checkout-service logging from info to debug for worker functions?"
+    )
+    assert trace["status"] == "assessed"
+    assert len(fake.review_calls) == 1
+
+
 @pytest.mark.parametrize(
     "question",
     [

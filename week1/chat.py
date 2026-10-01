@@ -29,6 +29,13 @@ MAX_QUESTION = (
     4000  # Room for an explicit session service within retrieval's 5,000 limit.
 )
 _SPECIFIC = r"\b(?:timeout|retry|retries|cache|ttl|column|token|cipher|pool|nat|logging|flag|version|sender|worker|consumer|index|session|certificate)\b"
+CAPABILITIES = (
+    "Browse incident titles and recorded details",
+    "Count incident records and distinct scenario titles",
+    "Find historical incidents relevant to a proposed change",
+    "Provide cited change-risk advice and review questions",
+    "Surface configured team risk settings and unconfirmed freeze reports",
+)
 
 
 def guard(value):
@@ -240,6 +247,19 @@ def respond(
         if decision["kind"] == "clarify":
             return _clarify(decision["question"])
         if decision["kind"] == "help":
+            if decision.get("topic") == "capabilities":
+                selected = CAPABILITIES[: decision["count"]]
+                return (
+                    "\n".join(f"{i}. {label}" for i, label in enumerate(selected, 1)),
+                    {
+                        "status": "help",
+                        "topic": "capabilities",
+                        "capabilities": list(selected),
+                        "retrieved": [],
+                        "provider_used": False,
+                        "request_attempted": False,
+                    },
+                )
             return (
                 "CRA2 reviews proposed changes using historical incidents, postmortems, and runbooks. Ask for dataset titles, counts, or incident fields, or describe one exact catalog service and the planned change. Current operational state and persistent preferences are deferred beyond Week 1.\n\n"
                 + ADVISORY,
