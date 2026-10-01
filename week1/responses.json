@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "messages": {
+    "out_of_scope": "Not really a CRA2-related question. See the [CRA2 GitHub repository](https://github.com/rajesamp/CRA2).",
+    "help": "CRA2 reviews proposed changes using historical incidents, postmortems, and runbooks. Ask for dataset titles, counts, or incident fields, or describe one exact catalog service and the planned change. Current operational state and persistent preferences are deferred beyond Week 1.",
+    "input_length": "Please enter a change description of 1–4,000 characters.",
+    "control_characters": "Please remove control characters from the request.",
+    "invalid_mode": "Choose Groq assessment or Local evidence only.",
+    "multiple_services": "Which one service is the target of this change? Assess one service at a time and describe its planned change.",
+    "unknown_dataset_service": "Unknown or unsupported dataset service filter: {services}. Specify exact dataset service names.",
+    "no_scenarios": "No matching scenarios found.",
+    "distinct_title_count": "{count} distinct scenario titles.",
+    "incident_count": "{count} incident records.",
+    "advisory_boundary": "I can help assess the change, but I cannot approve, block, merge, or deploy it. Please describe the planned change and a human can review the evidence.",
+    "memory_deferred": "This Week 1 demo does not store team preferences across sessions. Persistent team memory is a Week 2 task. You can include the preference in the current change description.",
+    "tools_deferred": "I cannot confirm current freeze, health, or dependency state in Week 1. The corpus contains static examples and verification guidance; live tool calls are a Week 2 task. Treat current status as unconfirmed.",
+    "missing_service": "Which catalog service is changing? Use an exact service name, such as checkout-service, and describe what will change. I will not infer a dependency or service identity from its name.",
+    "no_evidence": "I found no supporting corpus evidence for this request. I cannot assign a risk indication without evidence. Please add the specific change and relevant incident context.",
+    "history_comparison": "Past incidents for comparison; a match does not prove the same failure will recur.",
+    "no_historical_evidence": "The retrieved guidance contains no incident or postmortem supporting this comparison. Please describe the failure mechanism or change in more detail.",
+    "specific_change": "What specifically will change in {service}? Describe the affected setting or behavior and its before/after state. The retrieved history is context, not evidence that an unspecified change has the same failure mode.",
+    "evidence_only": "Local evidence only; no model risk indication.",
+    "no_model_evidence": "The model returned no usable evidence-linked assessment. No risk indication is assigned; review the retrieved sources below.",
+    "risk_indication": "**Risk indication: {level}** — uncalibrated historical assessment. Current health is unverified.",
+    "review_questions": "**Review questions**\n\n- Does this change repeat the cited failure mechanism?\n- How will recovery and monitoring be verified?",
+    "provider_unavailable": "The model assessment is unavailable. No model risk indication is assigned. You can still review the retrieved historical evidence below.",
+    "high_risk_policy": "Configured high-risk policy is retained; request text cannot override it. Source: {source}.",
+    "freeze_policy": "The configured freeze report is unconfirmed. Verify applicability and exceptions with the team. Source: {source}.",
+    "evidence_heading": "**Evidence · historical/sample**",
+    "guidance_prefix": "Guidance: ",
+    "help_or_change": "Choose one task: learn what CRA2 can do or review a proposed change. CRA2 cannot approve or execute changes.",
+    "browse_or_change": "Choose one task: browse the dataset or review a proposed change. CRA2 provides advice; a human makes the decision.",
+    "capability_limit": "CRA2 has {total} implemented capability groups. Request one to {total}, or ask for the full list.",
+    "missing_task": "What would you like CRA2 to do: browse incidents or review a proposed change?",
+    "dataset_service_filter": "For dataset browsing, specify exact service names. Describe the change separately to compare relevant historical incidents.",
+    "dataset_fields": "Choose supported dataset fields: title, incident ID, service, root cause, or severity.",
+    "title_or_fields": "Do you want titles only, or titles with the additional incident fields?",
+    "count_or_list": "Would you like a count or a list of the dataset records?"
+  },
+  "capabilities": [
+    "Browse incident titles and recorded details",
+    "Count incident records and distinct scenario titles",
+    "Find historical incidents relevant to a proposed change",
+    "Provide cited change-risk advice and review questions",
+    "Surface configured team risk settings and unconfirmed freeze reports"
+  ],
+  "field_labels": {
+    "incident_id": "Incident ID",
+    "service": "Service",
+    "root_cause": "Root cause",
+    "severity": "Severity"
+  },
+  "faq": [
+    {
+      "id": "session-history",
+      "questions": [
+        "Does CRA2 save chat history?",
+        "Does CRA2 restore previous conversations?"
+      ],
+      "answer": "This Week 1 demo does not restore previous conversations after a refresh. A viewer for earlier turns in the current session is proposed in ADR-002; it is not implemented."
+    }
+  ]
+}

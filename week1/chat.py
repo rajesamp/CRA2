@@ -1,13 +1,10 @@
 """Week 1 free-text RAG adapter; no operational tools or persistent chat memory."""
 
-import hashlib
-import json
-import os
 import re
 import unicodedata
 from pathlib import Path
 
-from cra2 import config, system2
+from cra2 import system2
 from cra2.advisor import (
     _GENERIC_TERMS,
     ADVISORY,
@@ -15,12 +12,10 @@ from cra2.advisor import (
     LEVELS,
     RULES,
     TEAM_SETTINGS,
-    _inline,
 )
 from cra2.incidents import load_incidents
-from cra2.secrets import reject_credentials
 from cra2.team_settings import resolve_settings
-from week1 import provider, routing
+from week1 import answers, provider, responses, routing
 from week1.retrieval import search
 
 HERE = Path(__file__).resolve().parent
@@ -29,21 +24,14 @@ MAX_QUESTION = (
     4000  # Room for an explicit session service within retrieval's 5,000 limit.
 )
 _SPECIFIC = routing.CHANGE_DETAILS
-OUT_OF_SCOPE = "Not really a CRA2-related question. See the [CRA2 GitHub repository](https://github.com/rajesamp/CRA2)."
-CAPABILITIES = (
-    "Browse incident titles and recorded details",
-    "Count incident records and distinct scenario titles",
-    "Find historical incidents relevant to a proposed change",
-    "Provide cited change-risk advice and review questions",
-    "Surface configured team risk settings and unconfirmed freeze reports",
-)
+config = answers.config  # Retain the existing catalog binding for callers.
+_inline = answers._inline
+# Preserve importable labels for existing callers; requests read fresh copy.
+OUT_OF_SCOPE = responses.message(responses.load(), "out_of_scope")
+CAPABILITIES = tuple(responses.load()["capabilities"])
 
 
-def guard(value):
-    """Keep provider and optional UI-auth credentials out of application data."""
-    reject_credentials(
-        value, additional=(os.getenv("CRA2_UI_USER"), os.getenv("CRA2_UI_PASSWORD"))
-    )
+guard = responses.guard
 
 
 def _services(text):
@@ -68,46 +56,8 @@ def _specific_change(text, service):
     return bool(re.search(_SPECIFIC, text.lower())) and len(details) >= 2
 
 
-def _evidence_list(hits):
-    """Show bounded, literal facts; retain full passages in the evidence trace."""
-    bullets = []
-    seen = set()
-    for hit in hits:
-        text = hit["text"]
-        brief = ""
-        if hit.get("kind") == "incident" and "Root cause:" in text:
-            brief = text.split("Root cause:", 1)[1].strip()
-        elif "## Recorded facts" in text:
-            facts = text.split("## Recorded facts", 1)[1]
-            # The corpus separates recorded facts from unknowns and review checks.
-            brief = re.split(r"\s+(?=The fixture\b|##\s)", facts.strip(), maxsplit=1)[0]
-            if not brief.endswith((".", "!", "?")):
-                brief = ""  # A chunk boundary may cut a sentence short.
-        elif (
-            not text.startswith("#")
-            and not re.search(r"#chunk-(?!001$)\d+$", hit["chunk_id"])
-            and hit.get("kind") != "runbook"
-        ):
-            brief = text if text.endswith((".", "!", "?")) else ""
-        # Never truncate a fact mid-sentence or remove its qualifiers.
-        if len(brief.split()) > 55:
-            brief = ""
-        brief = brief.replace("**", "")
-        label = brief or hit.get("title", hit["doc_id"])
-        if hit.get("kind") == "runbook":
-            label = "Guidance: " + label
-        identity = (hit["doc_id"], label)
-        if identity in seen:
-            continue
-        seen.add(identity)
-        bullets.append(
-            "- "
-            + _inline(label).replace("#", "\\#")
-            + " ("
-            + _inline(hit["chunk_id"])
-            + ")"
-        )
-    return "**Evidence · historical/sample**\n\n" + "\n".join(bullets)
+def _evidence_list(hits, catalog=None):
+    return answers._evidence_list(hits, catalog)
 
 
 def _is_dataset_listing(question):
@@ -115,112 +65,13 @@ def _is_dataset_listing(question):
     return bool(decision and decision["kind"] == "browse")
 
 
-def _dataset_titles(question, decision=None):
-    # Curated labels are bound to the canonical facts; reject stale mappings.
-    records = load_incidents(config.DATA_DIR)
-    guard(records)
-    titles = json.loads((HERE / "scenario_titles.json").read_text(encoding="utf-8"))
-    guard(titles)
-    if set(titles) != {record["incident_id"] for record in records}:
-        raise ValueError("Scenario titles do not match the incident corpus")
-    for record in records:
-        entry = titles[record["incident_id"]]
-        if (
-            entry["root_cause_sha256"]
-            != hashlib.sha256(record["root_cause"].encode()).hexdigest()
-            or not isinstance(entry["title"], str)
-            or not entry["title"].strip()
-            or len(entry["title"]) > 120
-        ):
-            raise ValueError("Scenario title requires source review")
-    decision = decision or routing.task(question)
-    services = set(CATALOG) | {record["service"] for record in records}
-    requested, unresolved = routing.service_scope(decision["text"], services)
-    if unresolved:
-        answer, trace = _clarify(
-            "Unknown or unsupported dataset service filter: "
-            + ", ".join(_inline(name) for name in unresolved)
-            + ". Specify exact dataset service names.",
-            scope="cra2",
-        )
-        trace.update(
-            unresolved_scope=unresolved,
-            scenarios=[],
-            provider_used=False,
-            request_attempted=False,
-        )
-        guard([answer, trace])
-        return answer, trace
-    selected = [
-        record for record in records if not requested or record["service"] in requested
-    ]
-    scenarios = {}
-    for record in selected:
-        title = titles[record["incident_id"]]["title"]
-        filename = (
-            "incidents.json"
-            if record["source_dataset"] == "synthetic"
-            else "sample_incidents.json"
-        )
-        scenarios.setdefault(title, []).append(
-            {
-                "incident_id": record["incident_id"],
-                "service": record["service"],
-                "source_dataset": record["source_dataset"],
-                "source": "data/" + filename + "#" + record["incident_id"],
-            }
-        )
-    answer = "\n".join("- " + _inline(title).replace("#", "\\#") for title in scenarios)
-    if decision["operation"] == "count":
-        if re.search(r"\b(?:distinct|unique)\b", decision["text"]):
-            answer = f"{len(scenarios)} distinct scenario titles."
-        else:
-            answer = f"{len(selected)} incident records."
-    elif decision["fields"] != ["title"]:
-        labels = {
-            "incident_id": "Incident ID",
-            "service": "Service",
-            "root_cause": "Root cause",
-            "severity": "Severity",
-        }
-        answer = "\n".join(
-            "- "
-            + "; ".join(
-                _inline(titles[record["incident_id"]]["title"])
-                if field == "title"
-                else labels[field] + ": " + _inline(record[field])
-                for field in decision["fields"]
-            )
-            for record in selected
-        )
-    trace = {
-        "scope": "cra2",
-        "status": "dataset_count"
-        if decision["operation"] == "count"
-        else "dataset_listing",
-        "provider_used": False,
-        "request_attempted": False,
-        "retrieved": [],
-        "source_scope": "Canonical synthetic incidents and sanitized samples; no live system lookup",
-        "title_basis": "Curated scenario titles checked against source hashes; identical labels grouped",
-        "operation": decision["operation"],
-        "requested_fields": decision["fields"],
-        "record_count": len(selected),
-        "distinct_title_count": len(scenarios),
-        "service_filter": sorted(requested),
-        "scenarios": [
-            {"title": title, "sources": sources} for title, sources in scenarios.items()
-        ],
-    }
-    guard([answer, trace])
-    return answer or "No matching scenarios found.", trace
+def _dataset_titles(question, decision=None, catalog=None):
+    return answers._dataset_titles(
+        question, decision, catalog, records_loader=load_incidents
+    )
 
 
-def _clarify(text, *, scope=None):
-    trace = {"status": "needs_clarification", "retrieved": []}
-    if scope:
-        trace["scope"] = scope
-    return text + "\n\n" + ADVISORY, trace
+_clarify = responses.clarify
 
 
 def respond(
@@ -234,22 +85,38 @@ def respond(
 ):
     """Return checked Markdown and an evidence-only trace, never raw SDK objects."""
     guard(question)
+    catalog = responses.load()
     if (
         not isinstance(question, str)
         or not question.strip()
         or len(question) > MAX_QUESTION
     ):
-        return _clarify("Please enter a change description of 1–4,000 characters.")
+        return _clarify(responses.message(catalog, "input_length"))
     if any(
         unicodedata.category(c).startswith("C") and c not in "\n\r\t" for c in question
     ):
-        return _clarify("Please remove control characters from the request.")
+        return _clarify(responses.message(catalog, "control_characters"))
     if mode not in {"Groq assessment", "Local evidence only"}:
-        return _clarify("Choose Groq assessment or Local evidence only.")
-    decision = routing.task(question)
+        return _clarify(responses.message(catalog, "invalid_mode"))
+    decision = routing.task(question, catalog)
     scope = routing.classify_scope(question, decision, CATALOG)
     if scope == "non_cra2":
-        return OUT_OF_SCOPE, {
+        # Exact documentation FAQs cannot override a supported task or boundary.
+        entry = responses.faq(catalog, question)
+        if entry:
+            answer = entry["answer"] + "\n\n" + ADVISORY
+            trace = {
+                "scope": "cra2",
+                "status": "help",
+                "topic": "faq",
+                "faq_id": entry["id"],
+                "retrieved": [],
+                "provider_used": False,
+                "request_attempted": False,
+            }
+            guard([answer, trace])
+            return answer, trace
+        return responses.message(catalog, "out_of_scope"), {
             "scope": scope,
             "status": "out_of_scope",
             "retrieved": [],
@@ -258,12 +125,12 @@ def respond(
         }
     if decision:
         if decision["kind"] == "browse":
-            return _dataset_titles(question, decision)
+            return _dataset_titles(question, decision, catalog)
         if decision["kind"] == "clarify":
             return _clarify(decision["question"], scope=scope)
         if decision["kind"] == "help":
             if decision.get("topic") == "capabilities":
-                selected = CAPABILITIES[: decision["count"]]
+                selected = catalog["capabilities"][: decision["count"]]
                 return (
                     "\n".join(f"{i}. {label}" for i, label in enumerate(selected, 1)),
                     {
@@ -277,8 +144,7 @@ def respond(
                     },
                 )
             return (
-                "CRA2 reviews proposed changes using historical incidents, postmortems, and runbooks. Ask for dataset titles, counts, or incident fields, or describe one exact catalog service and the planned change. Current operational state and persistent preferences are deferred beyond Week 1.\n\n"
-                + ADVISORY,
+                responses.message(catalog, "help") + "\n\n" + ADVISORY,
                 {
                     "scope": scope,
                     "status": "help",
@@ -290,7 +156,7 @@ def respond(
     names = _services(question)
     if len(names) > 1:
         return _clarify(
-            "Which one service is the target of this change? Assess one service at a time and describe its planned change.",
+            responses.message(catalog, "multiple_services"),
             scope=scope,
         )
     service = names[0] if names else None
@@ -357,22 +223,22 @@ def respond(
         r"\b(?:approve|authorize|merge|deploy|block)\b.*\b(?:for me|this change|it now)\b|\bjust approve\b",
         lower,
     ):
-        answer = "I can help assess the change, but I cannot approve, block, merge, or deploy it. Please describe the planned change and a human can review the evidence."
+        answer = responses.message(catalog, "advisory_boundary")
         trace["status"] = "advisory_boundary"
     elif re.search(r"\bremember\b|\b(?:save|store)\b.*\bpreference", lower):
-        answer = "This Week 1 demo does not store team preferences across sessions. Persistent team memory is a Week 2 task. You can include the preference in the current change description."
+        answer = responses.message(catalog, "memory_deferred")
         trace["status"] = "week2_deferred"
     elif re.search(
         r"\bfreeze\b|\bdepend(?:s|ents|encies)?\b|\b(?:current|live)\b.*\b(?:health|status)\b",
         lower,
     ) and not re.search(_SPECIFIC, lower):
-        answer = "I cannot confirm current freeze, health, or dependency state in Week 1. The corpus contains static examples and verification guidance; live tool calls are a Week 2 task. Treat current status as unconfirmed."
+        answer = responses.message(catalog, "tools_deferred")
         trace["status"] = "week2_deferred"
     elif not service:
-        answer = "Which catalog service is changing? Use an exact service name, such as checkout-service, and describe what will change. I will not infer a dependency or service identity from its name."
+        answer = responses.message(catalog, "missing_service")
         trace["status"] = "needs_clarification"
     elif not hits:
-        answer = "I found no supporting corpus evidence for this request. I cannot assign a risk indication without evidence. Please add the specific change and relevant incident context."
+        answer = responses.message(catalog, "no_evidence")
         trace["status"] = "insufficient_evidence"
     elif re.search(
         r"\b(?:had|caused|similar|past|previous)\b.*\bincidents?\b|\bincidents?\b.*\b(?:before|history|past)\b",
@@ -380,21 +246,17 @@ def respond(
     ):
         historical = [h for h in hits if h.get("kind") in {"incident", "postmortem"}]
         if historical:
-            answer = "Past incidents for comparison; a match does not prove the same failure will recur."
+            answer = responses.message(catalog, "history_comparison")
             display_hits = historical
             trace["status"] = "history_only"
         else:
-            answer = "The retrieved guidance contains no incident or postmortem supporting this comparison. Please describe the failure mechanism or change in more detail."
+            answer = responses.message(catalog, "no_historical_evidence")
             trace["status"] = "insufficient_evidence"
     elif not _specific_change(question, service):
-        answer = (
-            "What specifically will change in "
-            + service
-            + "? Describe the affected setting or behavior and its before/after state. The retrieved history is context, not evidence that an unspecified change has the same failure mode."
-        )
+        answer = responses.message(catalog, "specific_change", service=service)
         trace["status"] = "needs_clarification"
     elif mode == "Local evidence only":
-        answer = "Local evidence only; no model risk indication."
+        answer = responses.message(catalog, "evidence_only")
         trace["status"] = "evidence_only"
     else:
         payload = {
@@ -437,17 +299,15 @@ def respond(
                 and system2._comment_allowed(c, allowed)
             ]
             if not comments:
-                answer = "The model returned no usable evidence-linked assessment. No risk indication is assigned; review the retrieved sources below."
+                answer = responses.message(catalog, "no_model_evidence")
                 trace["status"] = "insufficient_evidence"
             else:
                 floor = "medium" if policy["effective"]["high_risk"] else "low"
                 level = max(
                     [floor] + [c["severity"] for c in comments], key=LEVELS.index
                 )
-                answer = (
-                    "**Risk indication: "
-                    + level.upper()
-                    + "** — uncalibrated historical assessment. Current health is unverified."
+                answer = responses.message(
+                    catalog, "risk_indication", level=level.upper()
                 )
                 cited = {key for comment in comments for key in comment["evidence"]}
                 excerpts = sorted(
@@ -459,7 +319,7 @@ def respond(
                     ),
                 )
                 display_hits = excerpts
-                answer += "\n\n**Review questions**\n\n- Does this change repeat the cited failure mechanism?\n- How will recovery and monitoring be verified?"
+                answer += "\n\n" + responses.message(catalog, "review_questions")
                 trace.update(
                     status="assessed",
                     provider_used=True,
@@ -471,7 +331,7 @@ def respond(
                     risk_floor=floor,
                 )
         except system2.System2Unavailable as failure:
-            answer = "The model assessment is unavailable. No model risk indication is assigned. You can still review the retrieved historical evidence below."
+            answer = responses.message(catalog, "provider_unavailable")
             trace.update(
                 status="provider_unavailable",
                 provider_used=False,
@@ -480,19 +340,15 @@ def respond(
                 groq_ms=failure.groq_ms,
             )
     if policy and policy["effective"]["high_risk"]:
-        answer += (
-            "\n\nConfigured high-risk policy is retained; request text cannot override it. Source: "
-            + policy["sources"]["high_risk"]
-            + "."
+        answer += "\n\n" + responses.message(
+            catalog, "high_risk_policy", source=policy["sources"]["high_risk"]
         )
     if policy and policy["effective"]["freeze_window_active"]:
-        answer += (
-            "\n\nThe configured freeze report is unconfirmed. Verify applicability and exceptions with the team. Source: "
-            + policy["sources"]["freeze_window_active"]
-            + "."
+        answer += "\n\n" + responses.message(
+            catalog, "freeze_policy", source=policy["sources"]["freeze_window_active"]
         )
     if display_hits:
-        answer += "\n\n" + _evidence_list(display_hits)
+        answer += "\n\n" + _evidence_list(display_hits, catalog)
     answer += "\n\n" + ADVISORY
     guard([answer, trace])
     return answer, trace

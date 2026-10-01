@@ -103,3 +103,11 @@ The chat classifies the active request as `cra2` or `non_cra2` before service hi
 Unsupported account questions such as `what is the username of this app?` and unrelated requests receive only: `Not really a CRA2-related question. See the CRA2 GitHub repository.` The repository text links to this project. No username is inferred from GitHub, environment variables, or chat history. The trace reports `scope: non_cra2`, no evidence, and no provider attempt.
 
 This local rule check covers tested forms, not unrestricted language classification. Credential and input validation still run first. See [scope verification](../docs/evidence/week1-question-scope.md).
+
+## Configurable answers and FAQ aliases
+
+Fixed answers, clarification text, capability labels, and dataset field labels now live in [`responses.json`](responses.json). Add documentation questions and answers in its `faq` array without editing `chat.py`. Each entry has an `id`, exact `questions` aliases, and an `answer`. The catalog is read on every request, so JSON-only edits take effect without a restart after this version of the app is running.
+
+Existing supported tasks and safety boundaries take precedence. FAQs do not retrieve incidents, call Groq, or use earlier service history. Dynamic dataset facts and risk indications retain their existing validation; unrelated unmatched questions keep the repository response. Invalid catalogs fail with a generic setup response in the UI. The running conversational agent cannot write the catalog.
+
+See the [editing guide](../docs/response-catalog.md) for examples, placeholders, validation limits, and review requirements. This adds no Week 2 implementation.
