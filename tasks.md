@@ -34,3 +34,7 @@ Files that existed at baseline `6adb5664ba974b590a9bd8e4c40242a02d740404` keep t
 **Week 1 engineering delivery: complete.** The owner requested milestone closure after fixing the routing defects. [Close-out evidence](docs/evidence/week1-routing-closeout.md) records the fixes, 402 core and 262 Week 1 passing offline tests, and the repeated core evaluation. Dataset routing now handles the reported negation, scope, count, and field-projection failures without a classifier API.
 
 The original table remains the historical acceptance record. Owner closure does not attest that teammates performed reviews, a fresh-clone run, or public sharing/channel posting. Keep those confirmations as follow-up evidence. The weekly status sheet update is a separate action at the maintained sheet's actual location.
+
+## Week 1 maintenance — question scope, 2026-09-30
+
+The app-username report exposed an unrestricted fallback to change assessment. A local scope check now gives unrelated/unsupported questions only the repository response, before history, retrieval, or Groq. Supported CRA2 tasks keep their existing handlers and safeguards. [Scope evidence](docs/evidence/week1-question-scope.md) records 449 passing Week 1 tests, 402 passing core tests, and the required 100-assessment fast evaluation. Historical acceptance and close-out records above remain intact; human confirmations and the maintained weekly sheet still require their actual evidence/location.

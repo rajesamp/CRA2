@@ -7,6 +7,7 @@ and filters ask for clarification rather than silently changing the request.
 import re
 
 _NEGATED = r"(?:do\s+not|don't|don’t|never)"
+CHANGE_DETAILS = r"\b(?:timeout|retry|retries|cache|ttl|column|token|cipher|pool|nat|logging|flag|version|sender|worker|consumer|index|session|certificate)\b"
 
 
 def active_request(question):
@@ -20,6 +21,61 @@ def active_request(question):
         for clause in clauses
         if not re.match(r"\s*(?:please\s+)?" + _NEGATED + r"\b", clause)
     )
+
+
+def classify_scope(question, decision, services):
+    """Classify supported CRA2 intents locally; history cannot supply scope."""
+    if decision is not None:
+        return "cra2"
+    text = active_request(question)
+    named_service = any(
+        re.search(r"(?<![a-z0-9-])" + re.escape(name) + r"(?![a-z0-9-])", text)
+        for name in services
+    )
+    detail = bool(re.search(CHANGE_DETAILS, text))
+    change_context = (
+        named_service
+        or detail
+        or bool(re.search(r"\b(?:this|that|the|proposed|planned)\s+change\b", text))
+    )
+    review = bool(re.search(r"\b(?:assess|evaluate|review|improve|risk|risky)\b", text))
+    change = bool(
+        re.search(r"\b(?:change|changing|set|increase|reduce|rollout|upgrade)\b", text)
+    )
+    history = bool(
+        re.search(
+            r"\b(?:had|caused|similar|past|previous)\b.*\bincidents?\b|"
+            r"\bincidents?\b.*\b(?:before|history|past)\b",
+            text,
+        )
+    )
+    boundary = change_context and bool(
+        re.search(
+            r"\b(?:approve|authorize|merge|deploy|block)\b.*\b(?:for me|this change|it now)\b|\bjust approve\b",
+            text,
+        )
+    )
+    settings = bool(
+        re.search(r"\bremember\b|\b(?:save|store)\b.*\bpreference", text)
+    ) and (named_service or bool(re.search(r"\b(?:team|risk|freeze)\b", text)))
+    operational_state = bool(re.search(r"\bfreeze\s+window\b", text)) or (
+        (named_service or bool(re.search(r"\bservices?\b", text)))
+        and bool(
+            re.search(
+                r"\bdepend(?:s|ents|encies)?\b|\b(?:current|live)\b.*\b(?:health|status)\b",
+                text,
+            )
+        )
+    )
+    if (
+        (change_context and (review or change))
+        or (named_service and (detail or history or text.strip(" .?!") in services))
+        or boundary
+        or settings
+        or operational_state
+    ):
+        return "cra2"
+    return "non_cra2"
 
 
 def task(question):
@@ -80,11 +136,11 @@ def task(question):
     help_request = (
         bool(
             re.search(
-                r"\b(?:explain|describe)\s+(?:what\s+)?cra2\b|"
-                r"\bwhat\s+(?:does|can|is)\s+cra2\b|\bhow\s+(?:do i |to )?use\s+"
-                + agent
-                + r"\b|"
-                r"\bwho\s+are\s+you\b|\bwhat\s+(?:is|does)\s+(?:this|the)\s+(?:agent|assistant)\b|"
+                r"\b(?:explain|describe)\s+(?:what\s+)?cra2(?:\s+(?:does|is|can do))?\s*(?:[?!.]|$)|"
+                r"\bwhat\s+is\s+(?:cra2|(?:this|the)\s+(?:agent|assistant))\s*(?:[?!.]|$)|"
+                r"\bwhat\s+does\s+(?:cra2|(?:this|the)\s+(?:agent|assistant))\s+do\b|"
+                r"\bhow\s+(?:do i |to )?use\s+" + agent + r"\b|"
+                r"\bwho\s+are\s+you\b|"
                 r"^\s*(?:help|about cra2)[?!. ]*$",
                 text,
             )
@@ -123,7 +179,7 @@ def task(question):
             return {"kind": "help", "topic": "capabilities", "count": count}
         return {"kind": "help"}
     if not browse:
-        if re.search(
+        if not text.strip() and re.search(
             _NEGATED + r"\s+(?:list|show|give|count|assess|review)\b", question.lower()
         ):
             return {

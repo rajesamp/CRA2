@@ -28,7 +28,8 @@ INDEX = HERE / ".cache" / "index.sqlite3"
 MAX_QUESTION = (
     4000  # Room for an explicit session service within retrieval's 5,000 limit.
 )
-_SPECIFIC = r"\b(?:timeout|retry|retries|cache|ttl|column|token|cipher|pool|nat|logging|flag|version|sender|worker|consumer|index|session|certificate)\b"
+_SPECIFIC = routing.CHANGE_DETAILS
+OUT_OF_SCOPE = "Not really a CRA2-related question. See the [CRA2 GitHub repository](https://github.com/rajesamp/CRA2)."
 CAPABILITIES = (
     "Browse incident titles and recorded details",
     "Count incident records and distinct scenario titles",
@@ -139,7 +140,8 @@ def _dataset_titles(question, decision=None):
         answer, trace = _clarify(
             "Unknown or unsupported dataset service filter: "
             + ", ".join(_inline(name) for name in unresolved)
-            + ". Specify exact dataset service names."
+            + ". Specify exact dataset service names.",
+            scope="cra2",
         )
         trace.update(
             unresolved_scope=unresolved,
@@ -192,6 +194,7 @@ def _dataset_titles(question, decision=None):
             for record in selected
         )
     trace = {
+        "scope": "cra2",
         "status": "dataset_count"
         if decision["operation"] == "count"
         else "dataset_listing",
@@ -213,8 +216,11 @@ def _dataset_titles(question, decision=None):
     return answer or "No matching scenarios found.", trace
 
 
-def _clarify(text):
-    return text + "\n\n" + ADVISORY, {"status": "needs_clarification", "retrieved": []}
+def _clarify(text, *, scope=None):
+    trace = {"status": "needs_clarification", "retrieved": []}
+    if scope:
+        trace["scope"] = scope
+    return text + "\n\n" + ADVISORY, trace
 
 
 def respond(
@@ -241,17 +247,27 @@ def respond(
     if mode not in {"Groq assessment", "Local evidence only"}:
         return _clarify("Choose Groq assessment or Local evidence only.")
     decision = routing.task(question)
+    scope = routing.classify_scope(question, decision, CATALOG)
+    if scope == "non_cra2":
+        return OUT_OF_SCOPE, {
+            "scope": scope,
+            "status": "out_of_scope",
+            "retrieved": [],
+            "provider_used": False,
+            "request_attempted": False,
+        }
     if decision:
         if decision["kind"] == "browse":
             return _dataset_titles(question, decision)
         if decision["kind"] == "clarify":
-            return _clarify(decision["question"])
+            return _clarify(decision["question"], scope=scope)
         if decision["kind"] == "help":
             if decision.get("topic") == "capabilities":
                 selected = CAPABILITIES[: decision["count"]]
                 return (
                     "\n".join(f"{i}. {label}" for i, label in enumerate(selected, 1)),
                     {
+                        "scope": scope,
                         "status": "help",
                         "topic": "capabilities",
                         "capabilities": list(selected),
@@ -264,6 +280,7 @@ def respond(
                 "CRA2 reviews proposed changes using historical incidents, postmortems, and runbooks. Ask for dataset titles, counts, or incident fields, or describe one exact catalog service and the planned change. Current operational state and persistent preferences are deferred beyond Week 1.\n\n"
                 + ADVISORY,
                 {
+                    "scope": scope,
                     "status": "help",
                     "retrieved": [],
                     "provider_used": False,
@@ -273,7 +290,8 @@ def respond(
     names = _services(question)
     if len(names) > 1:
         return _clarify(
-            "Which one service is the target of this change? Assess one service at a time and describe its planned change."
+            "Which one service is the target of this change? Assess one service at a time and describe its planned change.",
+            scope=scope,
         )
     service = names[0] if names else None
     prior = []
@@ -308,6 +326,7 @@ def respond(
     hits = (retriever or search)(query, index_path, limit=3, service=service)
     guard(hits)
     trace = {
+        "scope": scope,
         "status": "evidence_ready",
         "source_scope": "Static historical/sample corpus; no live system lookup",
         "retrieved": [

@@ -156,10 +156,18 @@ def test_unrelated_message_does_not_inherit_service_and_true_follow_up_does():
         calls.append(deepcopy(kwargs))
         return []
 
-    for question in ("Hello", "Change the timeout from 4 seconds to 400 milliseconds."):
-        chat.respond(question, HISTORIES[1], "Local evidence only", retriever=retrieve)
-    assert calls[0]["service"] is None
-    assert calls[1]["service"] == "checkout-service"
+    answer, trace = chat.respond(
+        "Hello", HISTORIES[1], "Local evidence only", retriever=retrieve
+    )
+    assert trace["status"] == "out_of_scope" and answer == chat.OUT_OF_SCOPE
+    assert calls == []
+    chat.respond(
+        "Change the timeout from 4 seconds to 400 milliseconds.",
+        HISTORIES[1],
+        "Local evidence only",
+        retriever=retrieve,
+    )
+    assert calls[0]["service"] == "checkout-service"
 
 
 def test_unknown_api_cannot_inherit_previous_service():

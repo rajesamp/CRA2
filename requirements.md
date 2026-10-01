@@ -40,3 +40,9 @@ Tools/MCP, live health/freeze/dependency observations, conversational team memor
 Week 1 embeddings/retrieval do not establish production accuracy. Citation membership does not prove semantic correctness, and a model seed does not guarantee identical fresh wording. No risk indication is assigned when evidence or a usable provider response is missing. Local evidence mode shows passages without a model rating. A localhost URL is not a public share link; a draft is not team agreement.
 
 See [tasks](tasks.md), [Week 1 launch instructions](week1/README.md), and the [alignment evidence](docs/evidence/week1-alignment.md) for implementation and acceptance status.
+
+## Question-scope clarification — 2026-09-30
+
+W1-R01 applies to CRA2 change requests, not every message entered into chat. Classify supported CRA2 tasks before consulting history or evidence. Preserve valid help, dataset queries, change clarification, historical comparison, and advisory/Week 2 boundaries. A recognized CRA2 task takes precedence over unrelated chatter without answering the unrelated portion.
+
+Unrelated or unsupported questions, including an app-username request, receive one fixed response with the CRA2 GitHub link and no further answer, incident evidence, or model request. Scope cannot be inferred from an earlier service discussion or a bare mention of CRA2. W1-R07 credential checks continue to run before classification; the app must not discover or disclose usernames or secrets to answer account questions. [Verification](docs/evidence/week1-question-scope.md) records the tested forms and limitations. This adds no Week 2 implementation.
