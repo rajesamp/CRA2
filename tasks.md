@@ -38,3 +38,27 @@ The original table remains the historical acceptance record. Owner closure does 
 ## Week 1 maintenance — question scope, 2026-09-30
 
 The app-username report exposed an unrestricted fallback to change assessment. A local scope check now gives unrelated/unsupported questions only the repository response, before history, retrieval, or Groq. Supported CRA2 tasks keep their existing handlers and safeguards. [Scope evidence](docs/evidence/week1-question-scope.md) records 449 passing Week 1 tests, 402 passing core tests, and the required 100-assessment fast evaluation. Historical acceptance and close-out records above remain intact; human confirmations and the maintained weekly sheet still require their actual evidence/location.
+
+<!-- Week 2 tasks 12–18: additive scope and acceptance record. -->
+## Week 2 continuation — 2026-09-30
+
+The owner authorized tasks 12–18, with each task discussed in order before
+implementation. This supersedes the earlier deferral for Week 2; Weeks 3–4 and
+stretch work remain deferred. Week 1 engineering is complete and its human
+acceptance remains pending. Task 12's proposed scope was accepted in chat.
+
+| # | Week 2 deliverable | Artifact / evidence | Status |
+|---|---|---|---|
+| 12 | Design health and dependency tool contracts | [Signatures, outputs, errors, and examples](docs/tools.md) | Spec delivered; fixture/example verification recorded with the change |
+| 13 | Implement system-health tool | Known/unknown-service test log | Pending task discussion and implementation |
+| 14 | Implement dependency-graph tool | Known/unknown-service test log | Pending task discussion and implementation |
+| 15 | Expose both tools through MCP | Actual agent/tool round-trip trace | Pending discussion; resolve required Sentinel metadata-screening skill |
+| 16 | Design memory schema and verify readback | Schema and write/read log | Pending task discussion and implementation |
+| 17 | Integrate team risk-appetite memory | Two separate session transcripts | Pending task discussion and implementation |
+| 18 | Expandable Gradio agent trace | Screenshot of actual calls and recalled settings | Pending task discussion and implementation |
+
+Tool invocations read explicitly labeled synthetic snapshots; they do not make
+the fixture current production evidence. Unknown active incidents and freshness
+stay unknown. Advisory behavior, evidence grounding, credential protection,
+team-policy precedence, and configurable `week1/responses.json` answers remain
+required. Jev integration is outside scope.
