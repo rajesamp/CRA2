@@ -196,3 +196,27 @@ evidence records intact; do not claim tasks 13–18 or Week 1 human acceptance.
 
 These checks verify the written examples and preserve existing behavior. They
 do not demonstrate executable Week 2 tools, MCP, persistent memory, or a UI trace.
+
+<!-- Week 2 tasks 13–14: implementation update; keep the task 12 design record above. -->
+## Implemented local tools — 30 Sep 2026
+
+Both functions now run in [`week2/tools.py`](../week2/tools.py), with shared source
+validation and credential protection. Their known-service outputs and unknown-
+service errors match the JSON examples above exactly. Python functions accept
+missing/extra arguments only to return `invalid_input`; these arguments never
+add lookup capabilities. Source reads are bounded to 1,048,576 decoded characters.
+Direct and transitive graph lists both exclude self edges.
+
+From the repository root:
+
+```sh
+uv run --locked --offline python - <<'PY'
+# Week 2 tasks 13–14: call the local tools directly.
+from week2.tools import check_system_health, get_dependency_graph
+print(check_system_health("checkout-service"))
+print(get_dependency_graph("payment-gateway"))
+PY
+```
+
+[Implementation evidence](evidence/week2-tools.md) records actual calls and
+verification. These tools are not yet wired into MCP or the chat; that is task 15.

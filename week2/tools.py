@@ -127,3 +127,39 @@ def check_system_health(service_name=None, *extra, **fields):
         )
     except _ToolError as error:
         return {"status": "error", "error": {"code": str(error)}}
+
+
+# Week 2 task 14: cycle-safe traversal with stable lists and no self-dependents.
+def _direction(name, edges):
+    seen, pending = {name}, list(edges[name])
+    while pending:
+        node = pending.pop()
+        if node not in seen:
+            seen.add(node)
+            pending.extend(edges[node] - seen)
+    return {
+        "direct": sorted(edges[name] - {name}),
+        "transitive": sorted(seen - {name}),
+    }
+
+
+# Week 2 task 14: upstream callers and downstream dependencies from recorded edges.
+def get_dependency_graph(service_name=None, *extra, **fields):
+    """Return both directions of the validated snapshot graph, never inferred edges."""
+    try:
+        name, services = _context(service_name, extra, fields)
+        outgoing = {node: set(record["depends_on"]) for node, record in services.items()}
+        incoming = {node: set() for node in services}
+        for caller, dependencies in outgoing.items():
+            for dependency in dependencies:
+                incoming[dependency].add(caller)
+        return _reply(
+            name,
+            {
+                "dependents": _direction(name, incoming),
+                "dependencies": _direction(name, outgoing),
+            },
+            [f"graph:{name}.dependents", f"graph:{name}.dependencies"],
+        )
+    except _ToolError as error:
+        return {"status": "error", "error": {"code": str(error)}}
