@@ -116,13 +116,16 @@ def respond(
             }
             guard([answer, trace])
             return answer, trace
-        return responses.message(catalog, "out_of_scope"), {
+        answer = responses.message(catalog, "out_of_scope")
+        trace = {
             "scope": scope,
             "status": "out_of_scope",
             "retrieved": [],
             "provider_used": False,
             "request_attempted": False,
         }
+        guard([answer, trace])
+        return answer, trace
     if decision:
         if decision["kind"] == "browse":
             return _dataset_titles(question, decision, catalog)
@@ -227,13 +230,13 @@ def respond(
         trace["status"] = "advisory_boundary"
     elif re.search(r"\bremember\b|\b(?:save|store)\b.*\bpreference", lower):
         answer = responses.message(catalog, "memory_deferred")
-        trace["status"] = "week2_deferred"
+        trace["status"] = "deferred"
     elif re.search(
         r"\bfreeze\b|\bdepend(?:s|ents|encies)?\b|\b(?:current|live)\b.*\b(?:health|status)\b",
         lower,
     ) and not re.search(_SPECIFIC, lower):
         answer = responses.message(catalog, "tools_deferred")
-        trace["status"] = "week2_deferred"
+        trace["status"] = "deferred"
     elif not service:
         answer = responses.message(catalog, "missing_service")
         trace["status"] = "needs_clarification"

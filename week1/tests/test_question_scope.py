@@ -36,8 +36,8 @@ def test_unrelated_or_unsupported_request_has_only_the_repository_response(
 ):
     answer, trace = local_response(question, history, mode)
     assert answer == (
-        "Not really a CRA2-related question. See the "
-        "[CRA2 GitHub repository](https://github.com/rajesamp/CRA2)."
+        "That's outside CRA2's scope \u2014 CRA2 assesses software-change risk. "
+        "See [how CRA2 works](https://github.com/rajesamp/CRA2/blob/main/docs/architecture-overview.md)."
     )
     assert trace == {
         "scope": "non_cra2",

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "messages": {
-    "out_of_scope": "Not really a CRA2-related question. See the [CRA2 GitHub repository](https://github.com/rajesamp/CRA2).",
-    "help": "CRA2 reviews proposed changes using historical incidents, postmortems, and runbooks. Ask for dataset titles, counts, or incident fields, or describe one exact catalog service and the planned change. Current operational state and persistent preferences are deferred beyond Week 1.",
+    "out_of_scope": "That's outside CRA2's scope \u2014 CRA2 assesses software-change risk. See [how CRA2 works](https://github.com/rajesamp/CRA2/blob/main/docs/architecture-overview.md).",
+    "help": "CRA2 reviews proposed changes using historical incidents, postmortems, and runbooks. Ask for dataset titles, counts, or incident fields, or describe one exact catalog service and the planned change. Current operational state and persistent preferences are not available in this demo.",
     "input_length": "Please enter a change description of 1–4,000 characters.",
     "control_characters": "Please remove control characters from the request.",
     "invalid_mode": "Choose Groq assessment or Local evidence only.",
@@ -12,8 +12,8 @@
     "distinct_title_count": "{count} distinct scenario titles.",
     "incident_count": "{count} incident records.",
     "advisory_boundary": "I can help assess the change, but I cannot approve, block, merge, or deploy it. Please describe the planned change and a human can review the evidence.",
-    "memory_deferred": "This Week 1 demo does not store team preferences across sessions. Persistent team memory is a Week 2 task. You can include the preference in the current change description.",
-    "tools_deferred": "I cannot confirm current freeze, health, or dependency state in Week 1. The corpus contains static examples and verification guidance; live tool calls are a Week 2 task. Treat current status as unconfirmed.",
+    "memory_deferred": "This demo does not store team preferences across sessions. Include the preference in the current change description.",
+    "tools_deferred": "I cannot confirm current freeze, health, or dependency state. The corpus contains static examples and verification guidance only. Treat current status as unconfirmed.",
     "missing_service": "Which catalog service is changing? Use an exact service name, such as checkout-service, and describe what will change. I will not infer a dependency or service identity from its name.",
     "no_evidence": "I found no supporting corpus evidence for this request. I cannot assign a risk indication without evidence. Please add the specific change and relevant incident context.",
     "history_comparison": "Past incidents for comparison; a match does not prove the same failure will recur.",
@@ -57,7 +57,7 @@
         "Does CRA2 save chat history?",
         "Does CRA2 restore previous conversations?"
       ],
-      "answer": "This Week 1 demo does not restore previous conversations after a refresh. A viewer for earlier turns in the current session is proposed in ADR-002; it is not implemented."
+      "answer": "This demo does not restore previous conversations after a refresh. A viewer for earlier turns in the current session is proposed in ADR-002; it is not implemented."
     }
   ]
 }

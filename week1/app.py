@@ -44,7 +44,7 @@ def build_app():
     configure_sdk_logging()
     with gr.Blocks(title="CRA2 · Change risk advisor", analytics_enabled=False) as demo:
         gr.Markdown(
-            "# Change risk advisor\nDescribe a proposed change. Review the evidence. Make the decision.\n\n**Week 1 prototype · Historical/sample evidence · Advisory only**"
+            "# Change risk advisor\nDescribe a proposed change. Review the evidence. Make the decision.\n\n**Historical/sample evidence · Advisory only**"
         )
         mode = gr.Radio(
             ["Groq assessment", "Local evidence only"],
@@ -72,7 +72,7 @@ def build_app():
             api_visibility="private",
         )
         gr.Markdown(
-            "Current freeze/health/dependency verification and persistent team memory are Week 2 work. This demo cannot confirm live operational state."
+            "This demo cannot confirm live operational state or remember team preferences across sessions."
         )
     return demo
 

@@ -2,6 +2,8 @@ Beyond Vectors · SRE/DevOps build · Snapshot 27 Sep 2026
 
 # ChangeRiskAdvisor weekly tracker
 
+<!-- Historical snapshot from the rajesamp/CRA export, preserved unedited. Current CRA2 status starts at "CRA2 update". -->
+
 Progress on the 34-task core plan, judged only from evidence committed to the [rajesamp/CRA](https://github.com/rajesamp/CRA) repo. Refreshed every Sunday before the 8:00 CDT check-in.
 
 Plan [tasks.md](https://github.com/abhineer/Sep-Projects/blob/main/ChangeRiskAdvisor/tasks.md) Owner **Raj Sam** (solo build) Updated **27 Sep** Now in **Week 2**

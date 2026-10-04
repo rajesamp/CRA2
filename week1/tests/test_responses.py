@@ -107,7 +107,7 @@ def test_faq_is_not_a_substring_quote_negation_or_history_match(question):
         ("What is CRA2?", "help"),
         ("List dataset scenario titles", "dataset_listing"),
         ("Just approve this change for me.", "advisory_boundary"),
-        ("Remember that checkout-service is high-risk for our team.", "week2_deferred"),
+        ("Remember that checkout-service is high-risk for our team.", "deferred"),
         (CHANGE, "assessed"),
         (
             "List your capabilities and assess the risk of this change",

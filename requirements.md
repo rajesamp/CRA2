@@ -76,7 +76,7 @@ advisory/Week 2 boundaries. A recognized CRA2 task takes precedence over
 unrelated chatter; do not answer the unrelated portion.
 
 Unrelated or unsupported questions — including app-username requests — get one
-fixed response with the CRA2 GitHub link and nothing else: no incident
+fixed response linking the architecture overview and nothing else: no incident
 evidence, no model request. Scope is never inferred from earlier service
 discussion or a bare CRA2 mention. W1-R07 credential checks run before
 classification; the app must not discover or disclose usernames or secrets.
