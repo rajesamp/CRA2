@@ -4,8 +4,9 @@ New to CRA2 or explaining it to a stakeholder? Start with the
 [two-page overview](architecture-overview.md). This page is the engineering
 reference: scoring math, cache semantics, and telemetry fields.
 
-CRA2 is a synchronous Python library and CLI over a static, synthetic checkout
-system. Per request, it:
+CRA2 is a local chat app over a static, synthetic checkout system. The Gradio
+UI in `week1/` is the product; `cra2/` is the shared engine underneath it. Per
+question, it:
 
 1. Validates a structured change.
 2. Computes a rule score (System 1).
@@ -23,30 +24,39 @@ samples keep their original labels and never expand the catalog.
 
 ```mermaid
 flowchart TD
-    Input[Structured change] --> Validate[Validate and normalize]
-    Validate --> Complete{Enough detail to assess?}
-    Complete -- No --> Clarify[Targeted questions, no risk or provider call]
-    Complete -- Yes --> Context[Catalog, team settings, dependencies, incidents]
-    Context --> Rules[System 1 rules and initial level]
-    Rules --> Select{Deep mode or auto and uncertain?}
-    Select -- No --> Floor[Apply rule level and policy floors]
-    Select -- Yes --> Cache{Validated response in cache?}
-    Cache -- Yes --> Blend[Blend scores and combine comments]
-    Cache -- No --> Groq[At most one Groq SDK request]
-    Groq --> ValidateResponse[Validate JSON and filter model comments]
+    Input[Typed question] --> Scope[Classify scope and task]
+    Scope --> OffTopic[Off-topic reply, no retrieval or model call]
+    Scope --> Identify[Resolve one known service]
+    Identify --> Detail{Concrete change described?}
+    Detail -- No --> Clarify[Ask what changes, no risk or model call]
+    Detail -- Yes --> Retrieve[Retrieve passages from corpus and incidents]
+    Retrieve --> Hits{Any usable passage?}
+    Hits -- No --> NoEvidence[Say no usable evidence, no risk claim]
+    Hits -- Yes --> Mode{Review mode selected}
+    Mode -- "Local evidence only" --> ShowPassages[Show passages only, no risk claim]
+    Mode -- "Groq assessment" --> Cache{Validated response cached?}
+    Cache -- Yes --> Blend[Keep model severity and citations]
+    Cache -- No --> Groq[At most one Groq request]
+    Groq --> ValidateResponse[Validate JSON, discard uncited comments]
     ValidateResponse -- Valid --> Blend
-    Groq -- Unavailable --> Fallback[Keep System 1, add availability note]
+    Groq -- Unavailable --> Fallback[Show passages, add availability note]
     ValidateResponse -- Invalid --> Fallback
-    Fallback --> Floor
-    Blend --> Floor
-    Floor --> Output[Level, route, three comments, advisory, telemetry]
+    Fallback --> ShowPassages
+    Blend --> Ground[Enforce policy floor, order comments]
+    ShowPassages --> Output[Passages, risk indication, review questions, advisory]
+    Ground --> Output
 ```
 
 | Component | Responsibility |
 |---|---|
-| `cra2/__main__.py` | Read a sample ID, JSON file, or stdin; report argument/input errors |
+| `week1/app.py` | Gradio UI: review-mode radio, chat surface, evidence panel, loopback-only launch |
+| `week1/chat.py` | Request flow: scope, service, history, mode branch, evidence list |
+| `week1/routing.py` | Classify the question as a supported task, a clarification, or out of scope |
+| `week1/retrieval.py` | Chunk, embed, and search the local SQLite vector index |
+| `week1/answers.py` | Dataset projections and evidence lists from canonical facts |
+| `week1/responses.json` | Editable answer copy, capability labels, and FAQ aliases |
 | `cra2/config.py` | Validate environment settings; opt-in dotenv; locate packaged/source resources |
-| `cra2/advisor.py` | Input validation, context, selection gate, floors, comment order, rendering |
+| `cra2/advisor.py` | Input validation, context, floors, comment order, rendering |
 | `cra2/incidents.py` | Load and validate both incident sources; rank and annotate up to five records |
 | `cra2/team_settings.py` | Validate team/request booleans; resolve precedence; expose sources/conflicts |
 | `cra2/system1.py` | Deterministic rule scoring and evidence-linked comment templates |
@@ -59,34 +69,30 @@ Canonical fixtures stay in `data/` and `evals/`. The wheel build maps them into
 The repository evaluation script reads its source case file and is not an
 installed command.
 
-## Input and context
+## Question scope and context
 
-An assessable request needs a known `service`, a supported `change_type`, and
-a concrete `summary`. Anything less returns
-`status: "needs_clarification"` with targeted questions and null risk, score,
-and route. No incident context or model request is produced.
+A typed question is classified before any retrieval or model call. Out-of-scope
+questions get one fixed reply and nothing else: no retrieval, no provider
+request, no answer to the unrelated portion. Scope is never inferred from
+earlier conversation or a bare mention of CRA2.
 
-The summary heuristic strips generic terms and service/type tokens, then
-requires at least two distinct informative terms remaining. It is lexical; it
-does not understand every vague or contradictory request.
+Within scope, an assessable question needs one exact known service and a
+concrete change. Either missing produces a clarification request, not a risk
+claim. Questions are capped at 4,000 characters and reject control characters
+other than tab, CR, and LF.
 
-Input rules:
+The concreteness check strips generic terms and service tokens, then requires at
+least two distinct informative terms remaining. It is lexical and does not
+understand every vague or contradictory question.
 
-- Optional fields: string `id`, three plan strings (`deploy_plan`,
-  `rollback_plan`, `monitoring_plan`), and `settings`. An omitted or null plan
-  normalizes to an empty string.
-- Settings accept only booleans `freeze_window_active` and `high_risk`.
-- Whitespace is trimmed; invalid types, unknown fields, and strings over
-  10,000 characters are input errors before any provider request.
-- A clarification need is distinct from malformed JSON or an invalid type.
-- Fields reject Unicode category-C characters except tabs, CR, and LF.
-- The CLI caps file/stdin input at 1,048,576 decoded characters and rejects
-  duplicate JSON keys and excessive nesting.
+When the previous turn named one known service and the new turn continues it,
+the adapter may carry that service forward. A named but unknown service never
+inherits the previous one.
 
-Context includes the service record, transitive reverse dependents, and at
-most five incidents from the 46-record collection. A candidate matches if it
-belongs to the exact service or shares at least two meaningful terms with the
-change; cross-service type matches alone never qualify. Ranking order:
+Context includes the service record, transitive reverse dependents, and at most
+five incidents from the 46-record collection. A candidate matches if it belongs
+to the exact service or shares at least two meaningful terms with the question;
+cross-service type matches alone never qualify. Ranking order:
 
 1. Exact service; within it, matching normalized type first.
 2. Cross-service candidates by token overlap count, then matching normalized
@@ -112,10 +118,10 @@ degraded health — not recursively. Graph traversal handles cycles and never
 counts the changed service as its own dependent. The static fixture is not
 live operational state.
 
-The model receives the normalized change, primary and direct-dependency
-catalog records, related incidents, dependent names, degraded names, allowed
-evidence keys, and System 1 signals. A Groq request sends this context off the
-local machine; `fast` mode never selects this path. The user authorized the
+The model receives the retrieved passages, the named service, its
+direct-dependency catalog records, configured policy facts, and the allowed
+evidence keys. A Groq request sends this context off the local machine.
+**Local evidence only** never selects this path. The user authorized the
 sanitized samples for public GitHub and provider context; adding them required
 no live Groq calls.
 
@@ -142,14 +148,8 @@ status.
 
 ## Scoring and policy floors
 
-System 1 adds:
-
-- Change-type base weight
-- Tier weight
-- Transitive reverse dependents: 0.02 each, capped at 0.08
-- Applicable rule weights
-
-Total capped at 1.0, rounded to two decimals.
+The engine scores a structured change. Two callers use it: the chat adapter
+builds one from your question, and the CLI reads one from a file. The weights:
 
 | Rule | Weight |
 |---|---|
@@ -161,6 +161,9 @@ Total capped at 1.0, rounded to two decimals.
 | Missing deploy plan on service with dependents | 0.05 |
 | Changed service or direct dependency degraded | 0.05 |
 
+Plus a change-type base weight, a tier weight, and 0.02 per transitive reverse
+dependent (capped at 0.08). Total capped at 1.0, rounded to two decimals.
+
 Tier thresholds:
 
 | Tier | Low | Medium | High |
@@ -170,24 +173,23 @@ Tier thresholds:
 | `standard` | < 0.40 | 0.40–0.69 | ≥ 0.70 |
 
 Degraded health or effective `high_risk = true` forces at least medium. A
-freeze report alone never elevates risk. System 1 is **uncertain** when the
-minimum distance between its score and a tier threshold, rounded to two
-decimals, is less than 0.05. Exactly 0.05 stays outside the gate. An uncertain
-assessment is at least medium in every mode, including `fast` and provider
-fallback.
+freeze report alone never elevates risk. A score within 0.05 of a tier
+threshold (rounded to two decimals) is **uncertain**; exactly 0.05 stays
+outside. An uncertain assessment is at least medium in every mode.
 
 System 2 rates five areas: deploy order, rollback, config drift, dependencies,
 and monitoring. Ratings map none=0, low=0.33, medium=0.67, high=1. Its score
-is `0.6 × max + 0.4 × mean`, rounded to two decimals. A successful response is
-blended equally with the System 1 score under current rules.
+is `0.6 × max + 0.4 × mean`, rounded to two decimals, blended equally with the
+System 1 score.
 
 The final level is the greater of the blended score's tier band and the risk
 floor, and the floor is never below the initial System 1 level. A benign model
 reply therefore cannot reduce a rule-based medium/high result to low. The
 numeric blended score can sit below the displayed level's threshold;
-`risk_floor` and `system1_level` explain why. Routes: low → `routine-review`,
-medium → `focused-review`, high → `priority-review`, always with the advisory
-notice. No route authorizes approval, rejection, or deployment.
+`risk_floor` and `system1_level` explain why. Routes map low →
+`routine-review`, medium → `focused-review`, high → `priority-review`, always
+with the advisory notice. No route authorizes approval, rejection, or
+deployment.
 
 ## Provider contract and grounding limits
 
@@ -274,19 +276,19 @@ complete token-cost estimate when any attempt lacks usage.
 
 ## Verification and limitations
 
-Offline tests cover validation, policy floors, malformed model output, cache
-identity, rendering, accounting, and package-resource contracts. CI also
-builds a wheel and checks the installed CLI outside the checkout. CI targets
-Python 3.10 and 3.13 and runs a five-repeat fast calibration gate. The gate
-scores every repeat; one good first response cannot hide later regressions.
-Unexpected clarification fails a calibration case without crashing the scorer.
-Repeatability covers status, questions, freeze state, settings, and conflicts,
-as well as score, level, route, and comments.
+Offline tests cover question scope, retrieval staleness, policy floors,
+malformed model output, cache identity, rendering, accounting, and
+package-resource contracts. CI targets Python 3.10 and 3.13, builds a wheel,
+and runs a five-repeat calibration gate. The gate scores every repeat; one good
+first response cannot hide later regressions. Unexpected clarification fails a
+calibration case without crashing the scorer. Repeatability covers status,
+questions, freeze state, settings, and conflicts, as well as score, level,
+route, and comments.
 
 The [fast report](evidence/evals-fast.md) preserves the pre-enrichment
-code-overhaul run and its UTC window. Its latency excludes CLI startup and is
-neither an operational guarantee nor a benchmark of the enlarged incident set.
-The 20-case dataset informed the weights; incident context adds no labeled
+code-overhaul run and its UTC window. Its latency excludes process startup and
+is neither an operational guarantee nor a benchmark of the enlarged incident
+set. The 20-case dataset informed the weights; incident context adds no labeled
 cases. Unseen-change quality is unmeasured. Live Groq tests need explicit
 opt-in and credentials; live quality, latency, cost, and repeatability are
 unverified by the offline suite. No Caveman project telemetry was available
@@ -296,6 +298,7 @@ records the updated review routes, settings, and freeze-verification behavior
 on the calibration set.
 
 Not implemented: hosted service, multiuser IAM, ingress/egress control plane,
-live catalog or freeze synchronization, postmortem ingestion. Cross-process or
-multiuser reproducibility needs common policy/data versions and an operational
-design; the process-local cache does not provide it. See the [FAQ](faq.md).
+live catalog or freeze synchronization, postmortem ingestion, and persistent
+conversational memory. Cross-process or multiuser reproducibility needs common
+policy/data versions and an operational design; the process-local cache does not
+provide it. See the [FAQ](faq.md).

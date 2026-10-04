@@ -1,9 +1,9 @@
-# Week 1: local RAG chat
+# Week 1: the chat app
 
-This optional project adds the upstream Week 1 corpus, embeddings, retrieval,
-and Gradio chat. The existing CLI and its dependencies stay unchanged. Run
-every command below from the CRA2 repository root. See
-[requirements](../requirements.md), [tasks](../tasks.md), and
+This project is the CRA2 app: corpus, embeddings, retrieval, and the Gradio
+chat. It runs in its own environment. The shared engine under `cra2/` and the
+app run side by side. Run every command below from the CRA2 repository root.
+See [requirements](../requirements.md), [tasks](../tasks.md), and
 [acceptance evidence](../docs/evidence/week1-alignment.md).
 
 ## Install and index

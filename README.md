@@ -1,19 +1,21 @@
 # CRA2 — ChangeRiskAdvisor 2
 
-CRA2 assesses the risk of a proposed software change and returns:
+CRA2 is a local chat app for change-risk review. You describe a proposed change
+in plain English. It answers with:
 
-- A risk level (`low`, `medium`, or `high`)
-- A review route (`routine-review`, `focused-review`, or `priority-review`)
-- Three comments with evidence references
+- A **risk indication** — `low`, `medium`, or `high`, always labeled
+  uncalibrated
+- **Review questions** for the human who decides
+- **The passages it based that on** — incident records, postmortems, and
+  runbooks, each with an ID you can open
 
-Local rules score every change. Optional Groq analysis can add concerns when
-rules are uncertain or `deep` mode is selected.
+**CRA2 never approves, rejects, blocks, merges, or deploys a change.** It ranks
+review attention and hands the decision to a human. Any model-produced comment
+is discarded unless it cites a passage the app actually retrieved. A reported
+freeze stays **unconfirmed** until verified; it triggers a verification
+question, not a risk weight.
 
-**CRA2 never approves, rejects, blocks, merges, or deploys a change.** Routes
-rank review attention only. A model response cannot lower the rule-based risk
-level. Degraded-service, high-risk team settings, and uncertainty floors also
-raise the floor. A reported freeze stays **unconfirmed** until verified; it
-triggers a verification question, not a risk weight.
+Start with the [two-page overview](docs/architecture-overview.md).
 
 The checkout catalog, 16 original incidents, and 20 evaluation cases are
 synthetic. An additional 30 sanitized incident samples
@@ -24,194 +26,133 @@ calibration, not production accuracy. See the
 
 ## Run it
 
-You need Python 3.10+. The repository pins Python 3.13 for
+CRA2 is a local chat app. You need Python 3.13 and
 [uv](https://docs.astral.sh/uv/).
 
 ```sh
 git clone https://github.com/rajesamp/CRA2.git
 cd CRA2
-uv sync --locked
 
-# Assess a bundled sample case
-uv run cra2 CHG-02 --mode fast
+# Install, build the local search index, and download the embedding model once
+uv sync --locked --project week1 --python 3.13
+uv run --project week1 python -m week1.setup_index --download-model
 
-# Assess a JSON file; --json prints the full result
-uv run cra2 my-change.json --mode fast --json
-
-# Assess stdin input
-uv run cra2 - --mode fast < my-change.json
-
-# Run offline tests
-uv run pytest -q -m "not live"
+# Start the app
+CRA2_ENV_FILE=.env uv run --project week1 python -m week1.app
 ```
 
-`CHG-01` through `CHG-20` select bundled sample cases. Wheel installs bundle
-sample cases, catalog, incidents, rules, and prompts, so the CLI works outside
-a source checkout.
+Open [CRA2 locally](http://127.0.0.1:7860). Pick **Local evidence only** to run
+without a Groq key, or **Groq assessment** for a model-chosen risk indication.
 
-For Groq, export `GROQ_API_KEY`, or select a dotenv file explicitly. CRA2 does
-not load an arbitrary `.env` from the current directory.
+For Groq, export `GROQ_API_KEY`, or select a dotenv file explicitly with
+`CRA2_ENV_FILE`. CRA2 does not load an arbitrary `.env` from the current
+directory.
+
+Full setup, credential boundaries, and optional authenticated sharing are in
+[week1/README.md](week1/README.md).
 
 ```sh
 cp .env.example .env  # add the key locally; never commit .env
-CRA2_ENV_FILE=.env uv run cra2 CHG-16 --mode auto
+CRA2_ENV_FILE=.env uv run --project week1 python -m week1.app
 ```
 
-`auto` and `deep` send change details, catalog context, and up to five related
-incidents to Groq, including the sanitized samples. `fast` is fully local.
+**Groq assessment** sends your question, the retrieved passages, and configured
+policy facts to Groq. **Local evidence only** makes no network request at all.
 
-## Input contract
+## What you can ask
 
-```json
-{
-  "id": "MY-CHANGE-01",
-  "service": "inventory-service",
-  "change_type": "Config change",
-  "summary": "Raise the stock-count cache TTL from 30 s to 120 s.",
-  "deploy_plan": "",
-  "rollback_plan": "Set the TTL back to 30 s.",
-  "monitoring_plan": "Nightly reconciliation drift."
-}
-```
+| You ask | You get |
+|---|---|
+| "How risky is changing checkout-service timeout to 400 ms?" | A risk indication labeled *uncalibrated*, plus review questions (Groq mode). Passages only, no risk claim (local mode) |
+| "Have checkout-service retry config changes caused incidents before?" | The matching past incidents, labeled historical |
+| "How many incidents do you have?" / "List scenario titles for payment" | Counts and titles from the canonical records |
+| "What are the incident fields?" | The four field names |
+| "Just approve this change for me." | A refusal and an offer to assess it instead |
+| "Is this a freeze window right now?" | "Cannot confirm current state — treat as unconfirmed" |
+| Anything off-topic | One sentence and a link. No retrieval, no model |
 
-Required fields: `service` (in the [catalog](data/checkout_system.json)),
-`change_type` (in [`rules.json`](cra2/rules.json)), and a concrete `summary`.
-Missing or unknown service/type, or a missing/generic summary, returns
-`status: "needs_clarification"` with targeted questions. Score, level, and route
-are null and no model is called.
+Questions are capped at 4,000 characters and must name one exact catalog
+service from the [checkout catalog](data/checkout_system.json). Name the service
+and describe the concrete change; the app asks for detail instead of guessing
+when either is missing.
 
-Field rules:
-
-- `id` is optional.
-- Plan fields are optional strings. Omitted, `null`, empty, or
-  whitespace-only values count as missing.
-- Strings are trimmed and capped at 10,000 characters.
-- Wrong types and unknown fields are rejected.
-- Control characters are rejected, except tabs and line breaks.
-- `settings` accepts only the booleans `freeze_window_active` and
-  `high_risk`. Team policy may override them.
-- Input files and stdin are capped at 1,048,576 decoded characters. Duplicate
-  JSON keys and excessive nesting are rejected.
-
-CRA2 does not parse free-text requests. The summary heuristic catches common
-vague requests; it cannot catch every contradiction.
-
-| Mode | Behavior | Groq key |
-|---|---|---|
-| `fast` | Local rules only | Not needed |
-| `auto` (default) | Calls System 2 only when uncertain | Only for selected requests |
-| `deep` | Calls System 2 for every assessable change | Needed unless cached in-process |
-
-Missing credentials, provider errors, and malformed replies fall back to local
-rules with an availability note. A model result cannot lower a medium or high
-rule-based rating.
+Retrieval matches your question against 46 incident records plus a corpus of
+postmortems and runbooks, and keeps the closest three passages. In Groq mode,
+any model comment that does not cite a retrieved passage is discarded before
+you see it.
 
 ## Team settings and freeze verification
 
 The bundled [team settings](data/team_settings.json) mark `auth-service` as
-`high_risk`, which forces at least medium risk. Set `CRA2_TEAM_SETTINGS_FILE`
-to use another validated JSON policy file; it replaces the bundled file.
+`high_risk`, which holds its risk at medium or above. Set
+`CRA2_TEAM_SETTINGS_FILE` to use another validated JSON policy file; it replaces
+the bundled file. Your typed question can never override team policy.
 
-Precedence: catalog defaults → request `settings` → team settings. Team
-values win even when `false`. Conflicts appear in `settings_conflicts` with
-the effective value and its source.
+When configured settings report an active freeze, the app says the freeze is
+**unconfirmed** and asks you to verify it. Otherwise it says `not_reported`,
+which is not proof that no freeze exists. CRA2 has no live freeze calendar.
 
-When effective settings report an active freeze, the result reports
-`freeze.status = "unconfirmed"` and asks a verification question. Otherwise it
-reports `not_reported`, which is not proof that no freeze exists. The freeze
-question can accompany a `status: "assessed"` result. CRA2 has no live freeze
-calendar.
+## Evidence integrity
 
-## Results and evidence
+Every comment cites a passage the app actually retrieved, drawn from a checked
+allow-list. A citation that is not on that list is discarded before display.
+This verifies that a cited passage exists, not that the prose interprets it
+correctly.
 
-An assessed result contains:
+Your question and the retrieved passages are untrusted input. The prompt design
+and local output checks reduce prompt-injection risk; they do not eliminate it.
+Never paste credentials into the chat.
 
-| Field | Content |
-|---|---|
-| `level`, `score`, `route` | Final risk level, blended 0–1 score, review route |
-| `comments` | Exactly three evidence-linked comments |
-| `questions` | Freeze-verification or context questions |
-| `advisory` | Fixed advisory sentence |
-| `system1_score`, `system1_level`, `risk_floor` | Rule scoring and floor provenance |
-| `settings`, `settings_conflicts` | Effective settings and visible conflicts |
-| `incident_context` | Selected incidents with source dataset, match kind, and matched terms |
-| `system2` | Provider telemetry: model, fingerprint, tokens, latency, cache state |
+Retrieval searches 46 incident records plus the postmortem and runbook corpus.
+Same-service history ranks first. Cross-service candidates need at least two
+meaningful shared terms; a shared change type alone does not qualify. An
+analogous incident is never evidence that the catalog service itself failed
+before, and the 28 external service labels in the samples do not create catalog
+services. See the [data guide](data/README.md).
 
-The final level can exceed the blended score's band because the risk floor is
-enforced.
+## Repeatability
 
-Evidence references bind comments to change fields, catalog fields, dependency
-edges, or supplied incidents, all from a checked allow-list. This verifies
-citation membership, not that the prose interprets the cited fact correctly.
-Input text is untrusted; prompt design and local checks reduce, but do not
-eliminate, prompt-injection risk.
+**Local evidence only** is deterministic: the same question returns the same
+passages every run.
 
-Incident retrieval searches 46 records and keeps at most five. Same-service
-history ranks first, and matching normalized types are preferred. Cross-service
-candidates need at least two meaningful shared terms; a shared change type
-alone does not qualify. `Deployment` is compared as `Code deploy`; stored
-labels stay unchanged. An analogous incident is never evidence that the catalog
-service itself failed before. The 28 external service labels in the samples do
-not create catalog services. See the [data guide](data/README.md).
+**Groq assessment** is best effort. Temperature zero, a fixed seed, a selected
+model, and a strict JSON schema reduce variation but do not guarantee identical
+wording. A bounded in-process cache reuses a recent answer, so a repeated
+question may skip the provider entirely. Automatic retries are off, so an
+uncached request makes at most one attempt.
 
-## Repeatability and performance
-
-System 1 is deterministic for fixed input, rules, and catalog data. System 2:
-temperature zero, a fixed seed, a selected model ID, and a strict JSON schema
-improve consistency but do not guarantee identical fresh answers. The backend
-fingerprint is recorded when available.
-
-System 2 keeps a bounded in-process cache. A cache hit avoids a new SDK request;
-it does not measure fresh-response repeatability. Evaluations clear the cache
-between non-fast assessments. Automatic SDK retries are off, so an uncached
-assessment makes at most one SDK attempt. Attempt telemetry is not proof the
-provider received or billed a request.
-
-Historical reports keep their UTC windows and policy baselines:
-
-- [Enriched fast report](docs/evidence/evals-enriched-fast.md)
-- [Original fast report](docs/evidence/evals-fast.md)
-
-Both predate the review-only routes and freeze policy. New runs must record
-current policy and data; never overwrite historical results. The
-[current policy report](docs/evidence/evals-policy-fast.md) records
-review-only routes, freeze questions, and settings behavior across repeats,
-with corpus/rules/catalog/settings hashes. Timings exclude CLI startup and are
-not service-level guarantees. Live Groq quality, latency, usage, and costs
-remain unverified.
+Live Groq quality, latency, usage, and cost remain unverified. Historical
+evaluation reports keep their original UTC windows and policy baselines; new
+runs record current policy rather than overwriting them.
 
 ## Evaluate and test
+
+The evaluation runner is repository tooling, not part of the app. It scores the
+20 calibration cases in [`evals/`](evals/).
 
 ```sh
 # Offline: every repeat must score 10/10 and give the same answer
 uv run python scripts/run_evals.py --mode fast --repeat 5 --require-repeatable \
   --out /tmp/cra2-policy-fast.md
 
+# Offline app tests
+uv run pytest -q -m "not live"
+uv run --project week1 python -m pytest week1/tests -q
+
 # Optional live tests; needs a key and may incur charges
 CRA2_RUN_LIVE_TESTS=1 uv run pytest -q -m live
-
-# Optional live evaluation; replace price placeholders with verified USD/1M rates
-uv run python scripts/run_evals.py --mode deep --repeat 5 --min-score 9 \
-  --require-repeatable --price-in INPUT_RATE --price-out OUTPUT_RATE
 ```
 
 Live tests need both `CRA2_RUN_LIVE_TESTS=1` and `GROQ_API_KEY`. If the key is
-in `.env`, also set `CRA2_ENV_FILE=.env`. The runner defaults to `fast` even
-though the CLI defaults to `auto`.
+in `.env`, also set `CRA2_ENV_FILE=.env`.
 
 Reports include per-repeat scores, observed levels, repeatability, timings,
 provider counts, and usage completeness. A report is written even when the gate
 fails. Exit codes: `0` pass, `1` gate failure, `2` invalid options. The default
 gate requires 10/10 on every assessment, an assessed outcome per calibration
-case, and no unavailable requested System 2 result. `--min-score` sets the
-per-assessment threshold. `--require-repeatable` needs at least two repeats and
-compares status, score, level, route, comments, questions, freeze state,
-settings, and conflicts.
-
-Both token prices are required for a cost estimate. Missing usage keeps the
-full estimate unknown; a known-usage subtotal stays explicitly partial.
-Estimates are not invoices or measured costs. See
-[eval methodology](evals/README.md).
+case, and no unavailable requested model result. Token-cost estimates need both
+prices and complete usage; a partial estimate stays labeled partial. Estimates
+are not invoices. See [eval methodology](evals/README.md).
 
 ## Configuration
 
@@ -224,7 +165,6 @@ override an explicitly selected dotenv file.
 | `CRA2_TEAM_SETTINGS_FILE` | bundled `data/team_settings.json` | Replacement policy file |
 | `GROQ_API_KEY` | unset | Provider credential; never put it in a change file |
 | `CRA2_MODEL` | `openai/gpt-oss-20b` | Model ID; changes require recorded evaluation |
-| `CRA2_MODE` | `auto` | `fast`, `auto`, or `deep`; CLI `--mode` overrides it |
 | `CRA2_SEED` | `7` | Integer sampling seed; repeatability is best effort |
 | `CRA2_TIMEOUT_S` | `10` | Positive finite SDK timeout; no automatic retries |
 | `CRA2_MAX_TOKENS` | `1024` | Positive completion-token cap |
@@ -238,39 +178,24 @@ requires updated evidence.
 
 | Path | Purpose |
 |---|---|
-| `cra2/` | Validation, rule scoring, Groq integration, routing, CLI, rules, prompts |
+| `week1/` | The chat app: UI, retrieval, embeddings, routing, response catalog |
+| `cra2/` | Shared engine: validation, rule scoring, Groq integration, rules, prompts |
 | `data/` | Synthetic catalog, original incidents, sanitized user samples |
 | `evals/` | Calibration cases and rubric methodology |
 | `scripts/run_evals.py` | Evaluation runner and quality gate |
-| `tests/` | Offline regression, packaging, and opt-in live checks |
+| `tests/` | Engine regression and opt-in live checks |
 | `docs/` | [Product-owner overview](docs/architecture-overview.md), architecture, ADRs, review and evaluation evidence |
 
-Hosted service, multiuser auth, ingress/egress controls, live configuration
-freshness, and postmortem integrations are not implemented. See the
-[FAQ](docs/faq.md).
+Not implemented: hosted service, multiuser auth, live configuration freshness,
+and postmortem ingestion. See the [FAQ](docs/faq.md).
 
-## Week 1 alignment and Gradio UI
+## Project records
 
-The additive [requirements](requirements.md) and [tasks](tasks.md) map upstream
-ChangeRiskAdvisor Week 1 tasks 1–11 to CRA2, with human acceptance tracked
-separately. Core CLI and earlier sections are preserved. See the
-[team record](docs/team.md), [six-pager](docs/6-pager.md),
-[PR/FAQ](docs/pr-faq.md), and [alignment evidence](docs/evidence/week1-alignment.md).
-
-From the repository root, launch the optional UI in its own environment:
-
-```sh
-uv sync --locked --project week1 --python 3.13
-uv run --project week1 python -m week1.setup_index --download-model
-CRA2_ENV_FILE=.env uv run --project week1 python -m week1.app
-```
-
-Open [CRA2 locally](http://127.0.0.1:7860). The explicit setup step downloads a
-checksum-pinned local embedding model; runtime retrieval stays local. Omit
-`CRA2_ENV_FILE=.env` and choose **Local evidence only** to run without Groq.
-Setup details, credential boundaries, and optional authenticated sharing are in
-[week1/README.md](week1/README.md). Operational tools and persistent
-conversational memory remain Week 2 work.
+The [requirements](requirements.md) and [tasks](tasks.md) map the upstream
+ChangeRiskAdvisor plan to CRA2, with human acceptance tracked separately from
+implementation. Supporting records: [team](docs/team.md),
+[six-pager](docs/6-pager.md), [PR/FAQ](docs/pr-faq.md), and
+[alignment evidence](docs/evidence/week1-alignment.md).
 
 ## Remaining work
 

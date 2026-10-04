@@ -25,13 +25,13 @@ finding. Review duration, incident avoidance, and workload are unmeasured, so
 this delivery shows that the assistant finds and explains relevant evidence. It
 claims no time saving and no prevented outage.
 
-CRA2 already provides a structured-input CLI, local rule scoring, an advisory
-policy, and bounded retrieval over incident records. The additive demonstration
-adds chat. Document ingestion, embedding, vector retrieval, and the cited answer
-path live in an isolated `week1/` project.
+CRA2 already provides local rule scoring, an advisory policy, and bounded
+retrieval over incident records. The additive work is the chat surface, with
+document ingestion, embedding, and vector retrieval in an isolated `week1/`
+project.
 
-Lexical selection alone does not prove the vector path works, and a CLI run does
-not prove a browser interface is usable or shareable.
+Lexical selection alone does not prove the vector path works, and passing rule
+scoring does not prove a browser interface is usable or shareable.
 
 The failure to avoid is an authoritative answer detached from evidence. A bare
 number does not help a reviewer judge risk. A citation to an irrelevant incident
@@ -68,7 +68,7 @@ workflow are unvalidated, and those gaps stay visible.
 ## 3. The solution: a small, inspectable retrieval workflow
 
 The implementation is an isolated Python 3.13 uv project with Gradio 6.28.0
-alongside the existing CLI and library. Its [app](../week1/app.py),
+alongside the shared engine. Its [app](../week1/app.py),
 [chat adapter](../week1/chat.py), and [retrieval module](../week1/retrieval.py)
 are additive; root dependencies and core code are unchanged.
 

@@ -131,8 +131,8 @@ and [demo evidence](evidence/week1-demo.md) tracks actual runs and final
 screenshot capture. Public-link verification is pending.
 
 The upstream task also requires posting that link to the team channel. The
-destination, authorization, and actual posting record are all pending. A local
-CLI result or a mock screenshot is not UI evidence. This draft publishes no
+destination, authorization, and actual posting record are all pending. A stored
+transcript or a mock screenshot is not UI evidence. This draft publishes no
 site, starts no public tunnel, and sends no message. Public sharing is an
 explicit `--share` action requiring `CRA2_UI_USER` and `CRA2_UI_PASSWORD`; never
 place those credentials in the repository, screenshots, or evidence transcripts.
