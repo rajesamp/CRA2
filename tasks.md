@@ -102,3 +102,57 @@ Both functions are callable from [week2/tools.py](week2/tools.py). No
 dependency or existing runtime file changed. Task 15's MCP/agent wiring, tasks
 16–17's persistent memory, and task 18's UI trace remain pending. Week 1 human
 acceptance remains pending.
+
+## Guided Week 2 continuation — 2026-10-17
+
+The owner requested completion of Week 2 one task at a time, introducing
+LangGraph for orchestration and MCP for the two existing local tools. This
+section records preparation, not implementation or milestone acceptance.
+
+The final 34-task objective is an advisory assistant combining cited incident
+history, tool-returned system facts, remembered team preferences, and eventually
+guardrails, caching, evaluation, observability, and a rehearsed demo. The upstream
+requirements permit static or lightly simulated operational data. Week 2 tools
+therefore retain synthetic provenance, unknown freshness/active incidents, and
+unconfirmed freeze applicability rather than claim current production state.
+
+| Task | Current state | Next completion evidence |
+|---|---|---|
+| 12–14 | Existing contracts and local tools delivered | Preserve their recorded acceptance and regression behavior |
+| 15 | LangGraph/MCP design prepared; runtime not implemented | Resolve required metadata-screening prerequisite; actual MCP calls to both tools and grounded response |
+| 16 | Planned after task 15 | Documented schema and actual persistent write/read log |
+| 17 | Planned after task 16 | Two separate same-team sessions demonstrating automatic recall, with policy precedence and team isolation |
+| 18 | Planned after task 17 | Running Gradio workflow and screenshot of actual calls/recalled settings in the expanded panel |
+
+Proposed scope, boundaries and file-level sequence:
+[intent](intent/week2-langgraph/intent.md),
+[design](intent/week2-langgraph/spec.md), and
+[implementation plan](intent/week2-langgraph/plan.md).
+These are review artifacts; no new runtime tests or task completion are claimed.
+Private per-task learning notes are excluded from Git and are not publication
+deliverables. Weeks 3–4 and Week 1 human acceptance retain their existing status.
+
+## Task 15 delivery — 2026-10-17
+
+LangGraph now coordinates a guarded local MCP client/server exposing both
+existing tools. A real local-index assessment retrieved three passages and
+called both tools over stdio; its answer renders the returned health/graph
+facts with synthetic-snapshot provenance. An offline reviewer integration
+also verified both results enter the assessment payload and tool citations
+are validated. This is not a live Groq success claim.
+
+[Launch and boundaries](week2/README.md) ·
+[Recorded task 15 evidence](docs/evidence/week2-task-15.md).
+
+The owner authorized the bounded exact-descriptor gate as the substitute for
+the unavailable Sentinel skill when starting task 15. Tests cover metadata
+mutation, duplicate/extra tools, malformed arguments/results, source failures,
+timeout cleanup and credential boundaries. Root runtime/dependencies and
+Week 1 code/tests remain unchanged.
+
+**Status:** task 15 implemented; local MCP/LangGraph acceptance verified.
+Live Groq validation remains pending explicit authorization to send the query,
+retrieved passages, configured policy and MCP results to Groq. The initial
+attempt returned provider-unavailable; automatic approval review rejected a
+network-enabled retry. Tasks 16–18 remain pending in sequence. No Week 2
+milestone closure or Week 1 human acceptance is inferred.

@@ -14,3 +14,8 @@ build/
 .DS_Store
 .idea/
 .vscode/
+
+# Private task learning notes and local Week 2 state; never publish these.
+/private-learning/
+/week2/.local/
+/week2/.venv/

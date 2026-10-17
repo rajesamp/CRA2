@@ -1,0 +1,8 @@
+{
+  "snapshot": "**Operational evidence via MCP · synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.",
+  "tool_failure": "Operational evidence is unavailable. No combined risk assessment is assigned; current health, dependencies and freeze applicability remain unconfirmed.",
+  "retrieval_failure": "Historical evidence is unavailable. No risk indication is assigned. Check the local index and model setup.",
+  "health": "Recorded health for {service}: **{health}**. Reported freeze status: **{freeze}**. Active incidents: unknown. Evidence: {evidence}.",
+  "graph": "Recorded graph for {service}:\n\n- Direct dependencies: {dependencies}\n- All reachable dependencies: {all_dependencies}\n- Direct dependents: {dependents}\n- All reachable dependents: {all_dependents}\n\nEvidence: {evidence}.",
+  "unavailable": "The request could not be processed. No risk indication is assigned. Check the local setup and provide one specific service/change."
+}

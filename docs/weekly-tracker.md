@@ -148,3 +148,17 @@ Verification: 100 focused tool tests, 502 total core tests (four live tests
 excluded), 494 Week 1 tests, and 100/100 repeated fast evaluations passed.
 MCP/chat integration remains task 15; memory and the UI trace remain tasks
 16–18. Week 1 human acceptance and Jev's exclusion remain unchanged.
+
+## Task 15: LangGraph and MCP — 17 Oct 2026
+
+Both existing tools are now exposed through local stdio MCP and orchestrated by
+an explicit LangGraph workflow. Actual local-index/MCP execution and a separate
+offline reviewer integration are recorded in
+[task 15 evidence](evidence/week2-task-15.md). The runtime uses an isolated
+locked environment; the existing Gradio app is unchanged pending task 18.
+
+Task 15 is implemented with verified local round trips. A real Groq response
+remains unverified: the provider attempt was unavailable and automatic approval
+review rejected the network-enabled retry for missing explicit payload and
+destination authorization. Tasks 16–18 remain pending. Synthetic snapshots do
+not establish current health, active incidents, freshness or freeze applicability.

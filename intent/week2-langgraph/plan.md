@@ -1,6 +1,6 @@
 # Plan: CRA2 Week 2 with LangGraph and MCP
 
-Status: task 15 authorized; implementation in progress. Date: 2026-10-17.
+Status: task 15 implemented and locally verified; external Groq verification pending explicit payload authorization. Date: 2026-10-17.
 Inputs: [intent](intent.md), [design](spec.md), tasks 12–18.
 WIP limit: one task at a time; no multi-agent implementation requested.
 
@@ -74,6 +74,25 @@ Private local files: `private-learning/task_12_learner.md` through
   secure multi-user hosting based on the single-team demo.
 
 ## Proof
+
+### Task 15 implementation decisions and deviations
+
+- Added `week2/__main__.py` and introduced `week2/README.md` during task 15,
+  rather than waiting until task 18, to provide a reproducible protocol/graph
+  entry point. The existing Gradio application remains unchanged.
+- Pinned FastEmbed 0.8.1 after an actual stale-index failure with 0.9.0. This
+  reuses the existing verified encoder identity without rebuilding its index.
+- Added an explicit LangSmith dependency to disable environment-triggered
+  tracing in a scoped context; no raw graph state is uploaded.
+- Preserved Week 1's immutable historical-citation checks through a reviewer
+  bridge: validate combined citations, retain tool citations in the exported
+  trace, and pass historical citations to the existing adapter.
+- Used real stdio and local-index runs, plus a clearly labeled offline reviewer
+  double for assessment-payload proof. A provider attempt was unavailable;
+  automatic approval review rejected a network-enabled retry because the exact
+  data payload/destination lacked explicit authorization. Do not claim a live
+  Groq result or bypass that rejection. See task-specific evidence.
+- Root runtime/dependencies/tests and `week2/tools.py` were not edited.
 
 Tasks count as done only after their named evidence exists. Preparation notes,
 schemas without readback, direct Python calls, test doubles, and screenshots
