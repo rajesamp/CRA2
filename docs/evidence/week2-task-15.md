@@ -131,6 +131,9 @@ week2/.venv/bin/python -m pytest -q week2/tests
 week1/.venv/bin/python -m pytest week1/tests -q
 494 passed in 8.48s
 
+week2/.venv/bin/python -m pytest week1/tests -q
+494 passed in 28.75s
+
 .venv/bin/python scripts/run_evals.py --mode fast --repeat 5 --require-repeatable --out /tmp/cra2-week2-fast.md
 100/100 assessments passed; minimum rubric 10/10; 20/20 decision contexts repeatable
 0 provider attempts
@@ -151,6 +154,14 @@ The first run exposed a trailing-newline argument acceptance issue and the
 existing adapter's rejection of newly introduced tool citations. The newline
 constraint and citation bridge were corrected; original regression tests were
 not weakened. Added tests preserve both cases.
+
+The Week 1 suite also passed under the new Week 2 dependency environment,
+verifying compatibility of the reused adapters. Git whitespace checks passed.
+Seven checked Markdown files had zero broken relative links. All seven learner
+files were ignored and none tracked. An exact configured-credential check found
+zero matches across 18 candidate implementation/documentation files for one
+configured value, with a positive detection canary. This is a bounded exact-value
+check, not a general secret-detection claim.
 
 ## Metadata gate and limits
 
