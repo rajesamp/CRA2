@@ -156,3 +156,15 @@ retrieved passages, configured policy and MCP results to Groq. The initial
 attempt returned provider-unavailable; automatic approval review rejected a
 network-enabled retry. Tasks 16–18 remain pending in sequence. No Week 2
 milestone closure or Week 1 human acceptance is inferred.
+
+## Task 15 live verification complete — 2026-10-17
+
+After explicit owner authorization for one transmission of the query, three
+retrieved passages, configured policy and both synthetic MCP results to Groq,
+the LangGraph workflow completed a successful live assessment. Both tools ran
+through MCP; the answer retained evidence, snapshot uncertainty and advisory
+boundaries. [Recorded provider result](docs/evidence/week2-task-15.md).
+
+**Task 15: complete.** The earlier provider-authorization blocker is resolved
+for this one execution. Next is task 16: persistent team-preference schema and
+actual write/read evidence. Tasks 17–18 and Week 1 human acceptance remain open.

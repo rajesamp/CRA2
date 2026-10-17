@@ -162,3 +162,13 @@ remains unverified: the provider attempt was unavailable and automatic approval
 review rejected the network-enabled retry for missing explicit payload and
 destination authorization. Tasks 16–18 remain pending. Synthetic snapshots do
 not establish current health, active incidents, freshness or freeze applicability.
+
+## Task 15 live verification complete — 17 Oct 2026
+
+The owner explicitly authorized one Groq assessment containing the query,
+three retrieved passages, configured policy and both synthetic MCP results.
+That execution succeeded: `assessed`, three retrieved passages, both MCP calls,
+and a validated advisory response from `openai/gpt-oss-20b`. The earlier
+authorization blocker is resolved for this one execution.
+[Provider evidence](evidence/week2-task-15.md). **Task 15 is complete.**
+Tasks 16–18 remain pending in order; this does not close the Week 2 milestone.

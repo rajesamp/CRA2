@@ -1,7 +1,8 @@
 # Task 15: LangGraph and MCP evidence
 
-Date: 17 Oct 2026. Task 15 is implemented and verified locally. External Groq
-success is not claimed. Tasks 16–18 are not implemented by this change.
+Date: 17 Oct 2026. Task 15 is implemented and verified with local MCP execution
+and one explicitly authorized live Groq assessment. Tasks 16–18 are not
+implemented by this change. Earlier failed/blocked attempts are retained below.
 
 ## Scope and implementation
 
@@ -180,7 +181,7 @@ image attestation or external trace export is claimed. Tool invocation time
 never establishes current production health, observed active incidents,
 freshness or freeze-calendar applicability.
 
-## External provider verification: still pending
+## Initial external-provider attempt: historical failure and approval block
 
 The configured-provider attempt at `2026-10-17T20:00:21.158320+00:00` returned
 `provider_unavailable`, `request_attempted=true`, and unknown token usage; both
@@ -190,9 +191,55 @@ a successful model response.
 Automatic approval review rejected a network-enabled retry: it would transmit
 the change query, retrieved incident passages, configured policy and MCP snapshot
 results to Groq without explicit authorization for that payload/destination.
-No retry was run after rejection. Completing that external check requires the
-owner's explicit authorization. Do not bypass the rejection through another
-network tool or indirect execution.
+No retry was run before explicit owner authorization. The subsequent approved
+execution is recorded below; it did not bypass the approval requirement.
 
 The remaining Week 2 work is task 16 (schema/readback), task 17 (two-session
 recall), then task 18 (Gradio operational trace and screenshot).
+
+## Authorized live Groq assessment — task 15 completion
+
+The owner explicitly answered yes to sending one assessment to Groq containing
+the change query, three retrieved passages, configured policy, and both synthetic
+MCP results. Exactly one assessment was executed after this authorization.
+
+Executed at `2026-10-17T20:35:24.568330+00:00` using the existing configured
+credential and protected provider adapter. The credential was not included in
+the query, trace, document or command arguments.
+
+```text
+Query: Change checkout-service config timeout from 4 seconds to 400 milliseconds.
+orchestration: langgraph
+status: assessed
+retrieved passages: 3
+MCP calls: check_system_health, get_dependency_graph
+provider_used: true
+request_attempted: true
+model: openai/gpt-oss-20b
+provider token usage: 2961 input, 268 output
+provider-reported processing time: 452 ms
+cache_hit: false
+```
+
+The validated response began:
+
+> **Risk indication: HIGH** — uncalibrated historical assessment. Current health is unverified.
+
+The answer included cited historical passages, both MCP-derived operational
+sections, the explicit synthetic-snapshot/unknown-freshness qualification, and
+the final advisory reminder. The model's accepted comments supplied historical
+citations, with no additional tool citations in `assessment_tool_citations`.
+Both tools' evidence identifiers and facts were rendered by the deterministic
+operational sections. Combined-evidence payload and citation behavior are
+separately covered by the offline integration tests above.
+
+The full guarded response and trace remain local under ignored
+`week2/.local/task15-groq-authorized.json`. No raw provider reasoning is stored.
+This is one successful provider observation, not an accuracy, repeatability,
+production-health or model-cost claim. No new runtime code changed for this
+verification; the existing regression results remain the applicable checks.
+
+**Task 15 acceptance is complete:** actual calls to both tools through MCP,
+LangGraph orchestration, and a successful live advisory assessment using the
+returned evidence. Task 16 is next; persistent memory and the Gradio trace panel
+remain tasks 16–18.

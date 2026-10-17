@@ -1,6 +1,6 @@
 # Plan: CRA2 Week 2 with LangGraph and MCP
 
-Status: task 15 implemented and locally verified; external Groq verification pending explicit payload authorization. Date: 2026-10-17.
+Status: task 15 complete; local/MCP tests and one explicitly authorized live Groq assessment verified. Date: 2026-10-17.
 Inputs: [intent](intent.md), [design](spec.md), tasks 12–18.
 WIP limit: one task at a time; no multi-agent implementation requested.
 
@@ -90,8 +90,9 @@ Private local files: `private-learning/task_12_learner.md` through
 - Used real stdio and local-index runs, plus a clearly labeled offline reviewer
   double for assessment-payload proof. A provider attempt was unavailable;
   automatic approval review rejected a network-enabled retry because the exact
-  data payload/destination lacked explicit authorization. Do not claim a live
-  Groq result or bypass that rejection. See task-specific evidence.
+  data payload/destination lacked explicit authorization. The owner then
+  explicitly authorized one assessment with that payload to Groq. That run
+  succeeded; no further provider requests were made. See task-specific evidence.
 - Root runtime/dependencies/tests and `week2/tools.py` were not edited.
 
 Tasks count as done only after their named evidence exists. Preparation notes,

@@ -36,9 +36,9 @@ rather than inferring one.
 
 `--mode 'Groq assessment'` opts into the existing protected Groq provider
 adapter. It sends the change, retrieved passages, configured policy and MCP
-results to Groq. A configured key alone is not permission for the agent to send
-that payload: the implementation session's network-enabled validation remains
-pending explicit owner authorization. Provider failures preserve tool evidence
+results to Groq. The owner explicitly authorized one such assessment for task 15;
+that live verification succeeded. This does not authorize unrelated or recurring
+provider calls. Provider failures preserve tool evidence
 and produce no model risk indication. Never put credentials in arguments or
 chat text; use the existing explicitly selected ignored dotenv configuration.
 
