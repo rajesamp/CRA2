@@ -1,7 +1,33 @@
-# Week 2 task 15: LangGraph and local MCP
+# Week 2: LangGraph, MCP, team memory and Gradio trace
 
-Run from the CRA2 repository root. This is the task 15 engineering entry point;
-the existing Gradio app stays unchanged until task 18.
+Run from the CRA2 repository root. Tasks 15–18 are implemented. The Week 2 app
+uses the guarded graph, actual MCP calls and persistent team preferences.
+
+## Start the chat
+
+```sh
+week2/.venv/bin/python -m week2.app
+```
+
+Open `http://127.0.0.1:7862`. The default is Local evidence only: no provider
+request or model risk rating. Expand **Agent trace** to inspect actual calls,
+recalled settings, provenance and protected failures. Team identity is trusted
+host configuration; it is not a user-editable field. The app binds to loopback,
+uses no public tunnel, disables analytics and does not restore conversations.
+
+Try these in order:
+
+1. `Remember that checkout-service is always high-risk for our team.`
+2. Open a new browser session, then ask: `Change checkout-service config timeout from 4 seconds to 400 milliseconds.`
+3. Expand Agent trace: the recalled flag and both MCP calls should be present.
+4. `Remember freeze policy for checkout-service: Verify the team calendar.`
+
+Preferences persist in ignored `week2/.local/team-memory.sqlite3`. Use
+`Forget the high-risk preference for checkout-service.` to explicitly clear a
+stored flag. This never lowers an authoritative configured risk floor. A
+freeze note is inert policy text, never proof of an active freeze.
+
+## Tool-only engineering entry point
 
 ```sh
 uv sync --locked --project week2 --python 3.13
@@ -84,8 +110,9 @@ Model prose is not exposed as independent operational truth.
 
 LangSmith tracing is explicitly disabled for this workflow, including when the
 environment enables it. Raw graph state is not the exported trace. No persistent
-checkpointer, conversation store, preference writes, or external telemetry is
-introduced. Tasks 16–18 remain separate work.
+graph checkpointer, conversation store or external telemetry is introduced.
+Task 16 adds a bounded preference database; task 17 loads it before assessment;
+task 18 projects actual events into the Gradio panel.
 
 ## Verify
 
@@ -99,4 +126,7 @@ deadline cleanup, input/output credentials, both tools reaching the assessment
 payload, and unchanged policy/advisory behavior. Provider/retrieval doubles in
 offline tests are labeled separately from actual protocol and local-index runs.
 
-[Task 15 evidence](../docs/evidence/week2-task-15.md).
+[Task 15 evidence](../docs/evidence/week2-task-15.md) ·
+[Task 16 readback](../docs/evidence/week2-task-16.md) ·
+[Task 17 recall](../docs/evidence/week2-task-17.md) ·
+[Task 18 browser proof](../docs/evidence/week2-task-18.md).

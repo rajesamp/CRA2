@@ -1,6 +1,6 @@
 # Plan: CRA2 Week 2 with LangGraph and MCP
 
-Status: task 15 complete; local/MCP tests and one explicitly authorized live Groq assessment verified. Date: 2026-10-17.
+Status: tasks 15–18 complete; task-specific evidence, browser proof and final regression checks recorded. Date: 2026-10-17.
 Inputs: [intent](intent.md), [design](spec.md), tasks 12–18.
 
 Completion run: tasks 16–18 are now authorized without intermediate confirmation.
@@ -11,6 +11,15 @@ and captures stay inside the work directory or `/tmp`. No dependency/global
 configuration changes are needed. Run final unchanged regression suites and
 update each private learner note plus task-specific evidence before close-out.
 WIP limit: one task at a time; no multi-agent implementation requested.
+
+Final task 18 result: additive `week2/app.py` with the same chat experience,
+host-owned session state, projected execution events and a collapsed trace
+panel. Actual browser inspection found and corrected a component relocation
+issue before the final screenshot. The corrected chat and trace are visible
+side by side. Existing root/Week 1 runtime and locks were preserved. All
+completion-run writes stayed inside CRA2 or `/tmp`; browser/server validation
+processes were closed after capturing evidence. No dependencies were installed
+and no new provider call was made during tasks 16–18.
 
 Tasks 16–17 implementation note: added `week2/preferences.py` and
 `week2/tests/test_preferences.py` to keep explicit command parsing and policy

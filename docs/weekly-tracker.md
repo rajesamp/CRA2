@@ -172,3 +172,20 @@ and a validated advisory response from `openai/gpt-oss-20b`. The earlier
 authorization blocker is resolved for this one execution.
 [Provider evidence](evidence/week2-task-15.md). **Task 15 is complete.**
 Tasks 16–18 remain pending in order; this does not close the Week 2 milestone.
+
+## Week 2 engineering complete — 17 Oct 2026
+
+Tasks 16–18 are now complete: persistent team/service preferences with actual
+fresh-process readback, automatic recall in a separate session, and a local
+Gradio app with actual MCP calls and recalled policy in an expandable trace.
+[Task 16 evidence](evidence/week2-task-16.md) ·
+[Task 17 evidence](evidence/week2-task-17.md) ·
+[Actual two-browser walkthrough and screenshot](evidence/week2-task-18.md).
+
+Final verification: 86 Week 2 tests, 502 core tests (four live tests excluded),
+494 unchanged Week 1 tests in the Week 2 environment, and 100/100 repeated fast
+evaluations passed. The final UI layout correction passed four focused tests
+and a repeated browser walkthrough. Private learner notes remain ignored.
+No new provider call, global dependency installation or public deployment was
+performed for tasks 16–18. Week 1 human acceptance and Weeks 3–4 retain their
+separate status; synthetic snapshot limitations remain explicit.

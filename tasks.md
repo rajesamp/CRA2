@@ -186,3 +186,22 @@ or preference restatement, and a different-team control seeing no record.
 Configured policy and risk floors retain precedence; conflicts are visible.
 Freeze-policy notes remain inert and never establish observed freeze state.
 Task 18 adds the UI trace and expanded-panel screenshot.
+
+## Week 2 completion — 2026-10-17
+
+**Tasks 12–18: implemented and verified.** The same advisory chat experience
+now runs through LangGraph, both local MCP tools, persistent team preferences,
+automatic cross-session recall, and an expandable operational trace.
+[Actual browser walkthrough and screenshot](docs/evidence/week2-task-18.md)
+show a preference saved in one browser context and recalled in a fresh context
+without chat history, alongside both actual MCP calls.
+
+Final checks: 86 Week 2 tests; 502 core tests (four live tests excluded);
+494 unchanged Week 1 tests in the Week 2 environment; 100/100 repeated fast
+evaluations. The final UI layout correction also passed its four focused tests
+and a repeated real browser walkthrough. No new external provider request was
+needed for tasks 16–18; task 15's separately authorized live Groq result remains
+recorded. Synthetic data limits and advisory boundaries remain explicit.
+
+Private learner notes for tasks 16–18 are updated and ignored. Week 1 human
+acceptance and Weeks 3–4 are not inferred from this engineering completion.
