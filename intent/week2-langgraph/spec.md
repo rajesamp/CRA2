@@ -5,6 +5,15 @@ Date: 2026-10-17. Input: [intent](intent.md), clarified by the originator.
 
 ## Requirements
 
+Completion run authorization: the owner approved tasks 16–18 without further
+interruptions and restricted all mutations to CRA2 and `/tmp`. Implement the
+design below using the existing environment. Use local evidence by default;
+team identity is trusted host configuration, never an editable browser field.
+Support only explicit bounded preference commands, fail closed on unavailable
+memory, preserve configured policy even when explicitly false, and expose
+conflicts. Store policy notes as inert text; never pass them as model instructions.
+No durable chat-history feature is introduced.
+
 1. Task 15 exposes both existing tools through local stdio MCP. A LangGraph
    workflow invokes them and uses validated results in an advisory response.
 2. Preserve source provenance: fixtures are synthetic snapshots, freshness and

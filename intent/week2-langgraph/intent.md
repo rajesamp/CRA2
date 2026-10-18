@@ -3,6 +3,17 @@
 Author: Raj Sam (originator); captured by Codex. Status: task 15 authorized in chat.
 Date: 2026-10-16.
 
+## Completion authorization — 2026-10-17
+
+The owner explicitly authorized finishing tasks 16–18 end to end without
+interruptions or further approval stops, with surgical edits only and no
+mutation outside the CRA2 work directory and `/tmp`. This authorizes the
+remaining previously proposed task sequence, local state, tests, UI and evidence.
+It supersedes per-task confirmation stops for this scoped completion run.
+Keep private learner notes ignored. Do not publish, deploy, change global
+configuration, install outside the permitted directories, or modify unrelated
+working-tree edits. Use the already installed environment and browser runtime.
+
 ## Scope clarification — 2026-10-17
 
 The originator reaffirmed the goal: review the final task-plan objective,

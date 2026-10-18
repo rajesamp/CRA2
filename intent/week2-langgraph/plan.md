@@ -2,6 +2,14 @@
 
 Status: task 15 complete; local/MCP tests and one explicitly authorized live Groq assessment verified. Date: 2026-10-17.
 Inputs: [intent](intent.md), [design](spec.md), tasks 12–18.
+
+Completion run: tasks 16–18 are now authorized without intermediate confirmation.
+Implement task 16 storage/schema first; task 17 explicit writes, recall and policy
+integration second; task 18 loopback Gradio UI, real two-session browser workflow
+and screenshot last. All generated databases, test temporaries, browser profile
+and captures stay inside the work directory or `/tmp`. No dependency/global
+configuration changes are needed. Run final unchanged regression suites and
+update each private learner note plus task-specific evidence before close-out.
 WIP limit: one task at a time; no multi-agent implementation requested.
 
 ## Files that change
