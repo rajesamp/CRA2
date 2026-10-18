@@ -4,5 +4,11 @@
   "retrieval_failure": "Historical evidence is unavailable. No risk indication is assigned. Check the local index and model setup.",
   "health": "Recorded health for {service}: **{health}**. Reported freeze status: **{freeze}**. Active incidents: unknown. Evidence: {evidence}.",
   "graph": "Recorded graph for {service}:\n\n- Direct dependencies: {dependencies}\n- All reachable dependencies: {all_dependencies}\n- Direct dependents: {dependents}\n- All reachable dependents: {all_dependents}\n\nEvidence: {evidence}.",
-  "unavailable": "The request could not be processed. No risk indication is assigned. Check the local setup and provide one specific service/change."
+  "unavailable": "The request could not be processed. No risk indication is assigned. Check the local setup and provide one specific service/change.",
+  "memory_saved": "Saved an explicit team preference for {service}. It will be recalled in a new session for this configured team.",
+  "memory_help": "Use one explicit command: Remember that checkout-service is always high-risk for our team. Or: Remember freeze policy for checkout-service: Verify the team calendar. To remove your stored flag: Forget the high-risk preference for checkout-service. Configured policy remains authoritative.",
+  "memory_unavailable": "Team preferences could not be read or saved. No combined risk assessment is assigned; restore the local memory store before continuing.",
+  "memory_flag": "Remembered team preference: high-risk flag for {service} = {flag}. Effective high-risk policy = {effective}. Source: {source}.",
+  "memory_note": "Remembered freeze-policy note (unverified policy text, not current freeze status): {note}",
+  "memory_conflict": "Configured policy or an existing risk floor takes precedence over the recalled preference. The conflict is recorded in the agent trace."
 }

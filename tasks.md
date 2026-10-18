@@ -176,3 +176,13 @@ actual write/read evidence. Tasks 17–18 and Week 1 human acceptance remain ope
 process. [Readback evidence](docs/evidence/week2-task-16.md). The store separates
 absent records from unavailable/corrupt storage, uses atomic parameterized
 updates, and persists no conversations or credentials. Tasks 17–18 follow.
+
+## Task 17 delivery — 2026-10-17
+
+**Task 17: complete.** Explicit preference writes and automatic same-team recall
+are integrated into LangGraph. [Three fresh-process transcripts](docs/evidence/week2-task-17.md)
+show session A saving a high-risk service, session B recalling it with no history
+or preference restatement, and a different-team control seeing no record.
+Configured policy and risk floors retain precedence; conflicts are visible.
+Freeze-policy notes remain inert and never establish observed freeze state.
+Task 18 adds the UI trace and expanded-panel screenshot.

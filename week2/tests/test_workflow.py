@@ -21,7 +21,10 @@ HIT = {"chunk_id": "pm-cx101:chunk-1", "doc_id": "pm-cx101", "title": "Timeout i
 
 
 @pytest.fixture(autouse=True)
-def no_provider(monkeypatch):
+def no_provider(monkeypatch, tmp_path):
+    from week2.memory import MemoryStore
+    store = MemoryStore(tmp_path / "preferences.sqlite3")
+    monkeypatch.setattr(workflow, "MemoryStore", lambda: store)
     monkeypatch.setenv("GROQ_API_KEY", token_hex(24))
     monkeypatch.delenv("CRA2_ENV_FILE", raising=False)
     monkeypatch.setattr(system2, "client", lambda: pytest.fail("no live provider in tests"))
@@ -34,7 +37,7 @@ def forbidden(*_a, **_k):
 @pytest.mark.parametrize("question,status", [
     ("What's the capital of France?", "out_of_scope"),
     ("Just approve this change for me.", "advisory_boundary"),
-    ("Remember checkout-service is high-risk for our team.", "deferred"),
+    ("Remember checkout-service is high-risk for our team.", "memory_saved"),
     ("How risky is changing checkout-service?", "needs_clarification"),
     ("Is this a freeze window right now?", "needs_clarification"),
     ("Is unknown-service current health okay?", "needs_clarification"),

@@ -23,7 +23,8 @@ def server_parameters():
     # Deliberately omit provider keys, selected dotenv, UI auth and arbitrary env.
     return StdioServerParameters(
         command=sys.executable, args=["-m", "week2.mcp_server"], cwd=str(ROOT),
-        env={"PYTHONPATH": str(ROOT), "PYTHONNOUSERSITE": "1", "PATH": os.defpath},
+        env={"PYTHONPATH": str(ROOT), "PYTHONNOUSERSITE": "1", "PATH": os.defpath,
+             "PYTHONDONTWRITEBYTECODE": "1", "TMPDIR": "/tmp"},
     )
 
 

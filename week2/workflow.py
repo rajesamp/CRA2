@@ -1,10 +1,11 @@
 """Task 15: explicit LangGraph host; MCP tools remain a guarded boundary.
 
-No durable graph checkpoints, memory writes, autonomous tool loop or raw-state
-streaming. Week 1's retrieval/provider/policy adapters retain their behavior.
+Explicit team-preference memory is separate from ephemeral graph state. No
+durable conversation checkpoints, autonomous loop, or raw-state streaming.
 """
 
 import re
+import html
 import unicodedata
 from pathlib import Path
 from string import Formatter
@@ -20,11 +21,16 @@ from cra2.advisor import ADVISORY, CATALOG
 from week1 import chat, provider, responses, routing
 from week2.contracts import ContractError, NAMES, checked, decode_json, validate_result
 from week2.mcp_client import call_tools
+from week2.memory import MemoryStore, MemoryUnavailable
+from week2.preferences import parse_command, effective_policy
 
 COPY = Path(__file__).with_name("responses.json")
 PARAMETERS = {
     "snapshot": set(), "tool_failure": set(), "retrieval_failure": set(),
     "unavailable": set(),
+    "memory_saved": {"service"}, "memory_help": set(), "memory_unavailable": set(),
+    "memory_flag": {"service", "flag", "effective", "source"},
+    "memory_note": {"note"}, "memory_conflict": set(),
     "health": {"service", "health", "freeze", "evidence"},
     "graph": {"service", "dependencies", "all_dependencies", "dependents",
               "all_dependents", "evidence"},
@@ -65,6 +71,10 @@ class State(TypedDict, total=False):
     answer: str
     trace: dict
     tools: dict
+    memory_record: dict
+    policy: dict
+    next_route: str
+    memory_updates: dict
 
 
 def _answer(text, status):
@@ -94,13 +104,14 @@ def _context_service(question, history):
     return None
 
 
-def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_path=chat.INDEX):
+def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_path=chat.INDEX, memory_store=None):
     """Dependencies are runtime collaborators, never serialized graph state."""
     retrieve = retriever or chat.search
     review = reviewer or provider.assess
     run_tools = tool_runner or call_tools
     copy = load_copy()
     catalog = responses.load()
+    store = MemoryStore() if memory_store is None else memory_store
 
     def classify(state):
         question, mode, history = state["question"], state["mode"], state["history"]
@@ -115,10 +126,15 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
         scope = routing.classify_scope(question, decision, CATALOG)
         if scope == "non_cra2" or decision is not None:
             return {"route": "legacy"}
+        # An anchored preference command stores its bounded note as inert data;
+        # words inside that note are never interpreted as execution requests.
+        command = parse_command(question)
+        if command:
+            return {"route": "memory_write", "service": command["service"], "memory_updates": command["updates"]}
         if re.search(r"\b(?:approve|authorize|merge|deploy|block)\b", active):
             return _answer(responses.message(catalog, "advisory_boundary"), "advisory_boundary")
         if re.search(r"\bremember\b|\b(?:save|store)\b.*\bpreference", active):
-            return _answer(responses.message(catalog, "memory_deferred"), "deferred")
+            return _answer(copy["memory_help"], "needs_clarification")
         names = chat._services(question)
         if len(names) > 1:
             return _answer(responses.message(catalog, "multiple_services"), "needs_clarification")
@@ -132,13 +148,36 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
             r"\b(?:had|caused|similar|past|previous)\b.*\bincidents?\b|\bincidents?\b.*\b(?:before|history|past)\b",
             active))
         if history_only and not (health or dependency):
-            return {"route": "legacy"}
+            return {"route": "memory_read", "service": service, "next_route": "legacy"}
         if not specific and not (health or dependency):
             return _answer(responses.message(catalog, "specific_change", service=service), "needs_clarification")
         selected = NAMES if specific else tuple(
             name for name, needed in zip(NAMES, (health, dependency)) if needed)
-        return {"route": "retrieve" if specific else "tools", "service": service,
+        return {"route": "memory_read", "next_route": "retrieve" if specific else "tools", "service": service,
                 "calls": [(name, {"service_name": service}) for name in selected]}
+
+    def memory_read(state):
+        try:
+            record = store.read(state["service"])
+            policy = effective_policy(state["service"], record, team_settings=chat.TEAM_SETTINGS)
+            responses.guard([record, policy])
+            return {"memory_record": record, "policy": policy, "route": state["next_route"]}
+        except MemoryUnavailable:
+            result = _answer(copy["memory_unavailable"], "memory_unavailable")
+            result["trace"]["memory"] = {"status": "unavailable"}
+            return result
+
+    def memory_write(state):
+        try:
+            record = store.write(state["service"], **state["memory_updates"])
+            result = _answer(copy["memory_saved"].format(service=state["service"]), "memory_saved")
+            result.update(memory_record=record, policy=effective_policy(state["service"], record, team_settings=chat.TEAM_SETTINGS))
+            result["trace"]["events"] = [{"event": "memory_written", "service": state["service"]}]
+            return result
+        except MemoryUnavailable:
+            result = _answer(copy["memory_unavailable"], "memory_unavailable")
+            result["trace"]["memory"] = {"status": "unavailable"}
+            return result
 
     def legacy(state):
         answer, trace = chat.respond(state["question"], state["history"], state["mode"],
@@ -177,8 +216,11 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                 historical_keys = set(payload["evidence_keys"])
                 payload = dict(payload)
                 payload["tool_results"] = outputs
+                payload["settings"] = state["policy"]
+                payload["settings_conflicts"] = state["policy"]["conflicts"]
                 payload["evidence_keys"] = sorted(set(payload["evidence_keys"]) | {
-                    key for result in outputs.values() for key in result["evidence"]})
+                    key for result in outputs.values() for key in result["evidence"]} |
+                    set(state["policy"]["sources"].values()))
                 payload["source_scope"] = (
                     "Historical corpus and actual MCP calls to synthetic snapshots. "
                     "Observation time, freshness and active incidents are unknown; "
@@ -192,12 +234,15 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                 # subset into that adapter and retain tool citations in trace.
                 accepted = []
                 allowed = set(payload["evidence_keys"])
-                tool_keys = allowed - historical_keys
+                tool_keys = {key for output in outputs.values() for key in output["evidence"]}
                 for comment in result["out"]["comments"]:
                     if (set(comment["evidence"]) & {h["chunk_id"] for h in state["hits"]}
                             and system2._comment_allowed(comment, allowed)):
                         tool_citations.update(set(comment["evidence"]) & tool_keys)
-                        accepted.append(dict(comment, evidence=[k for k in comment["evidence"] if k in historical_keys]))
+                        floor = "medium" if state["policy"]["effective"]["high_risk"] else "low"
+                        accepted.append(dict(comment,
+                            severity=max(comment["severity"], floor, key=chat.LEVELS.index),
+                            evidence=[k for k in comment["evidence"] if k in historical_keys]))
                 return dict(result, out=dict(result["out"], comments=accepted))
 
             answer, trace = chat.respond(
@@ -205,6 +250,8 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                 retriever=lambda *_a, **_k: state["hits"], reviewer=enriched_review,
             )
             trace["assessment_tool_citations"] = sorted(tool_citations)
+            if trace["status"] == "assessed":
+                trace["risk_floor"] = "medium" if state["policy"]["effective"]["high_risk"] else "low"
         else:
             answer = ADVISORY
             trace = {"status": "tool_evidence", "retrieved": [],
@@ -229,16 +276,39 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
         return {"answer": answer.strip(), "trace": trace}
 
     def output_guard(state):
+        if "memory_record" in state:
+            record, policy = state["memory_record"], state["policy"]
+            state["trace"]["memory"] = {"status": "recalled" if record else "empty", "record": record,
+                                      "effective_policy": policy}
+            if record:
+                sections = []
+                if record["high_risk"] is not None:
+                    sections.append(copy["memory_flag"].format(service=state["service"],
+                        flag=str(record["high_risk"]).lower(), effective=str(policy["effective"]["high_risk"]).lower(),
+                        source=policy["sources"]["high_risk"]))
+                if record["freeze_notes"]:
+                    # Inert quoted presentation, never sent as model instructions.
+                    note = html.escape(record["freeze_notes"])
+                    note = re.sub(r"([\\`*_{}\[\]()#+.!|>~-])", r"\\\1", note)
+                    sections.append(copy["memory_note"].format(note=note))
+                if policy["conflicts"]:
+                    sections.append(copy["memory_conflict"])
+                state["answer"] = state["answer"].removesuffix(ADVISORY).rstrip() + "\n\n" + "\n\n".join(sections) + "\n\n" + ADVISORY
         responses.guard([state["answer"], state["trace"]])
-        return {}
+        return {"answer": state["answer"], "trace": state["trace"]}
 
     builder = StateGraph(State)
     for name, node in (("classify", classify), ("legacy", legacy), ("retrieve", retrieval),
                        ("tools", tools_node), ("compose", compose), ("output_guard", output_guard)):
         builder.add_node(name, node)
+    builder.add_node("memory_read", memory_read)
+    builder.add_node("memory_write", memory_write)
     builder.add_edge(START, "classify")
     builder.add_conditional_edges("classify", lambda s: s["route"],
-                                  {"done": "output_guard", "legacy": "legacy", "retrieve": "retrieve", "tools": "tools"})
+                                  {"done": "output_guard", "legacy": "legacy", "memory_read": "memory_read", "memory_write": "memory_write"})
+    builder.add_conditional_edges("memory_read", lambda s: s["route"],
+                                 {"done": "output_guard", "legacy": "legacy", "retrieve": "retrieve", "tools": "tools"})
+    builder.add_edge("memory_write", "output_guard")
     builder.add_conditional_edges("retrieve", lambda s: s["route"],
                                   {"done": "output_guard", "tools": "tools"})
     builder.add_edge("legacy", "output_guard")
@@ -248,7 +318,7 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
     return builder.compile()
 
 
-async def arespond(question, history=None, mode="Local evidence only", **collaborators):
+async def arespond(question, history=None, mode="Local evidence only", *, session_id=None, **collaborators):
     """Only final guarded answer and trace leave this boundary; no raw state."""
     request_id = uuid4().hex
     try:
@@ -263,7 +333,8 @@ async def arespond(question, history=None, mode="Local evidence only", **collabo
         trace = result["trace"]
         trace.setdefault("provider_used", False)
         trace.setdefault("request_attempted", False)
-        trace.update(request_id=request_id, orchestration="langgraph", memory="not_implemented")
+        trace.setdefault("memory", {"status": "not_accessed"})
+        trace.update(request_id=request_id, session_id=session_id or uuid4().hex, orchestration="langgraph")
         responses.guard([result["answer"], trace])
         return result["answer"], trace
     except Exception:

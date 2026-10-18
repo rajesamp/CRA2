@@ -12,6 +12,13 @@ configuration changes are needed. Run final unchanged regression suites and
 update each private learner note plus task-specific evidence before close-out.
 WIP limit: one task at a time; no multi-agent implementation requested.
 
+Tasks 16–17 implementation note: added `week2/preferences.py` and
+`week2/tests/test_preferences.py` to keep explicit command parsing and policy
+precedence separate from storage/graph transport. The single task-15 deferred
+memory expectation was updated to the authorized write behavior with an isolated
+store; no unrelated tests were weakened. MCP child processes disable bytecode
+writes and use `/tmp` for temporaries to honor the completion-run mutation scope.
+
 ## Files that change
 
 New runtime, introduced only in its corresponding task:
