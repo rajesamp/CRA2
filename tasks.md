@@ -168,3 +168,11 @@ boundaries. [Recorded provider result](docs/evidence/week2-task-15.md).
 **Task 15: complete.** The earlier provider-authorization blocker is resolved
 for this one execution. Next is task 16: persistent team-preference schema and
 actual write/read evidence. Tasks 17–18 and Week 1 human acceptance remain open.
+
+## Task 16 delivery — 2026-10-17
+
+**Task 16: complete.** The bounded team/service SQLite schema is documented in
+[memory.md](docs/memory.md); a real write was read back identically in a fresh
+process. [Readback evidence](docs/evidence/week2-task-16.md). The store separates
+absent records from unavailable/corrupt storage, uses atomic parameterized
+updates, and persists no conversations or credentials. Tasks 17–18 follow.
