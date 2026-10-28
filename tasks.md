@@ -102,3 +102,106 @@ Both functions are callable from [week2/tools.py](week2/tools.py). No
 dependency or existing runtime file changed. Task 15's MCP/agent wiring, tasks
 16–17's persistent memory, and task 18's UI trace remain pending. Week 1 human
 acceptance remains pending.
+
+## Guided Week 2 continuation — 2026-10-17
+
+The owner requested completion of Week 2 one task at a time, introducing
+LangGraph for orchestration and MCP for the two existing local tools. This
+section records preparation, not implementation or milestone acceptance.
+
+The final 34-task objective is an advisory assistant combining cited incident
+history, tool-returned system facts, remembered team preferences, and eventually
+guardrails, caching, evaluation, observability, and a rehearsed demo. The upstream
+requirements permit static or lightly simulated operational data. Week 2 tools
+therefore retain synthetic provenance, unknown freshness/active incidents, and
+unconfirmed freeze applicability rather than claim current production state.
+
+| Task | Current state | Next completion evidence |
+|---|---|---|
+| 12–14 | Existing contracts and local tools delivered | Preserve their recorded acceptance and regression behavior |
+| 15 | LangGraph/MCP design prepared; runtime not implemented | Resolve required metadata-screening prerequisite; actual MCP calls to both tools and grounded response |
+| 16 | Planned after task 15 | Documented schema and actual persistent write/read log |
+| 17 | Planned after task 16 | Two separate same-team sessions demonstrating automatic recall, with policy precedence and team isolation |
+| 18 | Planned after task 17 | Running Gradio workflow and screenshot of actual calls/recalled settings in the expanded panel |
+
+Proposed scope, boundaries and file-level sequence:
+[intent](intent/week2-langgraph/intent.md),
+[design](intent/week2-langgraph/spec.md), and
+[implementation plan](intent/week2-langgraph/plan.md).
+These are review artifacts; no new runtime tests or task completion are claimed.
+Private per-task learning notes are excluded from Git and are not publication
+deliverables. Weeks 3–4 and Week 1 human acceptance retain their existing status.
+
+## Task 15 delivery — 2026-10-17
+
+LangGraph now coordinates a guarded local MCP client/server exposing both
+existing tools. A real local-index assessment retrieved three passages and
+called both tools over stdio; its answer renders the returned health/graph
+facts with synthetic-snapshot provenance. An offline reviewer integration
+also verified both results enter the assessment payload and tool citations
+are validated. This is not a live Groq success claim.
+
+[Launch and boundaries](week2/README.md) ·
+[Recorded task 15 evidence](docs/evidence/week2-task-15.md).
+
+The owner authorized the bounded exact-descriptor gate as the substitute for
+the unavailable Sentinel skill when starting task 15. Tests cover metadata
+mutation, duplicate/extra tools, malformed arguments/results, source failures,
+timeout cleanup and credential boundaries. Root runtime/dependencies and
+Week 1 code/tests remain unchanged.
+
+**Status:** task 15 implemented; local MCP/LangGraph acceptance verified.
+Live Groq validation remains pending explicit authorization to send the query,
+retrieved passages, configured policy and MCP results to Groq. The initial
+attempt returned provider-unavailable; automatic approval review rejected a
+network-enabled retry. Tasks 16–18 remain pending in sequence. No Week 2
+milestone closure or Week 1 human acceptance is inferred.
+
+## Task 15 live verification complete — 2026-10-17
+
+After explicit owner authorization for one transmission of the query, three
+retrieved passages, configured policy and both synthetic MCP results to Groq,
+the LangGraph workflow completed a successful live assessment. Both tools ran
+through MCP; the answer retained evidence, snapshot uncertainty and advisory
+boundaries. [Recorded provider result](docs/evidence/week2-task-15.md).
+
+**Task 15: complete.** The earlier provider-authorization blocker is resolved
+for this one execution. Next is task 16: persistent team-preference schema and
+actual write/read evidence. Tasks 17–18 and Week 1 human acceptance remain open.
+
+## Task 16 delivery — 2026-10-17
+
+**Task 16: complete.** The bounded team/service SQLite schema is documented in
+[memory.md](docs/memory.md); a real write was read back identically in a fresh
+process. [Readback evidence](docs/evidence/week2-task-16.md). The store separates
+absent records from unavailable/corrupt storage, uses atomic parameterized
+updates, and persists no conversations or credentials. Tasks 17–18 follow.
+
+## Task 17 delivery — 2026-10-17
+
+**Task 17: complete.** Explicit preference writes and automatic same-team recall
+are integrated into LangGraph. [Three fresh-process transcripts](docs/evidence/week2-task-17.md)
+show session A saving a high-risk service, session B recalling it with no history
+or preference restatement, and a different-team control seeing no record.
+Configured policy and risk floors retain precedence; conflicts are visible.
+Freeze-policy notes remain inert and never establish observed freeze state.
+Task 18 adds the UI trace and expanded-panel screenshot.
+
+## Week 2 completion — 2026-10-17
+
+**Tasks 12–18: implemented and verified.** The same advisory chat experience
+now runs through LangGraph, both local MCP tools, persistent team preferences,
+automatic cross-session recall, and an expandable operational trace.
+[Actual browser walkthrough and screenshot](docs/evidence/week2-task-18.md)
+show a preference saved in one browser context and recalled in a fresh context
+without chat history, alongside both actual MCP calls.
+
+Final checks: 86 Week 2 tests; 502 core tests (four live tests excluded);
+494 unchanged Week 1 tests in the Week 2 environment; 100/100 repeated fast
+evaluations. The final UI layout correction also passed its four focused tests
+and a repeated real browser walkthrough. No new external provider request was
+needed for tasks 16–18; task 15's separately authorized live Groq result remains
+recorded. Synthetic data limits and advisory boundaries remain explicit.
+
+Private learner notes for tasks 16–18 are updated and ignored. Week 1 human
+acceptance and Weeks 3–4 are not inferred from this engineering completion.

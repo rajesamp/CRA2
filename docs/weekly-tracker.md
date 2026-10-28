@@ -148,3 +148,44 @@ Verification: 100 focused tool tests, 502 total core tests (four live tests
 excluded), 494 Week 1 tests, and 100/100 repeated fast evaluations passed.
 MCP/chat integration remains task 15; memory and the UI trace remain tasks
 16–18. Week 1 human acceptance and Jev's exclusion remain unchanged.
+
+## Task 15: LangGraph and MCP — 17 Oct 2026
+
+Both existing tools are now exposed through local stdio MCP and orchestrated by
+an explicit LangGraph workflow. Actual local-index/MCP execution and a separate
+offline reviewer integration are recorded in
+[task 15 evidence](evidence/week2-task-15.md). The runtime uses an isolated
+locked environment; the existing Gradio app is unchanged pending task 18.
+
+Task 15 is implemented with verified local round trips. A real Groq response
+remains unverified: the provider attempt was unavailable and automatic approval
+review rejected the network-enabled retry for missing explicit payload and
+destination authorization. Tasks 16–18 remain pending. Synthetic snapshots do
+not establish current health, active incidents, freshness or freeze applicability.
+
+## Task 15 live verification complete — 17 Oct 2026
+
+The owner explicitly authorized one Groq assessment containing the query,
+three retrieved passages, configured policy and both synthetic MCP results.
+That execution succeeded: `assessed`, three retrieved passages, both MCP calls,
+and a validated advisory response from `openai/gpt-oss-20b`. The earlier
+authorization blocker is resolved for this one execution.
+[Provider evidence](evidence/week2-task-15.md). **Task 15 is complete.**
+Tasks 16–18 remain pending in order; this does not close the Week 2 milestone.
+
+## Week 2 engineering complete — 17 Oct 2026
+
+Tasks 16–18 are now complete: persistent team/service preferences with actual
+fresh-process readback, automatic recall in a separate session, and a local
+Gradio app with actual MCP calls and recalled policy in an expandable trace.
+[Task 16 evidence](evidence/week2-task-16.md) ·
+[Task 17 evidence](evidence/week2-task-17.md) ·
+[Actual two-browser walkthrough and screenshot](evidence/week2-task-18.md).
+
+Final verification: 86 Week 2 tests, 502 core tests (four live tests excluded),
+494 unchanged Week 1 tests in the Week 2 environment, and 100/100 repeated fast
+evaluations passed. The final UI layout correction passed four focused tests
+and a repeated browser walkthrough. Private learner notes remain ignored.
+No new provider call, global dependency installation or public deployment was
+performed for tasks 16–18. Week 1 human acceptance and Weeks 3–4 retain their
+separate status; synthetic snapshot limitations remain explicit.

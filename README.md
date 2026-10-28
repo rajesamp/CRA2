@@ -206,3 +206,18 @@ model-speed claims.
 
 CRA2 is separate from [CRA](https://github.com/rajesamp/CRA). Its data and
 tests do not establish performance comparisons with that project.
+
+## Week 2: LangGraph and MCP
+
+Task 15 adds an isolated LangGraph workflow and a local MCP server for the
+existing health and dependency tools. See [Week 2 launch instructions](week2/README.md)
+and [task 15 evidence](docs/evidence/week2-task-15.md). The existing Gradio app
+is unchanged; memory and the expanded agent trace remain tasks 16–18.
+
+## Week 2 complete: tools, memory and visible trace
+
+Tasks 12–18 are implemented and verified. Start the integrated app from the
+repository root with `week2/.venv/bin/python -m week2.app`, then open
+`http://127.0.0.1:7862`. [Launch and learning walkthrough](week2/README.md) ·
+[Actual expanded-panel screenshot and browser evidence](docs/evidence/week2-task-18.md).
+Week 1 human confirmations and Weeks 3–4 retain their separate acceptance.
