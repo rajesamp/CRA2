@@ -1,0 +1,24 @@
+{
+  "display_information": {
+    "name": "CRA2",
+    "description": "Software change risk advice and service questions",
+    "background_color": "#27364B"
+  },
+  "features": {
+    "bot_user": {"display_name": "CRA2", "always_online": false},
+    "slash_commands": [{
+      "command": "/cra",
+      "description": "Choose a service or ask Change Risk Advisor",
+      "usage_hint": "[question]",
+      "should_escape": false
+    }]
+  },
+  "oauth_config": {"scopes": {"bot": ["commands", "chat:write", "channels:history"]}},
+  "settings": {
+    "socket_mode_enabled": true,
+    "org_deploy_enabled": false,
+    "token_rotation_enabled": false,
+    "interactivity": {"is_enabled": true},
+    "event_subscriptions": {"bot_events": ["message.channels"]}
+  }
+}

@@ -1,5 +1,88 @@
 # Spec: CRA2 Week 2 completion with LangGraph and MCP
 
+## Admin presentation follow-up — 2026-10-18
+
+The owner requested removing the visible demo disclaimer and unlocked-status
+note. Show only actionable validation feedback, with no routine lock/unlock
+status paragraph. The demo gate's behavior and documented limitations remain
+unchanged; this supersedes the earlier requirement to label that limitation
+in the panel itself.
+
+## Admin trace panel — 2026-10-18
+
+Use adjacent Change Risk Advisor and Admin tabs. Put trace selection, summary,
+evidence/policy details and structured execution JSON inside an initially
+locked Admin group. A masked input accepts exactly four ASCII digits, with no
+configured password, saved PIN or first-use enrollment. Label this as a demo
+gate, not authentication. Only server-side session state controls the reveal;
+all trace-producing UI callbacks return empty trace views while locked.
+Retain the bounded snapshots in Gradio State so unlocking can show earlier
+questions. Clear the PIN input on submission; never pass it to the agent or
+owner audit. Lock clears rendered traces/choices but keeps session history.
+A refresh starts locked with no history. Preserve original modes, turn IDs,
+retry replacement, undo, clear, concise chat, abuse pauses and memory recall.
+Private owner records and classifier verdicts are not added to Admin. This
+supersedes the earlier always-visible trace-selector layout only.
+
+The semantic classifier incorrectly flags ordinary Admin navigation. Recognize
+only a whole navigation question (where/how to open/find/use the panel) as a
+benign app contract after the credential/prohibited-action checks. Appended
+instructions still receive the existing checks. Do not retrain or claim improved
+held-out classifier metrics from this explicit navigation allowance.
+
+## Abuse admission and private collection — 2026-10-18
+
+Classify chat requests before graph/provider/tool execution using the installed
+frozen local BGE encoder and a fixed synthetic nearest-prototype collection.
+Separate train, validation and test rows; runtime questions never become
+training data. Measure misses/false positives honestly. Explicit prohibited
+actions on credentials, owner records or safeguards also have an independent
+contract check. The classifier is best-effort, not authorization or proof of
+intent. Store scores/verdicts only in the private owner audit.
+
+Flagged requests receive a 15-second monotonic server cooldown keyed to a hash
+of the trusted connecting client. Hide chat controls and center the countdown;
+restore automatically. Clear/new sessions/refresh cannot clear that cooldown.
+Disable forwarded-header trust in this direct loopback app. Peer-IP scope means
+clients sharing an address share a cooldown; no production identity claim.
+
+Store admitted out-of-scope questions and suspected attacks in a separate
+ignored SQLite audit with a 0700 owner directory, 0600 owner-owned regular file,
+bounded rows/size, schema checks and parameterized SQL. Withhold configured
+credentials. No browser/admin/read API is added; owner review is a read-only
+local CLI. File serving remains blocked. Classifier/storage failures pause
+without accusing the user and never fail open into agent work. Do not alter
+the existing team preference schema, provider, MCP contracts or Week 1.
+
+## Trace history and app help — 2026-10-18
+
+Maintain up to 50 guarded trace snapshots in per-browser-session state, with an
+always-visible turn selector. Each snapshot records turn, selected review mode,
+guarded question and actual execution facts. Selecting an older turn performs
+no new agent/provider/tool work; mode changes cannot rewrite older snapshots.
+Retry replaces that turn; undo removes it; clear removes session traces. A
+refresh starts fresh session state. Chat replies have no turn badge.
+
+Week 2 handles app overview, capabilities, catalog-derived known services,
+getting started, modes, memory, trace, tools and limits locally in either mode.
+Do not call retrieval, MCP or Groq for app help. Preserve unrelated out-of-scope,
+mixed-request clarification, explicit memory commands, assessment and advisory
+boundaries. Keep Week 1 help/routing unchanged.
+
+## Presentation correction — 2026-10-18
+
+For change assessments the chat shows the outcome, an uncalibrated rating only
+when validated, and the advisory reminder. Source paths, chunk/evidence IDs,
+retrieved excerpts, tool/result dumps, memory provenance and policy conflicts
+belong to the collapsed trace. Retain the existing guarded response as trace
+supporting details; do not expose hidden reasoning, prompts or SDK objects.
+Publish the accepted assessment level/questions as structured guarded evidence.
+Assign the same visible turn number to the answer, trace header and JSON.
+Derive it from visible user turns so retry reuses the number and a new chat
+starts at one. Clear stale trace content when the conversation is cleared.
+Both modes retain their existing semantics and failure protections. The CLI
+and Week 1 presentation remain unchanged.
+
 Author: Codex. Status: task 15 authorized to implement in chat on 2026-10-17.
 Date: 2026-10-17. Input: [intent](intent.md), clarified by the originator.
 
@@ -162,3 +245,14 @@ Git-ignore qualifications still apply. Tasks 16–18 are not implemented here.
   distinguishes per-thread checkpoints from cross-thread application stores.
 - [Official MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
   is the implementation reference; installed APIs and versions require checks.
+# Useful-answer correction — 2026-10-18
+
+Local mode must continue to call retrieval/MCP for a concrete change without a
+provider request or risk rating. Present deterministic before/after facts when
+unambiguous and bounded change-specific review checks. In Groq mode, show the
+validated risk indication and at most two short, validated public review
+questions; never expose hidden reasoning or diagnostic identifiers. Vague
+changes must ask for the missing setting/behavior and include a concrete
+example, without inventing a risk assessment. Keep general onboarding brief
+and free of Admin or execution instructions. Preserve the existing trace,
+abuse gate, policy floor, selected review mode and Slack transport.

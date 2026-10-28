@@ -1,5 +1,49 @@
 # Intent: finish CRA2 Week 2 with LangGraph and MCP
 
+## Admin trace panel — 2026-10-18
+
+Move trace history and its related controls from the conversation to an Admin
+tab beside Change Risk Advisor. The owner explicitly selected a demo-only gate
+that accepts any four digits, after clarification that this provides no owner
+authentication. There is no fixed secret to hardcode or store. Keep entered
+digits out of chat, traces, logs and persistence, and clear the field after use.
+Keep session traces server-side while locked; unlocking reveals this session's
+snapshots. Private owner security records remain local-CLI-only. Preserve the
+existing chat, review modes, cooldown and memory behavior. No provider calls,
+new dependencies, publishing or writes outside CRA2 and `/tmp`.
+
+## Private abuse collection and temporary chat block — 2026-10-18
+
+The owner requested collecting out-of-scope questions in owner-only memory,
+classifying active adversarial requests, and disabling chat for 15 seconds
+with a centered notice when flagged. Implement this as a Week 2 UI extension:
+local classifier, independent protected-action checks, server-owned cooldowns,
+and a separate private audit store with a local owner CLI. Ordinary unrelated
+questions are collected without a block. Keep all actual records ignored and
+out of user traces, team memory, retrieval, browser file routes and model
+training. No external classifier/provider calls or new dependencies. Existing
+authorization remains bounded to surgical edits in CRA2 and `/tmp`.
+
+## Trace history and onboarding correction — 2026-10-18
+
+The owner asked to retain earlier agent traces, identify each by its original
+Local evidence only or Groq assessment mode, and remove turn numbers from chat
+replies. They also requested useful app help, known services and onboarding
+instead of out-of-scope responses. This supersedes the previous chat turn badge
+requirement. Keep trace history session-local; preserve concise assessment
+replies, existing safety boundaries, team preferences and unrelated edits.
+
+## Presentation correction authorized — 2026-10-18
+
+The owner reported that the exact checkout timeout question exposes unwanted
+supporting details in both Local evidence only and Groq assessment. They asked
+to move those details to tracing and identify the trace by chat turn number.
+Apply a surgical Week 2 presentation change: concise user outcomes, guarded
+supporting evidence/policy/tool details in the trace, matching visible turn
+numbers, unchanged routing, MCP, memory, policy and provider behavior. Use no
+new live provider request for verification. Preserve unrelated edits and keep
+all generated files inside CRA2 or `/tmp`.
+
 Author: Raj Sam (originator); captured by Codex. Status: task 15 authorized in chat.
 Date: 2026-10-16.
 
@@ -93,3 +137,12 @@ this follow-up authorization.
   Week 1 regressions remain passing.
 - SDK versions, graph state shape, storage backend, and the exact file-level
   implementation plan follow in the specification after intent acceptance.
+# Useful-answer correction — 2026-10-18
+
+The owner reported that app onboarding was verbose, concrete change questions
+returned only a generic local-evidence status, and a vague downstream-handling
+question produced an unhelpful clarification. Keep Local evidence only as the
+browser default, as explicitly selected by the owner. Provide concise change
+facts and practical review checks, while keeping raw passages, tool dumps,
+policy provenance and execution details in the existing trace. No Slack trace
+viewer or durable chat history is requested.

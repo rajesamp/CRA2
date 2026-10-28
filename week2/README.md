@@ -1,5 +1,11 @@
 # Week 2: LangGraph, MCP, team memory and Gradio trace
 
+Slack integration is available as a separate local Socket Mode process. Use
+`/cra` or the dedicated public `#cra` channel for a service picker and questions.
+See [Slack setup and walkthrough](SLACK.md) for the new-app manifest, ignored
+credential configuration and launch instructions. Workspace installation/live
+delivery require the owner's setup; the web app stays on its existing port.
+
 Run from the CRA2 repository root. Tasks 15–18 are implemented. The Week 2 app
 uses the guarded graph, actual MCP calls and persistent team preferences.
 
@@ -10,17 +16,91 @@ week2/.venv/bin/python -m week2.app
 ```
 
 Open `http://127.0.0.1:7862`. The default is Local evidence only: no provider
-request or model risk rating. Expand **Agent trace** to inspect actual calls,
+request or model risk rating. Assessment replies show a concise outcome,
+change-specific facts and review checks; source
+IDs, passages, tool results and memory/policy provenance stay in **Admin →
+Agent trace**. Open **Admin** beside **Change Risk Advisor**, enter any four
+digits, then select **Unlock Admin**. This is the explicitly chosen demo gate,
+not owner authentication: there is no fixed password, enrollment or saved PIN.
+The masked input clears after submission and never enters chat, traces, owner
+records or a provider request. Session traces remain in server-side Gradio
+State while locked; trace callbacks return empty details and choices until
+the session is unlocked. **Lock Admin** clears rendered details while retaining
+the session snapshots. Private owner security records remain local-CLI-only.
+
+The Admin **Agent trace history** selector keeps the latest 50 turns
+in this browser session. Each entry shows its original Local evidence only or
+Groq assessment mode. Select an earlier turn to inspect its question and results
+without rerunning the agent. Turn numbers appear only in the trace, not chat.
+Retry replaces the same turn; undo removes it; clear removes session traces.
+A refresh starts a fresh, locked session. Expand **Agent trace** in Admin to inspect actual calls,
 recalled settings, provenance and protected failures. Team identity is trusted
 host configuration; it is not a user-editable field. The app binds to loopback,
 uses no public tunnel, disables analytics and does not restore conversations.
+
+App help is local in either mode. Ask **What is this app?**, **What services do
+you support?**, **What can you do?**, **How do I get started?**, **How do I save a
+preference?**, or ask about modes, tools, memory, trace history and limitations.
+Known services come from the current catalog. Help does not call retrieval,
+MCP or Groq; unrelated requests remain outside scope.
+Whole Admin navigation questions such as **Where is the Admin tab?** have a
+bounded benign contract because the existing semantic classifier otherwise
+flags them. This does not admit appended actions or change classifier training.
+
+## Private out-of-scope collection and abuse cooldown
+
+Chat requests are screened locally before agent execution. A fixed collection
+of 80 synthetic examples supports the installed BGE semantic classifier;
+explicit protected-resource actions have a separate contract check. Ordinary
+unrelated questions are privately recorded without a block. Flagged requests
+hide chat controls, show a centered 15-second countdown, and restore chat
+automatically. Clear/refresh/new sessions do not reset the server cooldown.
+This loopback demo keys cooldowns to the connecting peer address, so browser
+windows sharing that address share the pause. Forwarded headers are not trusted.
+
+Actual questions/verdicts are kept separately from team memory in ignored
+`week2/.local/owner-private/questions.sqlite3`. Its directory is 0700 and file
+0600, owned by the app's OS account. The owner reads it locally, not through a
+browser/admin endpoint:
+
+```sh
+week2/.venv/bin/python -m week2.owner_audit --limit 50
+```
+
+Owner records never enter retrieval, user traces or training. Known configured
+credentials are withheld. Insecure, unavailable, corrupt or full storage and
+unavailable/malformed classifier results fail closed with a temporary pause;
+they do not accuse the user of an attack. The store is capped at 10,000 events
+and 64 MiB; it does not silently delete old records. No new dependency or
+external classification request is introduced.
+
+Detection is best-effort. The semantic model caught 7/8 adversarial held-out
+examples with 0/8 benign false positives; the independent protected-action
+check catches the observed credential-request miss. The combined replay is
+not a new unseen test. These synthetic results do not establish production
+coverage, user intent, or resistance to encoded/multilingual/multi-turn attacks.
+Owner-only access means OS account/file permissions plus blocked HTTP access;
+this is not a production role/authentication system. Model provisioning uses
+the existing explicit Week 1 setup if local weights are missing.
+
+Reproduce the synthetic evaluation without exposing owner records:
+
+```sh
+week2/.venv/bin/python -m week2.evaluate_abuse --out week2/.local/abuse-evaluation.json
+```
 
 Try these in order:
 
 1. `Remember that checkout-service is always high-risk for our team.`
 2. Open a new browser session, then ask: `Change checkout-service config timeout from 4 seconds to 400 milliseconds.`
-3. Expand Agent trace: the recalled flag and both MCP calls should be present.
+3. Open Admin, enter any four digits, then expand Agent trace: the recalled flag and both MCP calls should be present.
 4. `Remember freeze policy for checkout-service: Verify the team calendar.`
+
+Inside the trace, **Evidence and policy details** contains the guarded supporting
+response, and **Execution details** contains the selected structured facts,
+validated assessment questions and outcome. These are evidence and execution
+details, not hidden model reasoning or a raw graph-state dump. The primary UI
+does not display implementation instructions or example preference commands.
 
 Preferences persist in ignored `week2/.local/team-memory.sqlite3`. Use
 `Forget the high-risk preference for checkout-service.` to explicitly clear a

@@ -1,5 +1,73 @@
 # Plan: CRA2 Week 2 with LangGraph and MCP
 
+## Admin trace panel plan — 2026-10-18
+
+1. Add focused regression proof for adjacent tabs, locked trace callbacks,
+   any-four-digit demo validation, session reveal/lock, and history lifecycle.
+2. Change only Week 2 presentation: server-side demo state, masked/cleared
+   input, and the trace components inside Admin. Gate chat/selection/undo/clear
+   projections as well as visibility. Keep private audit and agent execution
+   unchanged. Update local help to direct users to Admin. If the existing
+   semantic guard mistakes navigation for an attack, allow only a whole bounded
+   navigation question and verify appended actions still block.
+3. Run the focused checks and Week 2 suite. Verify in Chrome that locked
+   responses do not serialize trace facts, earlier modes survive unlocking,
+   locking/fresh sessions clear the view, and chat/cooldown still work. Use an
+   explicit offline reviewer for Groq rendering, with actual local MCP/retrieval.
+4. Record evidence/private learning and restart only the owned port-7862 app.
+   No new provider request, dependency or unrelated mutation.
+
+Result: implemented and verified. Final Week 2 gate: 196 passed in 44.49 seconds.
+Chrome proved four-turn history across both modes with an offline reviewer,
+actual MCP/retrieval and memory recall; lock/reveal, isolated fresh sessions,
+retry/undo/clear and 15,677 ms cooldown recovery passed. Final live app proof
+at 18:51:18 UTC passed Admin navigation, local evidence, both MCP tools, memory
+recall, earlier-turn selection and private-file HTTP 403. The app is running
+on port 7862 and the fixture is stopped. No provider request or dependency added.
+
+## Abuse guard implementation plan — 2026-10-18
+
+1. Create a synthetic labeled collection, validate splits/schema, and reuse the
+   installed BGE model. Compare majority/nearest-prototype baselines and choose
+   a threshold on validation before reporting held-out results. Record errors.
+2. Add a separate bounded owner-only SQLite store and local read CLI; protect
+   permissions, paths, schema, credentials and unavailable/corrupt storage.
+3. Gate chat before any graph call, add independent prohibited-action checks,
+   retain benign out-of-scope records, and keep private verdicts outside traces.
+4. Add server-client cooldowns, centered notice and timer-driven UI recovery.
+   Block refresh/session/header bypass. Preserve earlier UI behavior.
+5. Verify the store/gate with fast tests, then a real classifier/browser run
+   proving 15 seconds, recovery, private-file denial and persisted owner records.
+   Run Week 2 checks, update private learner/evidence, and restart the owned app.
+
+## Trace history and app help plan — 2026-10-18
+
+1. Reproduce missing app-help coverage, missing earlier trace selection and
+   obsolete chat badges with focused regressions.
+2. Add bounded Week 2 help routing/copy using the existing catalog and parser.
+3. Retain guarded per-turn traces in Gradio session state, add a selector and
+   original-mode labels, and remove chat badges. Preserve retry/undo/clear.
+4. Verify both modes with an offline reviewer, actual MCP/retrieval and browser
+   selection of an earlier turn. Run the Week 2 gate, update evidence/private
+   learner notes, and restart only the owned app process on port 7862.
+
+## Presentation correction plan — 2026-10-18
+
+1. Add a failing regression for the owner's exact question in both modes,
+   using actual MCP transport and a clearly labeled offline reviewer double.
+2. In `week2/workflow.py`, retain validated assessment level/questions in trace;
+   keep rating floors and all execution paths unchanged.
+3. In `week2/app.py` and its response catalog, project concise outcomes for
+   assessment/memory/failure replies, retain supporting response details inside
+   the trace, and label both views with the visible turn number. Collapse
+   supporting details and reset trace on clear/undo. Remove demo instructions
+   and internal configuration hints from the primary UI.
+4. Run focused regressions and the Week 2 gate, then verify consecutive turns,
+   trace labels, clear/reset and recalled memory in a real local browser.
+   Verify Groq rendering offline; do not make a new provider request.
+5. Update the ignored task 18 learner note and record actual evidence. Restart
+   only the CRA2 app process previously launched for this chat.
+
 Status: tasks 15–18 complete; task-specific evidence, browser proof and final regression checks recorded. Date: 2026-10-17.
 Inputs: [intent](intent.md), [design](spec.md), tasks 12–18.
 
@@ -140,3 +208,22 @@ uv run --locked --offline --project week2 python -m pytest week2/tests -q
 Verify `git check-ignore` and `git ls-files` for all seven learner paths before
 any staging or publication. This preparation does not claim those runtime
 commands have passed on new code.
+# Useful-answer correction plan — 2026-10-18
+
+1. Reproduce the exact reported prompts in focused regressions using actual
+   MCP calls and an offline reviewer; forbid live Groq in validation.
+2. Update only Week 2 presentation and response copy, with a targeted
+   clarification copy in the workflow. Derive numeric facts from the user's
+   explicit values, normalize time units, and omit ambiguous comparisons.
+3. Retain all diagnostics in the same trace and keep Local evidence only as
+   the browser default. Do not add Slack history to Admin.
+4. Run the focused checks and Week 2 regression gate, verify the real browser,
+   update evidence/private learner notes, and restart only this chat's owned
+   web and Slack processes so both use the corrected presentation.
+
+Result: seven failures reproduced before the fix; 239 full Week 2 checks passed,
+then 53 focused checks passed after two added numeric edge cases. The actual
+browser verified the five reported turns and preserved Local mode, both MCP
+calls and trace correlation. Both owned processes were reloaded. No live Groq
+request or Slack test message was sent. Evidence:
+`docs/evidence/week2-useful-answers.md`.

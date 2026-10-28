@@ -23,6 +23,7 @@ from week2.contracts import ContractError, NAMES, checked, decode_json, validate
 from week2.mcp_client import call_tools
 from week2.memory import MemoryStore, MemoryUnavailable
 from week2.preferences import parse_command, effective_policy
+from week2.help import capability_lines, help_answer, help_topic
 
 COPY = Path(__file__).with_name("responses.json")
 PARAMETERS = {
@@ -34,6 +35,20 @@ PARAMETERS = {
     "health": {"service", "health", "freeze", "evidence"},
     "graph": {"service", "dependencies", "all_dependencies", "dependents",
               "all_dependents", "evidence"},
+    "chat_assessed": {"level"}, "chat_evidence_only": set(),
+    "chat_provider_unavailable": set(), "chat_insufficient_evidence": set(),
+    "chat_retrieval_unavailable": set(), "chat_tools_unavailable": set(),
+    "chat_memory_saved": set(), "chat_memory_unavailable": set(),
+    "chat_unavailable": set(),
+    "chat_timeout_change": {"direction", "percent"}, "chat_timeout_checks": set(),
+    "chat_retry_change": {"before", "after"}, "chat_retry_checks": set(),
+    "chat_change_checks": set(), "chat_review_checks": {"checks"},
+    "chat_specific_change": {"service"},
+    "help_overview": set(), "help_capabilities": set(), "help_services": {"services"},
+    "help_examples": {"service"}, "help_modes": set(), "help_memory": set(),
+    "help_trace": set(), "help_limits": set(), "help_tools": set(),
+    "help_preference_commands": {"service"},
+    "help_security": set(),
 }
 
 
@@ -121,8 +136,18 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
             return _answer(responses.message(catalog, "control_characters"), "needs_clarification")
         if mode not in {"Local evidence only", "Groq assessment"}:
             return _answer(responses.message(catalog, "invalid_mode"), "needs_clarification")
-        decision = routing.task(question, catalog)
+        decision = routing.task(question, dict(catalog, capabilities=capability_lines(copy)))
         active = routing.active_request(question)
+        if decision and decision["kind"] == "clarify":
+            return _answer(decision["question"], "needs_clarification")
+        if (decision and decision["kind"] == "help" and chat._services(question)
+                and re.search(r"\b(?:assess|evaluate|review)\b", active)):
+            return _answer(responses.message(catalog, "help_or_change"), "needs_clarification")
+        topic = help_topic(question, decision, CATALOG)
+        if topic:
+            result = _answer(help_answer(topic, copy, CATALOG, decision), "help")
+            result["trace"]["topic"] = topic
+            return result
         scope = routing.classify_scope(question, decision, CATALOG)
         if scope == "non_cra2" or decision is not None:
             return {"route": "legacy"}
@@ -150,7 +175,7 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
         if history_only and not (health or dependency):
             return {"route": "memory_read", "service": service, "next_route": "legacy"}
         if not specific and not (health or dependency):
-            return _answer(responses.message(catalog, "specific_change", service=service), "needs_clarification")
+            return _answer(copy["chat_specific_change"].format(service=service), "needs_clarification")
         selected = NAMES if specific else tuple(
             name for name, needed in zip(NAMES, (health, dependency)) if needed)
         return {"route": "memory_read", "next_route": "retrieve" if specific else "tools", "service": service,
@@ -212,6 +237,7 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
             return result
         if "hits" in state:
             tool_citations = set()
+            accepted_reviews = []
             def enriched_review(payload, weights):
                 historical_keys = set(payload["evidence_keys"])
                 payload = dict(payload)
@@ -240,8 +266,11 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                             and system2._comment_allowed(comment, allowed)):
                         tool_citations.update(set(comment["evidence"]) & tool_keys)
                         floor = "medium" if state["policy"]["effective"]["high_risk"] else "low"
-                        accepted.append(dict(comment,
-                            severity=max(comment["severity"], floor, key=chat.LEVELS.index),
+                        promoted = {"tag": comment["tag"], "text": comment["text"],
+                            "severity": max(comment["severity"], floor, key=chat.LEVELS.index),
+                            "evidence": list(comment["evidence"])}
+                        accepted_reviews.append(promoted)
+                        accepted.append(dict(promoted,
                             evidence=[k for k in comment["evidence"] if k in historical_keys]))
                 return dict(result, out=dict(result["out"], comments=accepted))
 
@@ -252,6 +281,11 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
             trace["assessment_tool_citations"] = sorted(tool_citations)
             if trace["status"] == "assessed":
                 trace["risk_floor"] = "medium" if state["policy"]["effective"]["high_risk"] else "low"
+                trace["assessment"] = {
+                    "risk_level": max([trace["risk_floor"]] + [c["severity"] for c in accepted_reviews],
+                                      key=chat.LEVELS.index),
+                    "review_questions": accepted_reviews,
+                }
         else:
             answer = ADVISORY
             trace = {"status": "tool_evidence", "retrieved": [],
