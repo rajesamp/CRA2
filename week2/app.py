@@ -20,6 +20,7 @@ from week2.abuse import AbuseGate
 from week2.owner_audit import OwnerAuditStore
 from week2.presentation import review_summary
 from week3.cache import WorkflowCaches
+from week4.telemetry import TelemetryStore
 
 HOST_CACHES = WorkflowCaches()
 
@@ -31,6 +32,7 @@ TRACE_FIELDS = (
     "rails",
     "support", "approval_declined",
     "cache",
+    "spans", "duration_ms", "transport", "mcp", "telemetry_status",
 )
 EMPTY_TRACE = "Run a query to inspect its supporting evidence and execution details."
 MAX_TRACES = 50
@@ -124,8 +126,12 @@ def chat_response(answer, trace):
     return text + "\n\n" + ADVISORY
 
 
-def ui_reply(message, history, mode, session_id, *, memory_store=None):
-    answer, trace = respond(message, history, mode, session_id=session_id, memory_store=memory_store, caches=HOST_CACHES)
+def ui_reply(message, history, mode, session_id, *, memory_store=None, transport="browser"):
+    host_store=getattr(memory_store,"store",memory_store)
+    memory_path=Path(getattr(host_store,"path",Path(__file__).with_name(".local")/"team-memory.sqlite3"))
+    telemetry=TelemetryStore(memory_path.parent/"telemetry"/"requests.sqlite3")
+    answer, trace = respond(message, history, mode, session_id=session_id, memory_store=memory_store, caches=HOST_CACHES,
+        telemetry_store=telemetry, transport=transport)
     turn = 1 + sum(1 for item in (history or []) if isinstance(item, dict) and item.get("role") == "user")
     question = message if trace.get("status") != "unavailable" and isinstance(message, str) and 0 < len(message) <= 4000 else "Input withheld"
     review_mode = mode if mode in ("Local evidence only", "Groq assessment") else "Unavailable"
@@ -179,25 +185,26 @@ def lock_admin():
             gr.update(visible=False), *admin_trace_view(None, [], False))
 
 
-def protected_reply(history, mode, session_id):
+def protected_reply(history, mode, session_id, *, transport="browser"):
     answer = "That request was blocked. Please try again after the temporary pause."
     trace = project_trace({"status": "security_blocked", "request_id": uuid4().hex,
         "session_id": session_id, "turn": 1 + sum(1 for item in (history or []) if isinstance(item, dict) and item.get("role") == "user"),
         "review_mode": mode if mode in ("Local evidence only", "Groq assessment") else "Unavailable",
         "question": "Request withheld", "response_details": answer, "orchestration": "not_started",
         "memory": {"status": "not_accessed"}, "retrieved": [], "events": [],
-        "provider_used": False, "request_attempted": False})
+        "provider_used": False, "request_attempted": False, "transport":transport,
+        "mcp":{"attempted":0,"failed":0,"status":"not_accessed"}})
     return answer, trace_summary(trace), trace
 
 
-def guarded_ui_reply(message, history, mode, session_id, *, gate, client, memory_store=None):
+def guarded_ui_reply(message, history, mode, session_id, *, gate, client, memory_store=None, transport="browser"):
     admission = gate.admit(message, client)
     if admission["blocked"]:
-        return protected_reply(history, mode, session_id)
-    result = ui_reply(message, history, mode, session_id, memory_store=memory_store)
+        return protected_reply(history, mode, session_id,transport=transport)
+    result = ui_reply(message, history, mode, session_id, memory_store=memory_store,transport=transport)
     if result[2]["status"] == "out_of_scope":
         if not gate.record_out_of_scope(message, client, admission["verdict"]):
-            return protected_reply(history, mode, session_id)
+            return protected_reply(history, mode, session_id,transport=transport)
     return result
 
 

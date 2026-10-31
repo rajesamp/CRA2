@@ -25,6 +25,12 @@ def file_version(path, limit=16*1024*1024):
     return hashlib.sha256(data).hexdigest()
 
 
+class CacheToolError(ValueError):
+    def __init__(self,bundle):
+        self.bundle=bundle
+        super().__init__('tool_unavailable')
+
+
 class ExactCache:
     def __init__(self, *, ttl=300, entries=1024, byte_limit=16*1024*1024, clock=time.monotonic):
         if ttl<=0 or entries<1 or byte_limit<1:
@@ -75,7 +81,7 @@ class ExactCache:
             found=self.get(key)
             if found:
                 if not valid():raise ValueError('source_changed')
-                return found[0],dict(found[1],outcome='hit')
+                return found[0],dict(found[1],outcome='hit',duration_ms=round((time.monotonic()-started)*1000,3))
             if self.reserve(key):break
             if time.monotonic()-started>12:raise ValueError('cache_wait_timeout')
             time.sleep(.005)
@@ -84,11 +90,11 @@ class ExactCache:
             found=self.get(key)
             if found:
                 if not valid():raise ValueError('source_changed')
-                return found[0],dict(found[1],outcome='hit')
+                return found[0],dict(found[1],outcome='hit',duration_ms=round((time.monotonic()-started)*1000,3))
             value=compute()
             if not valid():raise ValueError('source_changed')
             stored=self.put(key,value)
-            return value,{'outcome':'miss','stored':stored,'age_ms':0,'ttl_seconds':self.ttl}
+            return value,{'outcome':'miss','stored':stored,'age_ms':0,'ttl_seconds':self.ttl,'duration_ms':round((time.monotonic()-started)*1000,3)}
         finally:self.release(key)
 
     async def aload(self,key,compute,valid=lambda:True):
@@ -97,7 +103,7 @@ class ExactCache:
             found=self.get(key)
             if found:
                 if not valid():raise ValueError('source_changed')
-                return found[0],dict(found[1],outcome='hit')
+                return found[0],dict(found[1],outcome='hit',duration_ms=round((time.monotonic()-started)*1000,3))
             if self.reserve(key):break
             if time.monotonic()-started>12:raise ValueError('cache_wait_timeout')
             await anyio.sleep(.005)
@@ -105,11 +111,11 @@ class ExactCache:
             found=self.get(key)
             if found:
                 if not valid():raise ValueError('source_changed')
-                return found[0],dict(found[1],outcome='hit')
+                return found[0],dict(found[1],outcome='hit',duration_ms=round((time.monotonic()-started)*1000,3))
             value=await compute()
             if not valid():raise ValueError('source_changed')
             stored=self.put(key,value)
-            return value,{'outcome':'miss','stored':stored,'age_ms':0,'ttl_seconds':self.ttl}
+            return value,{'outcome':'miss','stored':stored,'age_ms':0,'ttl_seconds':self.ttl,'duration_ms':round((time.monotonic()-started)*1000,3)}
         finally:self.release(key)
 
 
@@ -135,6 +141,7 @@ class WorkflowCaches:
         if not isinstance(calls,list) or not 1<=len(calls)<=2 or len({n for n,_ in calls})!=len(calls):
             raise ValueError('invalid_calls')
         version=self.tool_version();outputs={};events=[];cache_events=[]
+        metrics={'attempted':0,'failed':0,'status':'measured'}
         for name,args in calls:
             validate_arguments(name,args)
             key=identity([scope,version,name,args])
@@ -142,13 +149,24 @@ class WorkflowCaches:
             async def compute():
                 bundle=await runner([(name,args)])
                 if bundle['status']!='ok' or set(bundle['outputs'])!={name}:
-                    raise ValueError('tool_unavailable')
+                    raise CacheToolError(bundle)
                 value=bundle['outputs'][name]
                 validate_result(name,args['service_name'],value)
-                if value['status']!='ok':raise ValueError('tool_unavailable')
+                if value['status']!='ok':raise CacheToolError(bundle)
+                measured=bundle.get('metrics')
+                if measured and measured.get('status')=='measured' and metrics['status']=='measured':
+                    metrics['attempted']+=measured['attempted'];metrics['failed']+=measured['failed']
+                else:metrics.update(attempted=None,failed=None,status='unavailable')
                 actual.extend(bundle['events'])
                 return value
-            value,event=await self.tools.aload(key,compute,lambda:self.tool_version()==version)
+            try:
+                value,event=await self.tools.aload(key,compute,lambda:self.tool_version()==version)
+            except CacheToolError as error:
+                measured=error.bundle.get('metrics',{})
+                if measured.get('status')=='measured' and metrics['status']=='measured':
+                    error.bundle['metrics']={k:metrics[k]+measured[k] for k in ('attempted','failed')}
+                    error.bundle['metrics']['status']='measured'
+                raise
             validate_result(name,args['service_name'],value)
             outputs[name]=value
             cache_events.append(dict(event,layer='tool',tool=name,source_version=version))
@@ -157,7 +175,7 @@ class WorkflowCaches:
                 events.append({'event':'cache_result','tool':name,'source_version':version,
                     'input':args,'output':value})
         if self.tool_version()!=version:raise ValueError('source_changed')
-        return {'status':'ok','outputs':outputs,'events':events,'cache_events':cache_events}
+        return {'status':'ok','outputs':outputs,'events':events,'cache_events':cache_events,'metrics':metrics}
 
     @staticmethod
     def retrieval_version(index_path):

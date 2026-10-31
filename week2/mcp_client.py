@@ -4,6 +4,7 @@ import math
 import os
 import subprocess
 import sys
+from time import perf_counter
 from pathlib import Path
 
 import anyio
@@ -68,6 +69,7 @@ async def call_tools(calls, *, timeout=12.0):
     locally defined codes; rejected metadata and raw exceptions never propagate.
     """
     events, outputs = [], {}
+    attempted, completed, failed = 0, 0, 0
     try:
         if (not isinstance(calls, list) or not 1 <= len(calls) <= 2
                 or type(timeout) not in (float, int) or not math.isfinite(timeout)
@@ -87,12 +89,18 @@ async def call_tools(calls, *, timeout=12.0):
                     events.append({"event": "metadata_admitted", "tools": list(NAMES)})
                     for name, arguments in calls:
                         await _inventory(session)
+                        began = perf_counter()
+                        attempted += 1
                         reply = await session.call_tool(name, arguments)
                         result = _decode(reply, name, arguments["service_name"])
+                        completed += 1
+                        failed += int(result["status"] != "ok")
                         outputs[name] = result
                         events.append({"event": "tool_result", "transport": "mcp-stdio",
-                                       "tool": name, "input": arguments, "output": result})
-        return {"status": "ok", "outputs": outputs, "events": events}
+                                       "tool": name, "input": arguments, "output": result,
+                                       "duration_ms": round((perf_counter()-began)*1000,3)})
+        return {"status": "ok", "outputs": outputs, "events": events,
+                "metrics": {"attempted": attempted, "failed": failed, "status": "measured"}}
     except ContractError as error:
         code = error.code
     except TimeoutError:
@@ -101,4 +109,5 @@ async def call_tools(calls, *, timeout=12.0):
         # AnyIO task groups can wrap protocol errors; do not expose nested text.
         code = _failure_code(error)
     return {"status": "error", "outputs": {},
-            "events": [{"event": "mcp_failed", "code": code}]}
+            "events": [{"event": "mcp_failed", "code": code}],
+            "metrics": {"attempted": attempted, "failed": failed+int(attempted>completed), "status": "measured"}}

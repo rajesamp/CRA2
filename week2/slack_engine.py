@@ -41,7 +41,7 @@ class SlackEngine:
         try:
             effective = with_service(question, service)
             answer, _, trace = guarded_ui_reply(effective, session.history, "Groq assessment", session.session_id,
-                gate=self.gate, client="slack:" + origin.team + ":" + origin.user, memory_store=self.memory)
+                gate=self.gate, client="slack:" + origin.team + ":" + origin.user, memory_store=self.memory,transport="slack")
             if trace["status"] == "memory_unavailable" and parse_command(effective):
                 answer = "Slack can read team preferences. Changes to team policy must be made by the app owner in the local app.\n\n" + ADVISORY
                 trace.update(status="preference_read_only", response_details=answer)

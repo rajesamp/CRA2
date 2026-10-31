@@ -298,3 +298,11 @@ Task 25 also tightened the task-21 detail boundary after an existing help test
 exposed vague approval continuation. See `docs/evidence/week3-task-25.md` for
 actual gates, browser screenshots and remaining evidence limits. Task 26 is
 next; this closure does not infer live model quality or external delivery.
+
+## Task 26 telemetry boundary — 2026-10-31
+
+Reuse host request IDs and add measured stage spans. Compact private SQLite
+metadata is separate from raw session trace history and owner audit records;
+full storage fails safely without rotation/deletion. Actual MCP attempts are
+separate from operation failures. The dashboard will consume the bounded
+current browser session history, not other transports or owner records.

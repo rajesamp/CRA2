@@ -7,6 +7,8 @@ durable conversation checkpoints, autonomous loop, or raw-state streaming.
 import re
 import html
 import unicodedata
+import inspect
+from time import perf_counter
 from pathlib import Path
 from string import Formatter
 from typing import TypedDict
@@ -28,7 +30,8 @@ from week2.preferences import parse_command, effective_policy
 from week2.help import capability_lines, help_answer, help_topic
 from week3.guardrails import LocalRails, RailUnavailable
 from week3.support import coverage
-from week3.cache import identity
+from week3.cache import identity, CacheToolError
+from week4.telemetry import TelemetryUnavailable, TRANSPORTS
 
 COPY = Path(__file__).with_name("responses.json")
 PARAMETERS = {
@@ -57,6 +60,7 @@ PARAMETERS = {
     "guardrail_failure": set(), "guardrail_blocked": set(),
     "approval_continuation": set(), "unsupported_mechanism": set(),
     "stale_context": set(),
+    "telemetry_failure": set(),
 }
 
 
@@ -127,7 +131,7 @@ def _context_service(question, history):
     return None
 
 
-def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_path=chat.INDEX, memory_store=None, guardrails=None, caches=None):
+def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_path=chat.INDEX, memory_store=None, guardrails=None, caches=None, spans=None):
     """Dependencies are runtime collaborators, never serialized graph state."""
     retrieve = retriever or chat.search
     review = reviewer or provider.assess
@@ -137,6 +141,19 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
     store = MemoryStore() if memory_store is None else memory_store
     rails = LocalRails() if guardrails is None else guardrails
     cache_events = []
+    spans = [] if spans is None else spans
+
+    def timed(name,node):
+        async def wrapped(state):
+            began=perf_counter();outcome="error"
+            try:
+                result=node(state)
+                if inspect.isawaitable(result):result=await result
+                outcome="completed"
+                return result
+            finally:
+                spans.append({"stage":name,"outcome":outcome,"duration_ms":round((perf_counter()-began)*1000,3)})
+        return wrapped
 
     def current_policy(service, record):
         return effective_policy(service, record, team_settings=load_settings(config.DATA_DIR, CATALOG))
@@ -266,8 +283,11 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                 cache_events.extend(bundle.pop("cache_events"))
             else:
                 bundle = await run_tools(state["calls"])
+        except CacheToolError as error:
+            bundle = error.bundle
         except Exception:
-            bundle = {"status":"error","outputs":{},"events":[{"event":"mcp_failed","code":"cache_or_source_unavailable"}]}
+            bundle = {"status":"error","outputs":{},"events":[{"event":"mcp_failed","code":"cache_or_source_unavailable"}],
+                "metrics":{"status":"unavailable","attempted":None,"failed":None}}
         checked(bundle, "invalid_result")
         if bundle["status"] == "ok":
             expected = {name for name, _ in state["calls"]}
@@ -283,6 +303,7 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
         if bundle["status"] != "ok" or any(r["status"] != "ok" for r in outputs.values()):
             result = _answer(copy["tool_failure"], "tools_unavailable")
             result["trace"]["events"] = bundle["events"]
+            result["trace"]["mcp"] = bundle.get("metrics", {"status":"unavailable","attempted":None,"failed":None})
             return result
         if "hits" in state:
             support = coverage(state["question"], state["hits"])
@@ -304,7 +325,12 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                     "freeze applicability is unconfirmed. Configured team policy wins."
                 )
                 responses.guard(payload)
-                result = review(payload, weights)
+                began = perf_counter()
+                try:
+                    result = review(payload, weights)
+                finally:
+                    spans.append({"stage":"reviewer","outcome":"invoked_provider_adapter" if reviewer is None else "invoked_offline_adapter",
+                        "duration_ms":round((perf_counter()-began)*1000,3)})
                 responses.guard(result)
                 # The unchanged Week 1 adapter owns historical-citation checks.
                 # Validate combined citations here, then project the historical
@@ -364,6 +390,7 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                 evidence=", ".join(graph["evidence"])))
         answer = answer.removesuffix(ADVISORY).rstrip() + "\n\n" + "\n\n".join(sections) + "\n\n" + ADVISORY
         trace.update(events=bundle["events"], source_scope="Historical evidence and MCP synthetic snapshots; current state unverified")
+        trace["mcp"] = bundle.get("metrics", {"status":"unavailable","attempted":None,"failed":None})
         return {"answer": answer.strip(), "trace": trace}
 
     async def output_guard(state):
@@ -408,9 +435,9 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
     builder = StateGraph(State)
     for name, node in (("classify", classify), ("legacy", legacy), ("retrieve", retrieval),
                        ("tools", tools_node), ("compose", compose), ("output_guard", output_guard)):
-        builder.add_node(name, node)
-    builder.add_node("memory_read", memory_read)
-    builder.add_node("memory_write", memory_write)
+        builder.add_node(name, timed(name,node))
+    builder.add_node("memory_read", timed("memory_read",memory_read))
+    builder.add_node("memory_write", timed("memory_write",memory_write))
     builder.add_edge(START, "classify")
     builder.add_conditional_edges("classify", lambda s: s["route"],
                                   {"done": "output_guard", "legacy": "legacy", "memory_read": "memory_read", "memory_write": "memory_write"})
@@ -426,10 +453,12 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
     return builder.compile()
 
 
-async def arespond(question, history=None, mode="Local evidence only", *, session_id=None, **collaborators):
+async def arespond(question, history=None, mode="Local evidence only", *, session_id=None, telemetry_store=None, transport="cli", **collaborators):
     """Only final guarded answer and trace leave this boundary; no raw state."""
     request_id = uuid4().hex
+    began=perf_counter();spans=[]
     try:
+        if transport not in TRANSPORTS:raise ValueError("invalid_transport")
         responses.guard([question, history, mode])
         if history is not None and (not isinstance(history, list) or len(history) > 100):
             raise ValueError("Invalid history")
@@ -439,7 +468,7 @@ async def arespond(question, history=None, mode="Local evidence only", *, sessio
             and re.search(r"\b(?:from|to)\s+\d|\b(?:add|remove|replace|rotate|enable|disable)\b", routing.active_request(question))
             and re.search(r"\b(?:approve|authorize|merge|deploy|block)\b", routing.active_request(question)))
         effective_question = re.sub(r"\b(?:approve|authorize|merge|deploy|block)\b", "review", question, flags=re.I) if approval else question
-        graph = build_workflow(**collaborators)
+        graph = build_workflow(**collaborators,spans=spans)
         # Environment-enabled LangSmith tracing must not upload raw state.
         with tracing_context(enabled=False):
             result = await graph.ainvoke({"question": effective_question, "history": history or [], "mode": mode},
@@ -452,6 +481,21 @@ async def arespond(question, history=None, mode="Local evidence only", *, sessio
         trace.setdefault("request_attempted", False)
         trace.setdefault("memory", {"status": "not_accessed"})
         trace.update(request_id=request_id, session_id=session_id or uuid4().hex, orchestration="langgraph")
+        trace["transport"]=transport
+        trace["duration_ms"]=round((perf_counter()-began)*1000,3)
+        trace["spans"]=spans+[
+            {"stage":"rail_"+e["stage"],"duration_ms":e["duration_ms"],"outcome":e["outcome"]} for e in trace.get("rails",[])]+[
+            {"stage":"cache_"+e["layer"],"duration_ms":e.get("duration_ms",0),"outcome":e["outcome"]} for e in trace.get("cache",[])]
+        for item in [*trace["spans"],*trace.get("events",[]),*trace.get("rails",[]),*trace.get("cache",[])]:
+            item["request_id"]=request_id
+        if telemetry_store is not None:
+            try:
+                telemetry_store.write(trace)
+                trace["telemetry_status"]="recorded"
+            except TelemetryUnavailable:
+                result["answer"]=load_copy()["telemetry_failure"]+"\n\n"+ADVISORY
+                trace.update(status="telemetry_unavailable",telemetry_status="unavailable")
+                trace.pop("assessment",None)
         responses.guard([result["answer"], trace])
         return result["answer"], trace
     except Exception:
@@ -459,7 +503,8 @@ async def arespond(question, history=None, mode="Local evidence only", *, sessio
         return ("The request could not be processed. No risk indication is assigned. "
                 "This is advisory only; a human decision is required.",
                 {"status": "unavailable", "request_id": request_id, "retrieved": [],
-                 "provider_used": False, "request_attempted": False})
+                 "provider_used": False, "request_attempted": False,"transport":transport,
+                 "mcp":{"status":"unavailable","attempted":None,"failed":None}})
 
 
 def respond(question, history=None, mode="Local evidence only", **collaborators):
