@@ -26,6 +26,7 @@ TRACE_FIELDS = (
     "assessment_tool_citations", "source_scope", "model", "tokens", "groq_ms",
     "assessment", "response_details", "turn", "review_mode", "question", "topic",
     "rails",
+    "support", "approval_declined",
 )
 EMPTY_TRACE = "Run a query to inspect its supporting evidence and execution details."
 MAX_TRACES = 50
@@ -94,6 +95,10 @@ def chat_response(answer, trace):
         text = copy[key]
     if trace.get("status") in {"assessed", "evidence_only"}:
         text = "\n\n".join([text, *review_summary(trace, copy)])
+    if trace.get("approval_declined"):
+        text = copy["approval_continuation"] + "\n\n" + text
+    if trace.get("support", {}).get("status") == "unsupported":
+        text += "\n\n" + copy["unsupported_mechanism"]
     return text + "\n\n" + ADVISORY
 
 

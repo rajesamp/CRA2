@@ -25,6 +25,7 @@ from week2.memory import MemoryStore, MemoryUnavailable
 from week2.preferences import parse_command, effective_policy
 from week2.help import capability_lines, help_answer, help_topic
 from week3.guardrails import LocalRails, RailUnavailable
+from week3.support import coverage
 
 COPY = Path(__file__).with_name("responses.json")
 PARAMETERS = {
@@ -51,6 +52,7 @@ PARAMETERS = {
     "help_preference_commands": {"service"},
     "help_security": set(),
     "guardrail_failure": set(), "guardrail_blocked": set(),
+    "approval_continuation": set(), "unsupported_mechanism": set(),
 }
 
 
@@ -257,6 +259,8 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
             result["trace"]["events"] = bundle["events"]
             return result
         if "hits" in state:
+            support = coverage(state["question"], state["hits"])
+            unsupported = support["status"] == "unsupported"
             tool_citations = set()
             accepted_reviews = []
             def enriched_review(payload, weights):
@@ -297,8 +301,14 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
 
             answer, trace = chat.respond(
                 state["question"], state["history"], state["mode"], index_path=index_path,
-                retriever=lambda *_a, **_k: state["hits"], reviewer=enriched_review,
+                retriever=lambda *_a, **_k: [] if unsupported and state["mode"] == "Groq assessment" else state["hits"], reviewer=enriched_review,
             )
+            trace["support"] = support
+            if unsupported and state["mode"] == "Groq assessment":
+                answer = copy["unsupported_mechanism"] + "\n\n" + ADVISORY
+                trace["status"] = "insufficient_evidence"
+            elif unsupported:
+                answer = copy["unsupported_mechanism"] + "\n\n" + answer
             trace["assessment_tool_citations"] = sorted(tool_citations)
             if trace["status"] == "assessed":
                 trace["risk_floor"] = "medium" if state["policy"]["effective"]["high_risk"] else "low"
@@ -385,12 +395,19 @@ async def arespond(question, history=None, mode="Local evidence only", *, sessio
         responses.guard([question, history, mode])
         if history is not None and (not isinstance(history, list) or len(history) > 100):
             raise ValueError("Invalid history")
+        names = chat._services(question) if isinstance(question, str) else []
+        approval = bool(len(names) == 1 and chat._specific_change(question, names[0])
+            and re.search(r"\b(?:approve|authorize|merge|deploy|block)\b", routing.active_request(question)))
+        effective_question = re.sub(r"\b(?:approve|authorize|merge|deploy|block)\b", "review", question, flags=re.I) if approval else question
         graph = build_workflow(**collaborators)
         # Environment-enabled LangSmith tracing must not upload raw state.
         with tracing_context(enabled=False):
-            result = await graph.ainvoke({"question": question, "history": history or [], "mode": mode},
+            result = await graph.ainvoke({"question": effective_question, "history": history or [], "mode": mode},
                                         config={"recursion_limit": 10, "callbacks": []})
         trace = result["trace"]
+        if approval:
+            result["answer"] = load_copy()["approval_continuation"] + "\n\n" + result["answer"]
+            trace["approval_declined"] = True
         trace.setdefault("provider_used", False)
         trace.setdefault("request_attempted", False)
         trace.setdefault("memory", {"status": "not_accessed"})
