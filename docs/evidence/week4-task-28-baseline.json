@@ -1,0 +1,3698 @@
+{
+  "started_at_utc": "2026-10-31T20:46:11.508111+00:00",
+  "completed_at_utc": "2026-10-31T20:47:02.679066+00:00",
+  "revision": "17bcfcf4775aca5456bc83f4f7e8183169f210a0",
+  "versions": {
+    "week4/cases.json": "ff9b4d16dc909f439d57af533095a345a7279a13b8d3b97ce52870fb816ece4c",
+    "week4/evaluate.py": "eb5bf5f894fb4ba9630cb337420ad9832c69ecad6ce95834012bff4aca84e7fb",
+    "week2/workflow.py": "74b40245e65f21cd0c6b9b9f438b3db2f9832dc18132ce159db5a6c45c47c3c0",
+    "week3/support.py": "913b06319b3642b581d5a26f4beb3025e8d1f3d15df7ec982acab9571fd8f650",
+    "week3/guardrails.py": "dacc9e7fcffe19d09273d66730b9c735434e604f1771038c9c3ce914ab151c7a",
+    "week3/cache.py": "4dc1ef3aa80afc391600f07f0bf25c9e376a9b9124b06863283e99af4bbce6f0",
+    "week2/uv.lock": "13d18a912f249a94741872121b3a32579ff3c0274a8bcec3cfea9afb35715999",
+    "index_and_corpus": "297db973dcd1e449ff7668d6dc0374944134594c528c98666a0d2041b84ecfe0",
+    "tool_source": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+    "team_policy": "b9cdbd5e3291a75f8b3965832e9fa8cd3a562a149a0085aef1969695f478b4db"
+  },
+  "split": "development-validation",
+  "mode": "local contracts and offline provider-boundary probes",
+  "passed": 16,
+  "total": 18,
+  "provider_attempts": 0,
+  "label_basis": "Normative contracts from requirements.md and docs/guardrails.md; synthetic fixtures explicit. Reserved checks are same-author sanity checks, not independently human-labeled quality gold.",
+  "limits": "Case counts, not production/model quality. Scorer unchanged for before/after comparison.",
+  "cases": [
+    {
+      "id": "contract-checkout",
+      "split": "contract",
+      "category": "contract",
+      "passed": true,
+      "checks": {
+        "source_contract": true,
+        "known_relevant_source_at_3": true
+      },
+      "actual": {
+        "question": "Change checkout-service config timeout from 4 seconds to 400 milliseconds.",
+        "answer": "Local evidence only; no model risk indication.\n\n**Evidence \u00b7 historical/sample**\n\n- The timeout for payment-gateway calls was cut from 4 seconds to 400 milliseconds. Slow authorisations were abandoned while still in flight. Some shoppers were charged even though no order was created. (pm-cx101-checkout-timeout#chunk-001)\n- Guidance: Runbook: review a checkout-service config change (rb-checkout-config-risk#chunk-002)\n\n**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded health for checkout-service: **Healthy**. Reported freeze status: **not_reported**. Active incidents: unknown. Evidence: catalog:checkout-service.status, catalog:checkout-service.freeze_window_active.\n\nRecorded graph for checkout-service:\n\n- Direct dependencies: auth-service, inventory-service, payment-gateway\n- All reachable dependencies: auth-service, inventory-service, notification-service, payment-gateway\n- Direct dependents: order-service\n- All reachable dependents: mobile-frontend, order-service, web-frontend\n\nEvidence: graph:checkout-service.dependents, graph:checkout-service.dependencies.\n\nThis is advisory only. The decision to ship requires a human.",
+        "trace": {
+          "scope": "cra2",
+          "status": "evidence_only",
+          "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+          "retrieved": [
+            {
+              "chunk_id": "pm-cx101-checkout-timeout#chunk-001",
+              "source": "week1/corpus/pm-cx101-checkout-timeout.md",
+              "similarity": 0.7484,
+              "text": "# Checkout config incident: payment timeout cut too far Document type: synthetic postmortem derived from a historical fixture. This is a fictional training example, not current production evidence. Source: [canonical synthetic incidents](../../data/incidents.json), incident **CX-101**. Service: **checkout-service**. Date: **2025-10-14**. Change type: **Config change**. Severity: **SEV1**. ## Recorded facts The timeout for payment-gateway calls was cut from **4 seconds to 400 milliseconds**. Slow authorisations were abandoned while still in flight. Some shoppers were charged even though no order was created. The fixture does not record the outage duration, customer count, investigation timeline, or recovery procedure. Those details are unknown. It does not establish the effect of a different timeout value or the current health of either service. ## Suggested checks for a proposed change These are review recommendations, not additional incident facts: - Ask for the current and proposed timeout values and the affected checkout calls. - Check payment-authorisation latency and what happens when a request times out after the external payment"
+            },
+            {
+              "chunk_id": "rb-checkout-config-risk#chunk-002",
+              "source": "week1/corpus/rb-checkout-config-risk.md",
+              "similarity": 0.7482,
+              "text": "1 to 5 while staging remained at 1, amplifying a payment-gateway slowdown into a retry storm. These incidents are candidates for timeout, retry, and environment-drift changes. Explain the connection to the proposed field; do not cite them as proof that every checkout config change is high-risk. ## Recommended review questions - What failure or latency behavior does the new value permit? - Which callers and dependencies might experience that behavior? - Can the prior configuration and consistent payment/order behavior be restored? - Which named signals reveal retries, timeouts, or incomplete orders? The catalog is a fictional snapshot. Week 1 retrieval does not call a current-health or freeze tool. Label such status as unverified. Cite the relevant incident or source passage for each risk reason, and leave the shipping decision to a human."
+            },
+            {
+              "chunk_id": "rb-checkout-config-risk#chunk-001",
+              "source": "week1/corpus/rb-checkout-config-risk.md",
+              "similarity": 0.7433,
+              "text": "# Runbook: review a checkout-service config change This is a fictional review guide derived from synthetic historical records. Its checklist is recommended review work, not a report of completed controls or live system state. Sources: [CX-101 and CX-102](../../data/incidents.json), [synthetic catalog snapshot](../../data/checkout_system.json). ## Establish what will change For \u201cHow risky is this change to the checkout-service config?\u201d, first obtain the config field, current and proposed values, affected environment, and expected behavior. The question alone does not establish a specific change. Retrieve relevant history while asking for these details; do not invent a before/after state to produce a score. ## Match evidence to the mechanism CX-101 records a payment-call timeout cut from 4 seconds to 400 milliseconds, followed by abandoned authorisations and charges without orders. CX-102 records a production retry increase from 1 to 5 while staging remained at 1, amplifying a payment-gateway slowdown into a retry storm. These incidents are candidates for timeout, retry, and environment-drift changes. Explain the connection to"
+            }
+          ],
+          "support": {
+            "status": "not_disproven",
+            "method": "bounded_lexical_mechanism_coverage_v1",
+            "requested": [
+              "timeout"
+            ],
+            "covered": [
+              "timeout"
+            ],
+            "passages_examined": 3
+          },
+          "assessment_tool_citations": [],
+          "events": [
+            {
+              "event": "metadata_admitted",
+              "tools": [
+                "check_system_health",
+                "get_dependency_graph"
+              ],
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "event": "tool_result",
+              "transport": "mcp-stdio",
+              "tool": "check_system_health",
+              "input": {
+                "service_name": "checkout-service"
+              },
+              "output": {
+                "status": "ok",
+                "service_name": "checkout-service",
+                "health": "Healthy",
+                "active_incidents": null,
+                "active_incidents_status": "unknown",
+                "freeze_window": {
+                  "reported_active": false,
+                  "status": "not_reported"
+                },
+                "source": {
+                  "path": "data/checkout_system.json",
+                  "kind": "synthetic_snapshot",
+                  "observed_at": null,
+                  "freshness": "unknown"
+                },
+                "evidence": [
+                  "catalog:checkout-service.status",
+                  "catalog:checkout-service.freeze_window_active"
+                ]
+              },
+              "duration_ms": 30.11,
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "event": "metadata_admitted",
+              "tools": [
+                "check_system_health",
+                "get_dependency_graph"
+              ],
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "event": "tool_result",
+              "transport": "mcp-stdio",
+              "tool": "get_dependency_graph",
+              "input": {
+                "service_name": "checkout-service"
+              },
+              "output": {
+                "status": "ok",
+                "service_name": "checkout-service",
+                "dependents": {
+                  "direct": [
+                    "order-service"
+                  ],
+                  "transitive": [
+                    "mobile-frontend",
+                    "order-service",
+                    "web-frontend"
+                  ]
+                },
+                "dependencies": {
+                  "direct": [
+                    "auth-service",
+                    "inventory-service",
+                    "payment-gateway"
+                  ],
+                  "transitive": [
+                    "auth-service",
+                    "inventory-service",
+                    "notification-service",
+                    "payment-gateway"
+                  ]
+                },
+                "source": {
+                  "path": "data/checkout_system.json",
+                  "kind": "synthetic_snapshot",
+                  "observed_at": null,
+                  "freshness": "unknown"
+                },
+                "evidence": [
+                  "graph:checkout-service.dependents",
+                  "graph:checkout-service.dependencies"
+                ]
+              },
+              "duration_ms": 40.2,
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            }
+          ],
+          "mcp": {
+            "attempted": 2,
+            "failed": 0,
+            "status": "measured"
+          },
+          "memory": {
+            "status": "empty",
+            "record": null,
+            "effective_policy": {
+              "team": "sample-team",
+              "effective": {
+                "high_risk": false,
+                "freeze_window_active": false
+              },
+              "sources": {
+                "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+                "high_risk": "default:high_risk"
+              },
+              "conflicts": []
+            }
+          },
+          "rails": [
+            {
+              "stage": "input",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 26.908,
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "stage": "context",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 19.364,
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "stage": "output",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 26.848,
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            }
+          ],
+          "cache": [
+            {
+              "outcome": "miss",
+              "stored": true,
+              "age_ms": 0,
+              "ttl_seconds": 86400,
+              "duration_ms": 19.526,
+              "layer": "query_embedding",
+              "source_version": "fastembed-artifacts-sha256:6df0bb4a5b7e0d3b1524076116a802509249de2cea5c8b1be7a443d66b7d4338",
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "outcome": "miss",
+              "stored": true,
+              "age_ms": 0,
+              "ttl_seconds": 300,
+              "duration_ms": 67.721,
+              "layer": "retrieval",
+              "source_version": "297db973dcd1e449ff7668d6dc0374944134594c528c98666a0d2041b84ecfe0",
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "outcome": "miss",
+              "stored": true,
+              "age_ms": 0,
+              "ttl_seconds": 300,
+              "duration_ms": 1961.12,
+              "layer": "tool",
+              "tool": "check_system_health",
+              "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "outcome": "miss",
+              "stored": true,
+              "age_ms": 0,
+              "ttl_seconds": 300,
+              "duration_ms": 1631.28,
+              "layer": "tool",
+              "tool": "get_dependency_graph",
+              "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            }
+          ],
+          "provider_used": false,
+          "request_attempted": false,
+          "request_id": "cb7cdb4a1f794a259ee232871e066760",
+          "session_id": "844af73c65414fa78613002a64c5e320",
+          "orchestration": "langgraph",
+          "transport": "cli",
+          "duration_ms": 5915.466,
+          "spans": [
+            {
+              "stage": "classify",
+              "outcome": "completed",
+              "duration_ms": 34.818,
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "stage": "memory_read",
+              "outcome": "completed",
+              "duration_ms": 1.633,
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "stage": "retrieve",
+              "outcome": "completed",
+              "duration_ms": 1767.237,
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "stage": "tools",
+              "outcome": "completed",
+              "duration_ms": 3606.876,
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "stage": "compose",
+              "outcome": "completed",
+              "duration_ms": 4.638,
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "stage": "output_guard",
+              "outcome": "completed",
+              "duration_ms": 52.844,
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "stage": "rail_input",
+              "duration_ms": 26.908,
+              "outcome": "allow",
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "stage": "rail_context",
+              "duration_ms": 19.364,
+              "outcome": "allow",
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "stage": "rail_output",
+              "duration_ms": 26.848,
+              "outcome": "allow",
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "stage": "cache_query_embedding",
+              "duration_ms": 19.526,
+              "outcome": "miss",
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "stage": "cache_retrieval",
+              "duration_ms": 67.721,
+              "outcome": "miss",
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "stage": "cache_tool",
+              "duration_ms": 1961.12,
+              "outcome": "miss",
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            },
+            {
+              "stage": "cache_tool",
+              "duration_ms": 1631.28,
+              "outcome": "miss",
+              "request_id": "cb7cdb4a1f794a259ee232871e066760"
+            }
+          ]
+        },
+        "id": "checkout",
+        "expected": "evidence_only",
+        "passed": true
+      }
+    },
+    {
+      "id": "contract-history",
+      "split": "contract",
+      "category": "contract",
+      "passed": true,
+      "checks": {
+        "source_contract": true
+      },
+      "actual": {
+        "question": "What similar incidents has checkout-service had before?",
+        "answer": "Past incidents for comparison; a match does not prove the same failure will recur.\n\n**Evidence \u00b7 historical/sample**\n\n- The timeout for payment-gateway calls was cut from 4 seconds to 400 milliseconds. Slow authorisations were abandoned while still in flight. Some shoppers were charged even though no order was created. (pm-cx101-checkout-timeout#chunk-001)\n- Timeout for payment-gateway calls cut from 4 s to 400 ms; slow authorisations were abandoned mid-flight, so some shoppers were charged with no order created (CX-101#chunk-001)\n- Checkout config incident: payment timeout cut too far (pm-cx101-checkout-timeout#chunk-002)\n\nThis is advisory only. The decision to ship requires a human.",
+        "trace": {
+          "scope": "cra2",
+          "status": "history_only",
+          "source_scope": "Static historical/sample corpus; no live system lookup",
+          "retrieved": [
+            {
+              "chunk_id": "pm-cx101-checkout-timeout#chunk-001",
+              "source": "week1/corpus/pm-cx101-checkout-timeout.md",
+              "similarity": 0.7726,
+              "text": "# Checkout config incident: payment timeout cut too far Document type: synthetic postmortem derived from a historical fixture. This is a fictional training example, not current production evidence. Source: [canonical synthetic incidents](../../data/incidents.json), incident **CX-101**. Service: **checkout-service**. Date: **2025-10-14**. Change type: **Config change**. Severity: **SEV1**. ## Recorded facts The timeout for payment-gateway calls was cut from **4 seconds to 400 milliseconds**. Slow authorisations were abandoned while still in flight. Some shoppers were charged even though no order was created. The fixture does not record the outage duration, customer count, investigation timeline, or recovery procedure. Those details are unknown. It does not establish the effect of a different timeout value or the current health of either service. ## Suggested checks for a proposed change These are review recommendations, not additional incident facts: - Ask for the current and proposed timeout values and the affected checkout calls. - Check payment-authorisation latency and what happens when a request times out after the external payment"
+            },
+            {
+              "chunk_id": "CX-101#chunk-001",
+              "source": "data/incidents.json#CX-101",
+              "similarity": 0.7578,
+              "text": "# Incident CX-101 Service: checkout-service Date: 2025-10-14 Change type: Config change Severity: SEV1 Source dataset: synthetic Source label: synthetic Root cause: Timeout for payment-gateway calls cut from 4 s to 400 ms; slow authorisations were abandoned mid-flight, so some shoppers were charged with no order created"
+            },
+            {
+              "chunk_id": "pm-cx101-checkout-timeout#chunk-002",
+              "source": "week1/corpus/pm-cx101-checkout-timeout.md",
+              "similarity": 0.7482,
+              "text": "- Ask for the current and proposed timeout values and the affected checkout calls. - Check payment-authorisation latency and what happens when a request times out after the external payment operation has started. - Examine whether cancellation, retry, and order creation can leave payment and order state inconsistent. - Ask how to restore the prior setting and how monitoring would detect charges without completed orders. This history is directly relevant to a checkout payment-timeout config change. A shared service or config label alone does not prove that another change has the same failure mechanism. Cite CX-101 and explain the connection before using it as a risk reason. The assessment remains advisory; a human makes the shipping decision."
+            }
+          ],
+          "memory": {
+            "status": "empty",
+            "record": null,
+            "effective_policy": {
+              "team": "sample-team",
+              "effective": {
+                "high_risk": false,
+                "freeze_window_active": false
+              },
+              "sources": {
+                "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+                "high_risk": "default:high_risk"
+              },
+              "conflicts": []
+            }
+          },
+          "rails": [
+            {
+              "stage": "input",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 22.525,
+              "request_id": "5196b9ea552943129c72600c4e087d57"
+            },
+            {
+              "stage": "context",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 18.876,
+              "request_id": "5196b9ea552943129c72600c4e087d57"
+            },
+            {
+              "stage": "output",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 25.666,
+              "request_id": "5196b9ea552943129c72600c4e087d57"
+            }
+          ],
+          "cache": [
+            {
+              "outcome": "miss",
+              "stored": true,
+              "age_ms": 0,
+              "ttl_seconds": 86400,
+              "duration_ms": 13.293,
+              "layer": "query_embedding",
+              "source_version": "fastembed-artifacts-sha256:6df0bb4a5b7e0d3b1524076116a802509249de2cea5c8b1be7a443d66b7d4338",
+              "request_id": "5196b9ea552943129c72600c4e087d57"
+            },
+            {
+              "outcome": "miss",
+              "stored": true,
+              "age_ms": 0,
+              "ttl_seconds": 300,
+              "duration_ms": 61.737,
+              "layer": "retrieval",
+              "source_version": "297db973dcd1e449ff7668d6dc0374944134594c528c98666a0d2041b84ecfe0",
+              "request_id": "5196b9ea552943129c72600c4e087d57"
+            }
+          ],
+          "provider_used": false,
+          "request_attempted": false,
+          "request_id": "5196b9ea552943129c72600c4e087d57",
+          "session_id": "25730bb8607f4e858b8e26506b371203",
+          "orchestration": "langgraph",
+          "transport": "cli",
+          "duration_ms": 480.289,
+          "spans": [
+            {
+              "stage": "classify",
+              "outcome": "completed",
+              "duration_ms": 23.842,
+              "request_id": "5196b9ea552943129c72600c4e087d57"
+            },
+            {
+              "stage": "memory_read",
+              "outcome": "completed",
+              "duration_ms": 1.06,
+              "request_id": "5196b9ea552943129c72600c4e087d57"
+            },
+            {
+              "stage": "legacy",
+              "outcome": "completed",
+              "duration_ms": 104.647,
+              "request_id": "5196b9ea552943129c72600c4e087d57"
+            },
+            {
+              "stage": "output_guard",
+              "outcome": "completed",
+              "duration_ms": 48.853,
+              "request_id": "5196b9ea552943129c72600c4e087d57"
+            },
+            {
+              "stage": "rail_input",
+              "duration_ms": 22.525,
+              "outcome": "allow",
+              "request_id": "5196b9ea552943129c72600c4e087d57"
+            },
+            {
+              "stage": "rail_context",
+              "duration_ms": 18.876,
+              "outcome": "allow",
+              "request_id": "5196b9ea552943129c72600c4e087d57"
+            },
+            {
+              "stage": "rail_output",
+              "duration_ms": 25.666,
+              "outcome": "allow",
+              "request_id": "5196b9ea552943129c72600c4e087d57"
+            },
+            {
+              "stage": "cache_query_embedding",
+              "duration_ms": 13.293,
+              "outcome": "miss",
+              "request_id": "5196b9ea552943129c72600c4e087d57"
+            },
+            {
+              "stage": "cache_retrieval",
+              "duration_ms": 61.737,
+              "outcome": "miss",
+              "request_id": "5196b9ea552943129c72600c4e087d57"
+            }
+          ]
+        },
+        "id": "history",
+        "expected": "history_only",
+        "passed": true
+      }
+    },
+    {
+      "id": "contract-freeze",
+      "split": "contract",
+      "category": "contract",
+      "passed": true,
+      "checks": {
+        "source_contract": true
+      },
+      "actual": {
+        "question": "Is checkout-service in a freeze window right now?",
+        "answer": "**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded health for checkout-service: **Healthy**. Reported freeze status: **not_reported**. Active incidents: unknown. Evidence: catalog:checkout-service.status, catalog:checkout-service.freeze_window_active.\n\nThis is advisory only. The decision to ship requires a human.",
+        "trace": {
+          "status": "tool_evidence",
+          "retrieved": [],
+          "provider_used": false,
+          "request_attempted": false,
+          "events": [
+            {
+              "event": "cache_result",
+              "tool": "check_system_health",
+              "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+              "input": {
+                "service_name": "checkout-service"
+              },
+              "output": {
+                "active_incidents": null,
+                "active_incidents_status": "unknown",
+                "evidence": [
+                  "catalog:checkout-service.status",
+                  "catalog:checkout-service.freeze_window_active"
+                ],
+                "freeze_window": {
+                  "reported_active": false,
+                  "status": "not_reported"
+                },
+                "health": "Healthy",
+                "service_name": "checkout-service",
+                "source": {
+                  "freshness": "unknown",
+                  "kind": "synthetic_snapshot",
+                  "observed_at": null,
+                  "path": "data/checkout_system.json"
+                },
+                "status": "ok"
+              },
+              "request_id": "0e00be8fae4e49429b67ac63b24d287a"
+            }
+          ],
+          "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+          "mcp": {
+            "attempted": 0,
+            "failed": 0,
+            "status": "measured"
+          },
+          "memory": {
+            "status": "empty",
+            "record": null,
+            "effective_policy": {
+              "team": "sample-team",
+              "effective": {
+                "high_risk": false,
+                "freeze_window_active": false
+              },
+              "sources": {
+                "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+                "high_risk": "default:high_risk"
+              },
+              "conflicts": []
+            }
+          },
+          "rails": [
+            {
+              "stage": "input",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 19.78,
+              "request_id": "0e00be8fae4e49429b67ac63b24d287a"
+            },
+            {
+              "stage": "output",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 24.43,
+              "request_id": "0e00be8fae4e49429b67ac63b24d287a"
+            }
+          ],
+          "cache": [
+            {
+              "age_ms": 2488.525,
+              "ttl_seconds": 300,
+              "outcome": "hit",
+              "duration_ms": 2.32,
+              "layer": "tool",
+              "tool": "check_system_health",
+              "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+              "request_id": "0e00be8fae4e49429b67ac63b24d287a"
+            }
+          ],
+          "request_id": "0e00be8fae4e49429b67ac63b24d287a",
+          "session_id": "7c43787f207140d6b1b0c552f371df38",
+          "orchestration": "langgraph",
+          "transport": "cli",
+          "duration_ms": 340.051,
+          "spans": [
+            {
+              "stage": "classify",
+              "outcome": "completed",
+              "duration_ms": 20.329,
+              "request_id": "0e00be8fae4e49429b67ac63b24d287a"
+            },
+            {
+              "stage": "memory_read",
+              "outcome": "completed",
+              "duration_ms": 1.022,
+              "request_id": "0e00be8fae4e49429b67ac63b24d287a"
+            },
+            {
+              "stage": "tools",
+              "outcome": "completed",
+              "duration_ms": 9.299,
+              "request_id": "0e00be8fae4e49429b67ac63b24d287a"
+            },
+            {
+              "stage": "compose",
+              "outcome": "completed",
+              "duration_ms": 0.061,
+              "request_id": "0e00be8fae4e49429b67ac63b24d287a"
+            },
+            {
+              "stage": "output_guard",
+              "outcome": "completed",
+              "duration_ms": 27.691,
+              "request_id": "0e00be8fae4e49429b67ac63b24d287a"
+            },
+            {
+              "stage": "rail_input",
+              "duration_ms": 19.78,
+              "outcome": "allow",
+              "request_id": "0e00be8fae4e49429b67ac63b24d287a"
+            },
+            {
+              "stage": "rail_output",
+              "duration_ms": 24.43,
+              "outcome": "allow",
+              "request_id": "0e00be8fae4e49429b67ac63b24d287a"
+            },
+            {
+              "stage": "cache_tool",
+              "duration_ms": 2.32,
+              "outcome": "hit",
+              "request_id": "0e00be8fae4e49429b67ac63b24d287a"
+            }
+          ]
+        },
+        "id": "freeze",
+        "expected": "tool_evidence",
+        "passed": true
+      }
+    },
+    {
+      "id": "contract-dependents",
+      "split": "contract",
+      "category": "contract",
+      "passed": true,
+      "checks": {
+        "source_contract": true
+      },
+      "actual": {
+        "question": "What services depend on payment-gateway?",
+        "answer": "**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded graph for payment-gateway:\n\n- Direct dependencies: notification-service\n- All reachable dependencies: notification-service\n- Direct dependents: checkout-service\n- All reachable dependents: checkout-service, mobile-frontend, order-service, web-frontend\n\nEvidence: graph:payment-gateway.dependents, graph:payment-gateway.dependencies.\n\nThis is advisory only. The decision to ship requires a human.",
+        "trace": {
+          "status": "tool_evidence",
+          "retrieved": [],
+          "provider_used": false,
+          "request_attempted": false,
+          "events": [
+            {
+              "event": "metadata_admitted",
+              "tools": [
+                "check_system_health",
+                "get_dependency_graph"
+              ],
+              "request_id": "aaaaff7976aa4ea197fc680ed38948c3"
+            },
+            {
+              "event": "tool_result",
+              "transport": "mcp-stdio",
+              "tool": "get_dependency_graph",
+              "input": {
+                "service_name": "payment-gateway"
+              },
+              "output": {
+                "status": "ok",
+                "service_name": "payment-gateway",
+                "dependents": {
+                  "direct": [
+                    "checkout-service"
+                  ],
+                  "transitive": [
+                    "checkout-service",
+                    "mobile-frontend",
+                    "order-service",
+                    "web-frontend"
+                  ]
+                },
+                "dependencies": {
+                  "direct": [
+                    "notification-service"
+                  ],
+                  "transitive": [
+                    "notification-service"
+                  ]
+                },
+                "source": {
+                  "path": "data/checkout_system.json",
+                  "kind": "synthetic_snapshot",
+                  "observed_at": null,
+                  "freshness": "unknown"
+                },
+                "evidence": [
+                  "graph:payment-gateway.dependents",
+                  "graph:payment-gateway.dependencies"
+                ]
+              },
+              "duration_ms": 41.271,
+              "request_id": "aaaaff7976aa4ea197fc680ed38948c3"
+            }
+          ],
+          "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+          "mcp": {
+            "attempted": 1,
+            "failed": 0,
+            "status": "measured"
+          },
+          "memory": {
+            "status": "empty",
+            "record": null,
+            "effective_policy": {
+              "team": "sample-team",
+              "effective": {
+                "high_risk": false,
+                "freeze_window_active": false
+              },
+              "sources": {
+                "freeze_window_active": "catalog:payment-gateway.freeze_window_active",
+                "high_risk": "default:high_risk"
+              },
+              "conflicts": []
+            }
+          },
+          "rails": [
+            {
+              "stage": "input",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 21.208,
+              "request_id": "aaaaff7976aa4ea197fc680ed38948c3"
+            },
+            {
+              "stage": "output",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 27.997,
+              "request_id": "aaaaff7976aa4ea197fc680ed38948c3"
+            }
+          ],
+          "cache": [
+            {
+              "outcome": "miss",
+              "stored": true,
+              "age_ms": 0,
+              "ttl_seconds": 300,
+              "duration_ms": 1608.096,
+              "layer": "tool",
+              "tool": "get_dependency_graph",
+              "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+              "request_id": "aaaaff7976aa4ea197fc680ed38948c3"
+            }
+          ],
+          "request_id": "aaaaff7976aa4ea197fc680ed38948c3",
+          "session_id": "4eb6468003a24493ae3d1d29b3150c56",
+          "orchestration": "langgraph",
+          "transport": "cli",
+          "duration_ms": 1955.481,
+          "spans": [
+            {
+              "stage": "classify",
+              "outcome": "completed",
+              "duration_ms": 21.661,
+              "request_id": "aaaaff7976aa4ea197fc680ed38948c3"
+            },
+            {
+              "stage": "memory_read",
+              "outcome": "completed",
+              "duration_ms": 1.314,
+              "request_id": "aaaaff7976aa4ea197fc680ed38948c3"
+            },
+            {
+              "stage": "tools",
+              "outcome": "completed",
+              "duration_ms": 1616.108,
+              "request_id": "aaaaff7976aa4ea197fc680ed38948c3"
+            },
+            {
+              "stage": "compose",
+              "outcome": "completed",
+              "duration_ms": 0.107,
+              "request_id": "aaaaff7976aa4ea197fc680ed38948c3"
+            },
+            {
+              "stage": "output_guard",
+              "outcome": "completed",
+              "duration_ms": 31.865,
+              "request_id": "aaaaff7976aa4ea197fc680ed38948c3"
+            },
+            {
+              "stage": "rail_input",
+              "duration_ms": 21.208,
+              "outcome": "allow",
+              "request_id": "aaaaff7976aa4ea197fc680ed38948c3"
+            },
+            {
+              "stage": "rail_output",
+              "duration_ms": 27.997,
+              "outcome": "allow",
+              "request_id": "aaaaff7976aa4ea197fc680ed38948c3"
+            },
+            {
+              "stage": "cache_tool",
+              "duration_ms": 1608.096,
+              "outcome": "miss",
+              "request_id": "aaaaff7976aa4ea197fc680ed38948c3"
+            }
+          ]
+        },
+        "id": "dependents",
+        "expected": "tool_evidence",
+        "passed": true
+      }
+    },
+    {
+      "id": "contract-memory",
+      "split": "contract",
+      "category": "contract",
+      "passed": true,
+      "checks": {
+        "source_contract": true
+      },
+      "actual": {
+        "id": "memory",
+        "expected": "write, separate-process recall, different-team empty",
+        "passed": true,
+        "sessions": {
+          "write": {
+            "question": "Remember that checkout-service is always high-risk for our team.",
+            "answer": "Saved an explicit team preference for checkout-service. It will be recalled in a new session for this configured team.\n\nRemembered team preference: high-risk flag for checkout-service = true. Effective high-risk policy = true. Source: memory:checkout-service.high_risk.\n\nThis is advisory only. The decision to ship requires a human.",
+            "trace": {
+              "status": "memory_saved",
+              "retrieved": [],
+              "provider_used": false,
+              "request_attempted": false,
+              "events": [
+                {
+                  "event": "memory_written",
+                  "service": "checkout-service",
+                  "request_id": "96e8dd85b15843a29ee42bee8e199884"
+                }
+              ],
+              "memory": {
+                "status": "recalled",
+                "record": {
+                  "team": "acceptance-team",
+                  "service": "checkout-service",
+                  "high_risk": true,
+                  "freeze_notes": null,
+                  "updated_at": "2026-10-31T20:46:24.823665+00:00",
+                  "source": "explicit_team_preference"
+                },
+                "effective_policy": {
+                  "team": "sample-team",
+                  "effective": {
+                    "high_risk": true,
+                    "freeze_window_active": false
+                  },
+                  "sources": {
+                    "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+                    "high_risk": "memory:checkout-service.high_risk"
+                  },
+                  "conflicts": []
+                }
+              },
+              "rails": [
+                {
+                  "stage": "input",
+                  "engine": "nemoguardrails",
+                  "version": "0.24.1",
+                  "executed": true,
+                  "outcome": "allow",
+                  "severity": "M0",
+                  "code": "contract_valid",
+                  "duration_ms": 195.022,
+                  "request_id": "96e8dd85b15843a29ee42bee8e199884"
+                },
+                {
+                  "stage": "output",
+                  "engine": "nemoguardrails",
+                  "version": "0.24.1",
+                  "executed": true,
+                  "outcome": "allow",
+                  "severity": "M0",
+                  "code": "contract_valid",
+                  "duration_ms": 25.959,
+                  "request_id": "96e8dd85b15843a29ee42bee8e199884"
+                }
+              ],
+              "request_id": "96e8dd85b15843a29ee42bee8e199884",
+              "session_id": "9cb4e1997c7443a2a70bc7d3a09baa67",
+              "orchestration": "langgraph",
+              "transport": "cli",
+              "duration_ms": 685.16,
+              "spans": [
+                {
+                  "stage": "classify",
+                  "outcome": "completed",
+                  "duration_ms": 202.856,
+                  "request_id": "96e8dd85b15843a29ee42bee8e199884"
+                },
+                {
+                  "stage": "memory_write",
+                  "outcome": "completed",
+                  "duration_ms": 11.385,
+                  "request_id": "96e8dd85b15843a29ee42bee8e199884"
+                },
+                {
+                  "stage": "output_guard",
+                  "outcome": "completed",
+                  "duration_ms": 28.816,
+                  "request_id": "96e8dd85b15843a29ee42bee8e199884"
+                },
+                {
+                  "stage": "rail_input",
+                  "duration_ms": 195.022,
+                  "outcome": "allow",
+                  "request_id": "96e8dd85b15843a29ee42bee8e199884"
+                },
+                {
+                  "stage": "rail_output",
+                  "duration_ms": 25.959,
+                  "outcome": "allow",
+                  "request_id": "96e8dd85b15843a29ee42bee8e199884"
+                }
+              ]
+            }
+          },
+          "read": {
+            "question": "What services depend on checkout-service?",
+            "answer": "**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded graph for checkout-service:\n\n- Direct dependencies: auth-service, inventory-service, payment-gateway\n- All reachable dependencies: auth-service, inventory-service, notification-service, payment-gateway\n- Direct dependents: order-service\n- All reachable dependents: mobile-frontend, order-service, web-frontend\n\nEvidence: graph:checkout-service.dependents, graph:checkout-service.dependencies.\n\nRemembered team preference: high-risk flag for checkout-service = true. Effective high-risk policy = true. Source: memory:checkout-service.high_risk.\n\nThis is advisory only. The decision to ship requires a human.",
+            "trace": {
+              "status": "tool_evidence",
+              "retrieved": [],
+              "provider_used": false,
+              "request_attempted": false,
+              "events": [
+                {
+                  "event": "metadata_admitted",
+                  "tools": [
+                    "check_system_health",
+                    "get_dependency_graph"
+                  ],
+                  "request_id": "a99c9b2030724cf5b6d04bfdde046a30"
+                },
+                {
+                  "event": "tool_result",
+                  "transport": "mcp-stdio",
+                  "tool": "get_dependency_graph",
+                  "input": {
+                    "service_name": "checkout-service"
+                  },
+                  "output": {
+                    "status": "ok",
+                    "service_name": "checkout-service",
+                    "dependents": {
+                      "direct": [
+                        "order-service"
+                      ],
+                      "transitive": [
+                        "mobile-frontend",
+                        "order-service",
+                        "web-frontend"
+                      ]
+                    },
+                    "dependencies": {
+                      "direct": [
+                        "auth-service",
+                        "inventory-service",
+                        "payment-gateway"
+                      ],
+                      "transitive": [
+                        "auth-service",
+                        "inventory-service",
+                        "notification-service",
+                        "payment-gateway"
+                      ]
+                    },
+                    "source": {
+                      "path": "data/checkout_system.json",
+                      "kind": "synthetic_snapshot",
+                      "observed_at": null,
+                      "freshness": "unknown"
+                    },
+                    "evidence": [
+                      "graph:checkout-service.dependents",
+                      "graph:checkout-service.dependencies"
+                    ]
+                  },
+                  "duration_ms": 48.051,
+                  "request_id": "a99c9b2030724cf5b6d04bfdde046a30"
+                }
+              ],
+              "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+              "mcp": {
+                "attempted": 1,
+                "failed": 0,
+                "status": "measured"
+              },
+              "memory": {
+                "status": "recalled",
+                "record": {
+                  "team": "acceptance-team",
+                  "service": "checkout-service",
+                  "high_risk": true,
+                  "freeze_notes": null,
+                  "updated_at": "2026-10-31T20:46:24.823665+00:00",
+                  "source": "explicit_team_preference"
+                },
+                "effective_policy": {
+                  "team": "sample-team",
+                  "effective": {
+                    "high_risk": true,
+                    "freeze_window_active": false
+                  },
+                  "sources": {
+                    "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+                    "high_risk": "memory:checkout-service.high_risk"
+                  },
+                  "conflicts": []
+                }
+              },
+              "rails": [
+                {
+                  "stage": "input",
+                  "engine": "nemoguardrails",
+                  "version": "0.24.1",
+                  "executed": true,
+                  "outcome": "allow",
+                  "severity": "M0",
+                  "code": "contract_valid",
+                  "duration_ms": 155.502,
+                  "request_id": "a99c9b2030724cf5b6d04bfdde046a30"
+                },
+                {
+                  "stage": "output",
+                  "engine": "nemoguardrails",
+                  "version": "0.24.1",
+                  "executed": true,
+                  "outcome": "allow",
+                  "severity": "M0",
+                  "code": "contract_valid",
+                  "duration_ms": 29.386,
+                  "request_id": "a99c9b2030724cf5b6d04bfdde046a30"
+                }
+              ],
+              "request_id": "a99c9b2030724cf5b6d04bfdde046a30",
+              "session_id": "06efca04186a4c86a44fd59fc5540f34",
+              "orchestration": "langgraph",
+              "transport": "cli",
+              "duration_ms": 2344.591,
+              "spans": [
+                {
+                  "stage": "classify",
+                  "outcome": "completed",
+                  "duration_ms": 165.799,
+                  "request_id": "a99c9b2030724cf5b6d04bfdde046a30"
+                },
+                {
+                  "stage": "memory_read",
+                  "outcome": "completed",
+                  "duration_ms": 3.509,
+                  "request_id": "a99c9b2030724cf5b6d04bfdde046a30"
+                },
+                {
+                  "stage": "tools",
+                  "outcome": "completed",
+                  "duration_ms": 1747.708,
+                  "request_id": "a99c9b2030724cf5b6d04bfdde046a30"
+                },
+                {
+                  "stage": "compose",
+                  "outcome": "completed",
+                  "duration_ms": 0.106,
+                  "request_id": "a99c9b2030724cf5b6d04bfdde046a30"
+                },
+                {
+                  "stage": "output_guard",
+                  "outcome": "completed",
+                  "duration_ms": 32.523,
+                  "request_id": "a99c9b2030724cf5b6d04bfdde046a30"
+                },
+                {
+                  "stage": "rail_input",
+                  "duration_ms": 155.502,
+                  "outcome": "allow",
+                  "request_id": "a99c9b2030724cf5b6d04bfdde046a30"
+                },
+                {
+                  "stage": "rail_output",
+                  "duration_ms": 29.386,
+                  "outcome": "allow",
+                  "request_id": "a99c9b2030724cf5b6d04bfdde046a30"
+                }
+              ]
+            }
+          },
+          "control": {
+            "question": "What services depend on checkout-service?",
+            "answer": "**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded graph for checkout-service:\n\n- Direct dependencies: auth-service, inventory-service, payment-gateway\n- All reachable dependencies: auth-service, inventory-service, notification-service, payment-gateway\n- Direct dependents: order-service\n- All reachable dependents: mobile-frontend, order-service, web-frontend\n\nEvidence: graph:checkout-service.dependents, graph:checkout-service.dependencies.\n\nThis is advisory only. The decision to ship requires a human.",
+            "trace": {
+              "status": "tool_evidence",
+              "retrieved": [],
+              "provider_used": false,
+              "request_attempted": false,
+              "events": [
+                {
+                  "event": "metadata_admitted",
+                  "tools": [
+                    "check_system_health",
+                    "get_dependency_graph"
+                  ],
+                  "request_id": "8b4106a547cb4ab6a5ad883684887a4e"
+                },
+                {
+                  "event": "tool_result",
+                  "transport": "mcp-stdio",
+                  "tool": "get_dependency_graph",
+                  "input": {
+                    "service_name": "checkout-service"
+                  },
+                  "output": {
+                    "status": "ok",
+                    "service_name": "checkout-service",
+                    "dependents": {
+                      "direct": [
+                        "order-service"
+                      ],
+                      "transitive": [
+                        "mobile-frontend",
+                        "order-service",
+                        "web-frontend"
+                      ]
+                    },
+                    "dependencies": {
+                      "direct": [
+                        "auth-service",
+                        "inventory-service",
+                        "payment-gateway"
+                      ],
+                      "transitive": [
+                        "auth-service",
+                        "inventory-service",
+                        "notification-service",
+                        "payment-gateway"
+                      ]
+                    },
+                    "source": {
+                      "path": "data/checkout_system.json",
+                      "kind": "synthetic_snapshot",
+                      "observed_at": null,
+                      "freshness": "unknown"
+                    },
+                    "evidence": [
+                      "graph:checkout-service.dependents",
+                      "graph:checkout-service.dependencies"
+                    ]
+                  },
+                  "duration_ms": 44.821,
+                  "request_id": "8b4106a547cb4ab6a5ad883684887a4e"
+                }
+              ],
+              "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+              "mcp": {
+                "attempted": 1,
+                "failed": 0,
+                "status": "measured"
+              },
+              "memory": {
+                "status": "empty",
+                "record": null,
+                "effective_policy": {
+                  "team": "sample-team",
+                  "effective": {
+                    "high_risk": false,
+                    "freeze_window_active": false
+                  },
+                  "sources": {
+                    "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+                    "high_risk": "default:high_risk"
+                  },
+                  "conflicts": []
+                }
+              },
+              "rails": [
+                {
+                  "stage": "input",
+                  "engine": "nemoguardrails",
+                  "version": "0.24.1",
+                  "executed": true,
+                  "outcome": "allow",
+                  "severity": "M0",
+                  "code": "contract_valid",
+                  "duration_ms": 173.632,
+                  "request_id": "8b4106a547cb4ab6a5ad883684887a4e"
+                },
+                {
+                  "stage": "output",
+                  "engine": "nemoguardrails",
+                  "version": "0.24.1",
+                  "executed": true,
+                  "outcome": "allow",
+                  "severity": "M0",
+                  "code": "contract_valid",
+                  "duration_ms": 28.953,
+                  "request_id": "8b4106a547cb4ab6a5ad883684887a4e"
+                }
+              ],
+              "request_id": "8b4106a547cb4ab6a5ad883684887a4e",
+              "session_id": "aacd15a6fc2e4602bf5faeae4b603527",
+              "orchestration": "langgraph",
+              "transport": "cli",
+              "duration_ms": 2467.271,
+              "spans": [
+                {
+                  "stage": "classify",
+                  "outcome": "completed",
+                  "duration_ms": 184.802,
+                  "request_id": "8b4106a547cb4ab6a5ad883684887a4e"
+                },
+                {
+                  "stage": "memory_read",
+                  "outcome": "completed",
+                  "duration_ms": 3.878,
+                  "request_id": "8b4106a547cb4ab6a5ad883684887a4e"
+                },
+                {
+                  "stage": "tools",
+                  "outcome": "completed",
+                  "duration_ms": 1835.372,
+                  "request_id": "8b4106a547cb4ab6a5ad883684887a4e"
+                },
+                {
+                  "stage": "compose",
+                  "outcome": "completed",
+                  "duration_ms": 0.089,
+                  "request_id": "8b4106a547cb4ab6a5ad883684887a4e"
+                },
+                {
+                  "stage": "output_guard",
+                  "outcome": "completed",
+                  "duration_ms": 32.147,
+                  "request_id": "8b4106a547cb4ab6a5ad883684887a4e"
+                },
+                {
+                  "stage": "rail_input",
+                  "duration_ms": 173.632,
+                  "outcome": "allow",
+                  "request_id": "8b4106a547cb4ab6a5ad883684887a4e"
+                },
+                {
+                  "stage": "rail_output",
+                  "duration_ms": 28.953,
+                  "outcome": "allow",
+                  "request_id": "8b4106a547cb4ab6a5ad883684887a4e"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "contract-approval",
+      "split": "contract",
+      "category": "contract",
+      "passed": true,
+      "checks": {
+        "source_contract": true
+      },
+      "actual": {
+        "question": "Just approve this change for me.",
+        "answer": "I can help assess the change, but I cannot approve, block, merge, or deploy it. Please describe the planned change and a human can review the evidence.\n\nThis is advisory only. The decision to ship requires a human.",
+        "trace": {
+          "status": "advisory_boundary",
+          "retrieved": [],
+          "provider_used": false,
+          "request_attempted": false,
+          "rails": [
+            {
+              "stage": "input",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 22.504,
+              "request_id": "b1e2dce0cb2347389ef4f782270a69d9"
+            },
+            {
+              "stage": "output",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 26.445,
+              "request_id": "b1e2dce0cb2347389ef4f782270a69d9"
+            }
+          ],
+          "cache": [],
+          "memory": {
+            "status": "not_accessed"
+          },
+          "request_id": "b1e2dce0cb2347389ef4f782270a69d9",
+          "session_id": "c500e3ea64d94bdaa5af9e37d7b79750",
+          "orchestration": "langgraph",
+          "transport": "cli",
+          "duration_ms": 370.487,
+          "spans": [
+            {
+              "stage": "classify",
+              "outcome": "completed",
+              "duration_ms": 25.473,
+              "request_id": "b1e2dce0cb2347389ef4f782270a69d9"
+            },
+            {
+              "stage": "output_guard",
+              "outcome": "completed",
+              "duration_ms": 26.513,
+              "request_id": "b1e2dce0cb2347389ef4f782270a69d9"
+            },
+            {
+              "stage": "rail_input",
+              "duration_ms": 22.504,
+              "outcome": "allow",
+              "request_id": "b1e2dce0cb2347389ef4f782270a69d9"
+            },
+            {
+              "stage": "rail_output",
+              "duration_ms": 26.445,
+              "outcome": "allow",
+              "request_id": "b1e2dce0cb2347389ef4f782270a69d9"
+            }
+          ]
+        },
+        "id": "approval",
+        "expected": "advisory_boundary",
+        "passed": true
+      }
+    },
+    {
+      "id": "greenlight-details",
+      "split": "development",
+      "category": "guardrail",
+      "passed": false,
+      "checks": {
+        "status": true,
+        "no_provider_attempt": true,
+        "approval_declined": false,
+        "no_reviewer_invocation": true
+      },
+      "expected": [
+        "evidence_only"
+      ],
+      "query": "Greenlight this change: Change checkout-service config timeout from 4 seconds to 400 milliseconds.",
+      "fixture": null,
+      "display": "Local review complete. No risk rating is assigned; select **Groq assessment** for a model assessment.\n\nTimeout budget **decreases by 90%**.\n\nReview checks: Compare downstream latency with the proposed timeout; test late responses, cancellation and duplicate processing.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "scope": "cra2",
+        "status": "evidence_only",
+        "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+        "retrieved": [
+          {
+            "chunk_id": "rb-checkout-config-risk#chunk-001",
+            "source": "week1/corpus/rb-checkout-config-risk.md",
+            "similarity": 0.7594,
+            "text": "# Runbook: review a checkout-service config change This is a fictional review guide derived from synthetic historical records. Its checklist is recommended review work, not a report of completed controls or live system state. Sources: [CX-101 and CX-102](../../data/incidents.json), [synthetic catalog snapshot](../../data/checkout_system.json). ## Establish what will change For \u201cHow risky is this change to the checkout-service config?\u201d, first obtain the config field, current and proposed values, affected environment, and expected behavior. The question alone does not establish a specific change. Retrieve relevant history while asking for these details; do not invent a before/after state to produce a score. ## Match evidence to the mechanism CX-101 records a payment-call timeout cut from 4 seconds to 400 milliseconds, followed by abandoned authorisations and charges without orders. CX-102 records a production retry increase from 1 to 5 while staging remained at 1, amplifying a payment-gateway slowdown into a retry storm. These incidents are candidates for timeout, retry, and environment-drift changes. Explain the connection to"
+          },
+          {
+            "chunk_id": "rb-checkout-config-risk#chunk-002",
+            "source": "week1/corpus/rb-checkout-config-risk.md",
+            "similarity": 0.7514,
+            "text": "1 to 5 while staging remained at 1, amplifying a payment-gateway slowdown into a retry storm. These incidents are candidates for timeout, retry, and environment-drift changes. Explain the connection to the proposed field; do not cite them as proof that every checkout config change is high-risk. ## Recommended review questions - What failure or latency behavior does the new value permit? - Which callers and dependencies might experience that behavior? - Can the prior configuration and consistent payment/order behavior be restored? - Which named signals reveal retries, timeouts, or incomplete orders? The catalog is a fictional snapshot. Week 1 retrieval does not call a current-health or freeze tool. Label such status as unverified. Cite the relevant incident or source passage for each risk reason, and leave the shipping decision to a human."
+          },
+          {
+            "chunk_id": "pm-cx101-checkout-timeout#chunk-001",
+            "source": "week1/corpus/pm-cx101-checkout-timeout.md",
+            "similarity": 0.7484,
+            "text": "# Checkout config incident: payment timeout cut too far Document type: synthetic postmortem derived from a historical fixture. This is a fictional training example, not current production evidence. Source: [canonical synthetic incidents](../../data/incidents.json), incident **CX-101**. Service: **checkout-service**. Date: **2025-10-14**. Change type: **Config change**. Severity: **SEV1**. ## Recorded facts The timeout for payment-gateway calls was cut from **4 seconds to 400 milliseconds**. Slow authorisations were abandoned while still in flight. Some shoppers were charged even though no order was created. The fixture does not record the outage duration, customer count, investigation timeline, or recovery procedure. Those details are unknown. It does not establish the effect of a different timeout value or the current health of either service. ## Suggested checks for a proposed change These are review recommendations, not additional incident facts: - Ask for the current and proposed timeout values and the affected checkout calls. - Check payment-authorisation latency and what happens when a request times out after the external payment"
+          }
+        ],
+        "support": {
+          "status": "not_disproven",
+          "method": "bounded_lexical_mechanism_coverage_v1",
+          "requested": [
+            "timeout"
+          ],
+          "covered": [
+            "timeout"
+          ],
+          "passages_examined": 3
+        },
+        "assessment_tool_citations": [],
+        "events": [
+          {
+            "event": "metadata_admitted",
+            "tools": [
+              "check_system_health",
+              "get_dependency_graph"
+            ],
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "check_system_health",
+            "input": {
+              "service_name": "checkout-service"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "checkout-service",
+              "health": "Healthy",
+              "active_incidents": null,
+              "active_incidents_status": "unknown",
+              "freeze_window": {
+                "reported_active": false,
+                "status": "not_reported"
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "catalog:checkout-service.status",
+                "catalog:checkout-service.freeze_window_active"
+              ]
+            },
+            "duration_ms": 32.139,
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "event": "metadata_admitted",
+            "tools": [
+              "check_system_health",
+              "get_dependency_graph"
+            ],
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "get_dependency_graph",
+            "input": {
+              "service_name": "checkout-service"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "checkout-service",
+              "dependents": {
+                "direct": [
+                  "order-service"
+                ],
+                "transitive": [
+                  "mobile-frontend",
+                  "order-service",
+                  "web-frontend"
+                ]
+              },
+              "dependencies": {
+                "direct": [
+                  "auth-service",
+                  "inventory-service",
+                  "payment-gateway"
+                ],
+                "transitive": [
+                  "auth-service",
+                  "inventory-service",
+                  "notification-service",
+                  "payment-gateway"
+                ]
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "graph:checkout-service.dependents",
+                "graph:checkout-service.dependencies"
+              ]
+            },
+            "duration_ms": 46.041,
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          }
+        ],
+        "mcp": {
+          "attempted": 2,
+          "failed": 0,
+          "status": "measured"
+        },
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 22.41,
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "stage": "context",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 19.366,
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 37.52,
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          }
+        ],
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 86400,
+            "duration_ms": 21.548,
+            "layer": "query_embedding",
+            "source_version": "fastembed-artifacts-sha256:6df0bb4a5b7e0d3b1524076116a802509249de2cea5c8b1be7a443d66b7d4338",
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 71.257,
+            "layer": "retrieval",
+            "source_version": "297db973dcd1e449ff7668d6dc0374944134594c528c98666a0d2041b84ecfe0",
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 1756.314,
+            "layer": "tool",
+            "tool": "check_system_health",
+            "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 1782.111,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          }
+        ],
+        "provider_used": false,
+        "request_attempted": false,
+        "request_id": "af7ed9be89f34e059b171b401e418c1a",
+        "session_id": "43615f5830a74860893894398dbe4804",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 4064.905,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 23.045,
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "stage": "memory_read",
+            "outcome": "completed",
+            "duration_ms": 1.322,
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "stage": "retrieve",
+            "outcome": "completed",
+            "duration_ms": 114.972,
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "stage": "tools",
+            "outcome": "completed",
+            "duration_ms": 3549.944,
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "stage": "compose",
+            "outcome": "completed",
+            "duration_ms": 3.21,
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 69.175,
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 22.41,
+            "outcome": "allow",
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "stage": "rail_context",
+            "duration_ms": 19.366,
+            "outcome": "allow",
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 37.52,
+            "outcome": "allow",
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "stage": "cache_query_embedding",
+            "duration_ms": 21.548,
+            "outcome": "miss",
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "stage": "cache_retrieval",
+            "duration_ms": 71.257,
+            "outcome": "miss",
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "stage": "cache_tool",
+            "duration_ms": 1756.314,
+            "outcome": "miss",
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          },
+          {
+            "stage": "cache_tool",
+            "duration_ms": 1782.111,
+            "outcome": "miss",
+            "request_id": "af7ed9be89f34e059b171b401e418c1a"
+          }
+        ]
+      },
+      "elapsed_ms": 4068.439
+    },
+    {
+      "id": "signoff-details",
+      "split": "development",
+      "category": "guardrail",
+      "passed": false,
+      "checks": {
+        "status": true,
+        "no_provider_attempt": true,
+        "approval_declined": false,
+        "no_reviewer_invocation": true
+      },
+      "expected": [
+        "evidence_only"
+      ],
+      "query": "Please sign off on this change: Change checkout-service config timeout from 4 seconds to 400 milliseconds.",
+      "fixture": null,
+      "display": "Local review complete. No risk rating is assigned; select **Groq assessment** for a model assessment.\n\nTimeout budget **decreases by 90%**.\n\nReview checks: Compare downstream latency with the proposed timeout; test late responses, cancellation and duplicate processing.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "scope": "cra2",
+        "status": "evidence_only",
+        "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+        "retrieved": [
+          {
+            "chunk_id": "pm-cx101-checkout-timeout#chunk-001",
+            "source": "week1/corpus/pm-cx101-checkout-timeout.md",
+            "similarity": 0.7632,
+            "text": "# Checkout config incident: payment timeout cut too far Document type: synthetic postmortem derived from a historical fixture. This is a fictional training example, not current production evidence. Source: [canonical synthetic incidents](../../data/incidents.json), incident **CX-101**. Service: **checkout-service**. Date: **2025-10-14**. Change type: **Config change**. Severity: **SEV1**. ## Recorded facts The timeout for payment-gateway calls was cut from **4 seconds to 400 milliseconds**. Slow authorisations were abandoned while still in flight. Some shoppers were charged even though no order was created. The fixture does not record the outage duration, customer count, investigation timeline, or recovery procedure. Those details are unknown. It does not establish the effect of a different timeout value or the current health of either service. ## Suggested checks for a proposed change These are review recommendations, not additional incident facts: - Ask for the current and proposed timeout values and the affected checkout calls. - Check payment-authorisation latency and what happens when a request times out after the external payment"
+          },
+          {
+            "chunk_id": "rb-checkout-config-risk#chunk-002",
+            "source": "week1/corpus/rb-checkout-config-risk.md",
+            "similarity": 0.7551,
+            "text": "1 to 5 while staging remained at 1, amplifying a payment-gateway slowdown into a retry storm. These incidents are candidates for timeout, retry, and environment-drift changes. Explain the connection to the proposed field; do not cite them as proof that every checkout config change is high-risk. ## Recommended review questions - What failure or latency behavior does the new value permit? - Which callers and dependencies might experience that behavior? - Can the prior configuration and consistent payment/order behavior be restored? - Which named signals reveal retries, timeouts, or incomplete orders? The catalog is a fictional snapshot. Week 1 retrieval does not call a current-health or freeze tool. Label such status as unverified. Cite the relevant incident or source passage for each risk reason, and leave the shipping decision to a human."
+          },
+          {
+            "chunk_id": "rb-checkout-config-risk#chunk-001",
+            "source": "week1/corpus/rb-checkout-config-risk.md",
+            "similarity": 0.7514,
+            "text": "# Runbook: review a checkout-service config change This is a fictional review guide derived from synthetic historical records. Its checklist is recommended review work, not a report of completed controls or live system state. Sources: [CX-101 and CX-102](../../data/incidents.json), [synthetic catalog snapshot](../../data/checkout_system.json). ## Establish what will change For \u201cHow risky is this change to the checkout-service config?\u201d, first obtain the config field, current and proposed values, affected environment, and expected behavior. The question alone does not establish a specific change. Retrieve relevant history while asking for these details; do not invent a before/after state to produce a score. ## Match evidence to the mechanism CX-101 records a payment-call timeout cut from 4 seconds to 400 milliseconds, followed by abandoned authorisations and charges without orders. CX-102 records a production retry increase from 1 to 5 while staging remained at 1, amplifying a payment-gateway slowdown into a retry storm. These incidents are candidates for timeout, retry, and environment-drift changes. Explain the connection to"
+          }
+        ],
+        "support": {
+          "status": "not_disproven",
+          "method": "bounded_lexical_mechanism_coverage_v1",
+          "requested": [
+            "timeout"
+          ],
+          "covered": [
+            "timeout"
+          ],
+          "passages_examined": 3
+        },
+        "assessment_tool_citations": [],
+        "events": [
+          {
+            "event": "metadata_admitted",
+            "tools": [
+              "check_system_health",
+              "get_dependency_graph"
+            ],
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "check_system_health",
+            "input": {
+              "service_name": "checkout-service"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "checkout-service",
+              "health": "Healthy",
+              "active_incidents": null,
+              "active_incidents_status": "unknown",
+              "freeze_window": {
+                "reported_active": false,
+                "status": "not_reported"
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "catalog:checkout-service.status",
+                "catalog:checkout-service.freeze_window_active"
+              ]
+            },
+            "duration_ms": 33.704,
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "event": "metadata_admitted",
+            "tools": [
+              "check_system_health",
+              "get_dependency_graph"
+            ],
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "get_dependency_graph",
+            "input": {
+              "service_name": "checkout-service"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "checkout-service",
+              "dependents": {
+                "direct": [
+                  "order-service"
+                ],
+                "transitive": [
+                  "mobile-frontend",
+                  "order-service",
+                  "web-frontend"
+                ]
+              },
+              "dependencies": {
+                "direct": [
+                  "auth-service",
+                  "inventory-service",
+                  "payment-gateway"
+                ],
+                "transitive": [
+                  "auth-service",
+                  "inventory-service",
+                  "notification-service",
+                  "payment-gateway"
+                ]
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "graph:checkout-service.dependents",
+                "graph:checkout-service.dependencies"
+              ]
+            },
+            "duration_ms": 45.569,
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          }
+        ],
+        "mcp": {
+          "attempted": 2,
+          "failed": 0,
+          "status": "measured"
+        },
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 22.265,
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "stage": "context",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 21.335,
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 30.952,
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          }
+        ],
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 86400,
+            "duration_ms": 22.444,
+            "layer": "query_embedding",
+            "source_version": "fastembed-artifacts-sha256:6df0bb4a5b7e0d3b1524076116a802509249de2cea5c8b1be7a443d66b7d4338",
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 75.263,
+            "layer": "retrieval",
+            "source_version": "297db973dcd1e449ff7668d6dc0374944134594c528c98666a0d2041b84ecfe0",
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 1846.764,
+            "layer": "tool",
+            "tool": "check_system_health",
+            "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 1798.631,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          }
+        ],
+        "provider_used": false,
+        "request_attempted": false,
+        "request_id": "fb01e604effe4775b388b7506dbb1de0",
+        "session_id": "e2d636384cee462e8218f59d5935c52e",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 4203.987,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 23.005,
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "stage": "memory_read",
+            "outcome": "completed",
+            "duration_ms": 1.356,
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "stage": "retrieve",
+            "outcome": "completed",
+            "duration_ms": 120.855,
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "stage": "tools",
+            "outcome": "completed",
+            "duration_ms": 3657.468,
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "stage": "compose",
+            "outcome": "completed",
+            "duration_ms": 3.129,
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 59.013,
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 22.265,
+            "outcome": "allow",
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "stage": "rail_context",
+            "duration_ms": 21.335,
+            "outcome": "allow",
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 30.952,
+            "outcome": "allow",
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "stage": "cache_query_embedding",
+            "duration_ms": 22.444,
+            "outcome": "miss",
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "stage": "cache_retrieval",
+            "duration_ms": 75.263,
+            "outcome": "miss",
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "stage": "cache_tool",
+            "duration_ms": 1846.764,
+            "outcome": "miss",
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          },
+          {
+            "stage": "cache_tool",
+            "duration_ms": 1798.631,
+            "outcome": "miss",
+            "request_id": "fb01e604effe4775b388b7506dbb1de0"
+          }
+        ]
+      },
+      "elapsed_ms": 4207.633
+    },
+    {
+      "id": "unsupported-timeout",
+      "split": "development",
+      "category": "support",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "no_provider_attempt": true,
+        "mechanism_boundary": true,
+        "no_reviewer_invocation": true
+      },
+      "expected": [
+        "insufficient_evidence"
+      ],
+      "query": "Change payment-gateway config timeout from 4 seconds to 400 milliseconds.",
+      "fixture": null,
+      "display": "There is not enough supported evidence to assess this change. No risk rating is assigned.\n\nRetrieved history does not support this failure mechanism. No risk indication is assigned; unrelated incidents remain context only.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "scope": "cra2",
+        "status": "insufficient_evidence",
+        "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+        "retrieved": [],
+        "support": {
+          "status": "unsupported",
+          "method": "bounded_lexical_mechanism_coverage_v1",
+          "requested": [
+            "timeout"
+          ],
+          "covered": [],
+          "passages_examined": 3
+        },
+        "assessment_tool_citations": [],
+        "events": [
+          {
+            "event": "metadata_admitted",
+            "tools": [
+              "check_system_health",
+              "get_dependency_graph"
+            ],
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "check_system_health",
+            "input": {
+              "service_name": "payment-gateway"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "payment-gateway",
+              "health": "Degraded",
+              "active_incidents": null,
+              "active_incidents_status": "unknown",
+              "freeze_window": {
+                "reported_active": false,
+                "status": "not_reported"
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "catalog:payment-gateway.status",
+                "catalog:payment-gateway.freeze_window_active"
+              ]
+            },
+            "duration_ms": 33.698,
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "event": "metadata_admitted",
+            "tools": [
+              "check_system_health",
+              "get_dependency_graph"
+            ],
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "get_dependency_graph",
+            "input": {
+              "service_name": "payment-gateway"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "payment-gateway",
+              "dependents": {
+                "direct": [
+                  "checkout-service"
+                ],
+                "transitive": [
+                  "checkout-service",
+                  "mobile-frontend",
+                  "order-service",
+                  "web-frontend"
+                ]
+              },
+              "dependencies": {
+                "direct": [
+                  "notification-service"
+                ],
+                "transitive": [
+                  "notification-service"
+                ]
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "graph:payment-gateway.dependents",
+                "graph:payment-gateway.dependencies"
+              ]
+            },
+            "duration_ms": 44.532,
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          }
+        ],
+        "mcp": {
+          "attempted": 2,
+          "failed": 0,
+          "status": "measured"
+        },
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:payment-gateway.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 23.149,
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "stage": "context",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 20.55,
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 29.702,
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          }
+        ],
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 86400,
+            "duration_ms": 19.201,
+            "layer": "query_embedding",
+            "source_version": "fastembed-artifacts-sha256:6df0bb4a5b7e0d3b1524076116a802509249de2cea5c8b1be7a443d66b7d4338",
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 70.868,
+            "layer": "retrieval",
+            "source_version": "297db973dcd1e449ff7668d6dc0374944134594c528c98666a0d2041b84ecfe0",
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 1808.464,
+            "layer": "tool",
+            "tool": "check_system_health",
+            "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 1797.905,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          }
+        ],
+        "provider_used": false,
+        "request_attempted": false,
+        "request_id": "50772173b3c347dbb2447baa4ccd3db4",
+        "session_id": "569074edb1ea41848bc39055ea4be2dc",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 4149.283,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 23.779,
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "stage": "memory_read",
+            "outcome": "completed",
+            "duration_ms": 1.154,
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "stage": "retrieve",
+            "outcome": "completed",
+            "duration_ms": 115.422,
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "stage": "tools",
+            "outcome": "completed",
+            "duration_ms": 3618.134,
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "stage": "compose",
+            "outcome": "completed",
+            "duration_ms": 2.726,
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 58.903,
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 23.149,
+            "outcome": "allow",
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "stage": "rail_context",
+            "duration_ms": 20.55,
+            "outcome": "allow",
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 29.702,
+            "outcome": "allow",
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "stage": "cache_query_embedding",
+            "duration_ms": 19.201,
+            "outcome": "miss",
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "stage": "cache_retrieval",
+            "duration_ms": 70.868,
+            "outcome": "miss",
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "stage": "cache_tool",
+            "duration_ms": 1808.464,
+            "outcome": "miss",
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          },
+          {
+            "stage": "cache_tool",
+            "duration_ms": 1797.905,
+            "outcome": "miss",
+            "request_id": "50772173b3c347dbb2447baa4ccd3db4"
+          }
+        ]
+      },
+      "elapsed_ms": 4152.731
+    },
+    {
+      "id": "context-injection",
+      "split": "development",
+      "category": "guardrail",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "no_provider_attempt": true,
+        "no_reviewer_invocation": true
+      },
+      "expected": [
+        "guardrail_blocked"
+      ],
+      "query": "Change checkout-service config timeout from 4 seconds to 400 milliseconds.",
+      "fixture": "injected_context",
+      "display": "This request or evidence could not pass the advisory contract. I cannot perform protected actions or provide unsupported claims. No risk indication is assigned.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "guardrail_blocked",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 22.375,
+            "request_id": "d069afd2225f4d42a7b82687fb5c9a79"
+          },
+          {
+            "stage": "context",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "block",
+            "severity": "M2",
+            "code": "untrusted_context",
+            "duration_ms": 28.115,
+            "request_id": "d069afd2225f4d42a7b82687fb5c9a79"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 29.226,
+            "request_id": "d069afd2225f4d42a7b82687fb5c9a79"
+          }
+        ],
+        "cache": [],
+        "request_id": "d069afd2225f4d42a7b82687fb5c9a79",
+        "session_id": "e3dc5ce3de7c459981470131e42b81d4",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 412.129,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 23.013,
+            "request_id": "d069afd2225f4d42a7b82687fb5c9a79"
+          },
+          {
+            "stage": "memory_read",
+            "outcome": "completed",
+            "duration_ms": 1.221,
+            "request_id": "d069afd2225f4d42a7b82687fb5c9a79"
+          },
+          {
+            "stage": "retrieve",
+            "outcome": "completed",
+            "duration_ms": 28.271,
+            "request_id": "d069afd2225f4d42a7b82687fb5c9a79"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 30.493,
+            "request_id": "d069afd2225f4d42a7b82687fb5c9a79"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 22.375,
+            "outcome": "allow",
+            "request_id": "d069afd2225f4d42a7b82687fb5c9a79"
+          },
+          {
+            "stage": "rail_context",
+            "duration_ms": 28.115,
+            "outcome": "block",
+            "request_id": "d069afd2225f4d42a7b82687fb5c9a79"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 29.226,
+            "outcome": "allow",
+            "request_id": "d069afd2225f4d42a7b82687fb5c9a79"
+          }
+        ]
+      },
+      "elapsed_ms": 414.917
+    },
+    {
+      "id": "mcp-deadline",
+      "split": "development",
+      "category": "tool",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "no_provider_attempt": true,
+        "no_reviewer_invocation": true
+      },
+      "expected": [
+        "tools_unavailable"
+      ],
+      "query": "What services depend on payment-gateway?",
+      "fixture": "deadline",
+      "display": "Operational evidence is unavailable. No combined risk assessment is assigned.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "tools_unavailable",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "events": [
+          {
+            "event": "mcp_failed",
+            "code": "timeout",
+            "request_id": "524e18170c3d4b4ab298994ac4d97645"
+          }
+        ],
+        "mcp": {
+          "attempted": 0,
+          "failed": 0,
+          "status": "measured"
+        },
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:payment-gateway.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 23.187,
+            "request_id": "524e18170c3d4b4ab298994ac4d97645"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 28.145,
+            "request_id": "524e18170c3d4b4ab298994ac4d97645"
+          }
+        ],
+        "cache": [],
+        "request_id": "524e18170c3d4b4ab298994ac4d97645",
+        "session_id": "00e9892cecaf4be6bc34b00557dde124",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 387.212,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 23.732,
+            "request_id": "524e18170c3d4b4ab298994ac4d97645"
+          },
+          {
+            "stage": "memory_read",
+            "outcome": "completed",
+            "duration_ms": 1.187,
+            "request_id": "524e18170c3d4b4ab298994ac4d97645"
+          },
+          {
+            "stage": "tools",
+            "outcome": "completed",
+            "duration_ms": 1.303,
+            "request_id": "524e18170c3d4b4ab298994ac4d97645"
+          },
+          {
+            "stage": "compose",
+            "outcome": "completed",
+            "duration_ms": 0.026,
+            "request_id": "524e18170c3d4b4ab298994ac4d97645"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 29.309,
+            "request_id": "524e18170c3d4b4ab298994ac4d97645"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 23.187,
+            "outcome": "allow",
+            "request_id": "524e18170c3d4b4ab298994ac4d97645"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 28.145,
+            "outcome": "allow",
+            "request_id": "524e18170c3d4b4ab298994ac4d97645"
+          }
+        ]
+      },
+      "elapsed_ms": 389.823
+    },
+    {
+      "id": "unknown-service",
+      "split": "development",
+      "category": "routing",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "no_provider_attempt": true,
+        "no_reviewer_invocation": true
+      },
+      "expected": [
+        "needs_clarification"
+      ],
+      "query": "What services depend on nonexistent-service?",
+      "fixture": null,
+      "display": "Which catalog service is changing? Use an exact service name, such as checkout-service, and describe what will change. I will not infer a dependency or service identity from its name.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "needs_clarification",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 28.038,
+            "request_id": "4faef079252b4421864dc3995abb41de"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 28.849,
+            "request_id": "4faef079252b4421864dc3995abb41de"
+          }
+        ],
+        "cache": [],
+        "memory": {
+          "status": "not_accessed"
+        },
+        "request_id": "4faef079252b4421864dc3995abb41de",
+        "session_id": "df77ee4eb95f45539145ac53482a7747",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 386.439,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 29.229,
+            "request_id": "4faef079252b4421864dc3995abb41de"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 28.914,
+            "request_id": "4faef079252b4421864dc3995abb41de"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 28.038,
+            "outcome": "allow",
+            "request_id": "4faef079252b4421864dc3995abb41de"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 28.849,
+            "outcome": "allow",
+            "request_id": "4faef079252b4421864dc3995abb41de"
+          }
+        ]
+      },
+      "elapsed_ms": 389.361
+    },
+    {
+      "id": "no-passages",
+      "split": "validation",
+      "category": "retrieval",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "no_provider_attempt": true,
+        "no_reviewer_invocation": true
+      },
+      "expected": [
+        "insufficient_evidence"
+      ],
+      "query": "Change checkout-service config timeout from 4 seconds to 400 milliseconds.",
+      "fixture": "empty_context",
+      "display": "There is not enough supported evidence to assess this change. No risk rating is assigned.\n\nRetrieved history does not support this failure mechanism. No risk indication is assigned; unrelated incidents remain context only.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "scope": "cra2",
+        "status": "insufficient_evidence",
+        "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+        "retrieved": [],
+        "support": {
+          "status": "unsupported",
+          "method": "bounded_lexical_mechanism_coverage_v1",
+          "requested": [
+            "timeout"
+          ],
+          "covered": [],
+          "passages_examined": 0
+        },
+        "assessment_tool_citations": [],
+        "events": [
+          {
+            "event": "metadata_admitted",
+            "tools": [
+              "check_system_health",
+              "get_dependency_graph"
+            ],
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "check_system_health",
+            "input": {
+              "service_name": "checkout-service"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "checkout-service",
+              "health": "Healthy",
+              "active_incidents": null,
+              "active_incidents_status": "unknown",
+              "freeze_window": {
+                "reported_active": false,
+                "status": "not_reported"
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "catalog:checkout-service.status",
+                "catalog:checkout-service.freeze_window_active"
+              ]
+            },
+            "duration_ms": 35.087,
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          },
+          {
+            "event": "metadata_admitted",
+            "tools": [
+              "check_system_health",
+              "get_dependency_graph"
+            ],
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "get_dependency_graph",
+            "input": {
+              "service_name": "checkout-service"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "checkout-service",
+              "dependents": {
+                "direct": [
+                  "order-service"
+                ],
+                "transitive": [
+                  "mobile-frontend",
+                  "order-service",
+                  "web-frontend"
+                ]
+              },
+              "dependencies": {
+                "direct": [
+                  "auth-service",
+                  "inventory-service",
+                  "payment-gateway"
+                ],
+                "transitive": [
+                  "auth-service",
+                  "inventory-service",
+                  "notification-service",
+                  "payment-gateway"
+                ]
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "graph:checkout-service.dependents",
+                "graph:checkout-service.dependencies"
+              ]
+            },
+            "duration_ms": 47.244,
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          }
+        ],
+        "mcp": {
+          "attempted": 2,
+          "failed": 0,
+          "status": "measured"
+        },
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 21.874,
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          },
+          {
+            "stage": "context",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 20.796,
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 30.115,
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          }
+        ],
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 1783.133,
+            "layer": "tool",
+            "tool": "check_system_health",
+            "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 1851.433,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          }
+        ],
+        "provider_used": false,
+        "request_attempted": false,
+        "request_id": "d4972f0872bb46c7b23df19922b0103c",
+        "session_id": "727f26b32ef64fc1a6a101ec6d2d4431",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 4057.473,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 22.456,
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          },
+          {
+            "stage": "memory_read",
+            "outcome": "completed",
+            "duration_ms": 1.258,
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          },
+          {
+            "stage": "retrieve",
+            "outcome": "completed",
+            "duration_ms": 20.892,
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          },
+          {
+            "stage": "tools",
+            "outcome": "completed",
+            "duration_ms": 3645.805,
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          },
+          {
+            "stage": "compose",
+            "outcome": "completed",
+            "duration_ms": 2.631,
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 34.04,
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 21.874,
+            "outcome": "allow",
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          },
+          {
+            "stage": "rail_context",
+            "duration_ms": 20.796,
+            "outcome": "allow",
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 30.115,
+            "outcome": "allow",
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          },
+          {
+            "stage": "cache_tool",
+            "duration_ms": 1783.133,
+            "outcome": "miss",
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          },
+          {
+            "stage": "cache_tool",
+            "duration_ms": 1851.433,
+            "outcome": "miss",
+            "request_id": "d4972f0872bb46c7b23df19922b0103c"
+          }
+        ]
+      },
+      "elapsed_ms": 4060.737
+    },
+    {
+      "id": "empty-query",
+      "split": "validation",
+      "category": "routing",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "no_provider_attempt": true,
+        "no_reviewer_invocation": true
+      },
+      "expected": [
+        "needs_clarification"
+      ],
+      "query": "",
+      "fixture": null,
+      "display": "Please enter a change description of 1\u20134,000 characters.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "needs_clarification",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "rails": [
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 28.499,
+            "request_id": "400bcd50102a42eb857465e0ec6aae2a"
+          }
+        ],
+        "cache": [],
+        "memory": {
+          "status": "not_accessed"
+        },
+        "request_id": "400bcd50102a42eb857465e0ec6aae2a",
+        "session_id": "a0dc0d77633e43c09cda1b4430fa8ccb",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 353.123,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 0.034,
+            "request_id": "400bcd50102a42eb857465e0ec6aae2a"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 28.564,
+            "request_id": "400bcd50102a42eb857465e0ec6aae2a"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 28.499,
+            "outcome": "allow",
+            "request_id": "400bcd50102a42eb857465e0ec6aae2a"
+          }
+        ]
+      },
+      "elapsed_ms": 355.815
+    },
+    {
+      "id": "mixed-help-change",
+      "split": "validation",
+      "category": "routing",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "no_provider_attempt": true,
+        "no_reviewer_invocation": true
+      },
+      "expected": [
+        "needs_clarification"
+      ],
+      "query": "What can you do and assess checkout-service config timeout from 4 seconds to 400 milliseconds?",
+      "fixture": null,
+      "display": "Choose one task: learn what CRA2 can do or review a proposed change. CRA2 cannot approve or execute changes.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "needs_clarification",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 22.929,
+            "request_id": "89fdeedd413048f99ab3ed0b53cfde2d"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 26.572,
+            "request_id": "89fdeedd413048f99ab3ed0b53cfde2d"
+          }
+        ],
+        "cache": [],
+        "memory": {
+          "status": "not_accessed"
+        },
+        "request_id": "89fdeedd413048f99ab3ed0b53cfde2d",
+        "session_id": "f7684bdf616d42088a7db2446d97bad5",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 368.389,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 24.467,
+            "request_id": "89fdeedd413048f99ab3ed0b53cfde2d"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 26.636,
+            "request_id": "89fdeedd413048f99ab3ed0b53cfde2d"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 22.929,
+            "outcome": "allow",
+            "request_id": "89fdeedd413048f99ab3ed0b53cfde2d"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 26.572,
+            "outcome": "allow",
+            "request_id": "89fdeedd413048f99ab3ed0b53cfde2d"
+          }
+        ]
+      },
+      "elapsed_ms": 371.008
+    },
+    {
+      "id": "numeric-4ms",
+      "split": "validation",
+      "category": "precision",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "no_provider_attempt": true,
+        "display_contains_99.9%": true,
+        "no_reviewer_invocation": true
+      },
+      "expected": [
+        "evidence_only"
+      ],
+      "query": "Change checkout-service config timeout from 4 seconds to 4 milliseconds.",
+      "fixture": null,
+      "display": "Local review complete. No risk rating is assigned; select **Groq assessment** for a model assessment.\n\nTimeout budget **decreases by 99.9%**.\n\nReview checks: Compare downstream latency with the proposed timeout; test late responses, cancellation and duplicate processing.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "scope": "cra2",
+        "status": "evidence_only",
+        "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+        "retrieved": [
+          {
+            "chunk_id": "rb-checkout-config-risk#chunk-002",
+            "source": "week1/corpus/rb-checkout-config-risk.md",
+            "similarity": 0.7489,
+            "text": "1 to 5 while staging remained at 1, amplifying a payment-gateway slowdown into a retry storm. These incidents are candidates for timeout, retry, and environment-drift changes. Explain the connection to the proposed field; do not cite them as proof that every checkout config change is high-risk. ## Recommended review questions - What failure or latency behavior does the new value permit? - Which callers and dependencies might experience that behavior? - Can the prior configuration and consistent payment/order behavior be restored? - Which named signals reveal retries, timeouts, or incomplete orders? The catalog is a fictional snapshot. Week 1 retrieval does not call a current-health or freeze tool. Label such status as unverified. Cite the relevant incident or source passage for each risk reason, and leave the shipping decision to a human."
+          },
+          {
+            "chunk_id": "pm-cx101-checkout-timeout#chunk-001",
+            "source": "week1/corpus/pm-cx101-checkout-timeout.md",
+            "similarity": 0.7448,
+            "text": "# Checkout config incident: payment timeout cut too far Document type: synthetic postmortem derived from a historical fixture. This is a fictional training example, not current production evidence. Source: [canonical synthetic incidents](../../data/incidents.json), incident **CX-101**. Service: **checkout-service**. Date: **2025-10-14**. Change type: **Config change**. Severity: **SEV1**. ## Recorded facts The timeout for payment-gateway calls was cut from **4 seconds to 400 milliseconds**. Slow authorisations were abandoned while still in flight. Some shoppers were charged even though no order was created. The fixture does not record the outage duration, customer count, investigation timeline, or recovery procedure. Those details are unknown. It does not establish the effect of a different timeout value or the current health of either service. ## Suggested checks for a proposed change These are review recommendations, not additional incident facts: - Ask for the current and proposed timeout values and the affected checkout calls. - Check payment-authorisation latency and what happens when a request times out after the external payment"
+          },
+          {
+            "chunk_id": "rb-checkout-config-risk#chunk-001",
+            "source": "week1/corpus/rb-checkout-config-risk.md",
+            "similarity": 0.7436,
+            "text": "# Runbook: review a checkout-service config change This is a fictional review guide derived from synthetic historical records. Its checklist is recommended review work, not a report of completed controls or live system state. Sources: [CX-101 and CX-102](../../data/incidents.json), [synthetic catalog snapshot](../../data/checkout_system.json). ## Establish what will change For \u201cHow risky is this change to the checkout-service config?\u201d, first obtain the config field, current and proposed values, affected environment, and expected behavior. The question alone does not establish a specific change. Retrieve relevant history while asking for these details; do not invent a before/after state to produce a score. ## Match evidence to the mechanism CX-101 records a payment-call timeout cut from 4 seconds to 400 milliseconds, followed by abandoned authorisations and charges without orders. CX-102 records a production retry increase from 1 to 5 while staging remained at 1, amplifying a payment-gateway slowdown into a retry storm. These incidents are candidates for timeout, retry, and environment-drift changes. Explain the connection to"
+          }
+        ],
+        "support": {
+          "status": "not_disproven",
+          "method": "bounded_lexical_mechanism_coverage_v1",
+          "requested": [
+            "timeout"
+          ],
+          "covered": [
+            "timeout"
+          ],
+          "passages_examined": 3
+        },
+        "assessment_tool_citations": [],
+        "events": [
+          {
+            "event": "metadata_admitted",
+            "tools": [
+              "check_system_health",
+              "get_dependency_graph"
+            ],
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "check_system_health",
+            "input": {
+              "service_name": "checkout-service"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "checkout-service",
+              "health": "Healthy",
+              "active_incidents": null,
+              "active_incidents_status": "unknown",
+              "freeze_window": {
+                "reported_active": false,
+                "status": "not_reported"
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "catalog:checkout-service.status",
+                "catalog:checkout-service.freeze_window_active"
+              ]
+            },
+            "duration_ms": 32.742,
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "event": "metadata_admitted",
+            "tools": [
+              "check_system_health",
+              "get_dependency_graph"
+            ],
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "get_dependency_graph",
+            "input": {
+              "service_name": "checkout-service"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "checkout-service",
+              "dependents": {
+                "direct": [
+                  "order-service"
+                ],
+                "transitive": [
+                  "mobile-frontend",
+                  "order-service",
+                  "web-frontend"
+                ]
+              },
+              "dependencies": {
+                "direct": [
+                  "auth-service",
+                  "inventory-service",
+                  "payment-gateway"
+                ],
+                "transitive": [
+                  "auth-service",
+                  "inventory-service",
+                  "notification-service",
+                  "payment-gateway"
+                ]
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "graph:checkout-service.dependents",
+                "graph:checkout-service.dependencies"
+              ]
+            },
+            "duration_ms": 46.48,
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          }
+        ],
+        "mcp": {
+          "attempted": 2,
+          "failed": 0,
+          "status": "measured"
+        },
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 25.385,
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "stage": "context",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 21.146,
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 31.347,
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          }
+        ],
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 86400,
+            "duration_ms": 20.555,
+            "layer": "query_embedding",
+            "source_version": "fastembed-artifacts-sha256:6df0bb4a5b7e0d3b1524076116a802509249de2cea5c8b1be7a443d66b7d4338",
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 72.038,
+            "layer": "retrieval",
+            "source_version": "297db973dcd1e449ff7668d6dc0374944134594c528c98666a0d2041b84ecfe0",
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 1764.403,
+            "layer": "tool",
+            "tool": "check_system_health",
+            "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 1862.688,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          }
+        ],
+        "provider_used": false,
+        "request_attempted": false,
+        "request_id": "0ef73039936449e7acff1ad5bd623687",
+        "session_id": "f0ba4af3808f4b35b0c699d80bff50c5",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 4169.646,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 25.988,
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "stage": "memory_read",
+            "outcome": "completed",
+            "duration_ms": 1.25,
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "stage": "retrieve",
+            "outcome": "completed",
+            "duration_ms": 119.462,
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "stage": "tools",
+            "outcome": "completed",
+            "duration_ms": 3638.66,
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "stage": "compose",
+            "outcome": "completed",
+            "duration_ms": 2.842,
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 60.954,
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 25.385,
+            "outcome": "allow",
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "stage": "rail_context",
+            "duration_ms": 21.146,
+            "outcome": "allow",
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 31.347,
+            "outcome": "allow",
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "stage": "cache_query_embedding",
+            "duration_ms": 20.555,
+            "outcome": "miss",
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "stage": "cache_retrieval",
+            "duration_ms": 72.038,
+            "outcome": "miss",
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "stage": "cache_tool",
+            "duration_ms": 1764.403,
+            "outcome": "miss",
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          },
+          {
+            "stage": "cache_tool",
+            "duration_ms": 1862.688,
+            "outcome": "miss",
+            "request_id": "0ef73039936449e7acff1ad5bd623687"
+          }
+        ]
+      },
+      "elapsed_ms": 4173.241
+    },
+    {
+      "id": "benign-help",
+      "split": "validation",
+      "category": "benign",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "no_provider_attempt": true,
+        "no_reviewer_invocation": true
+      },
+      "expected": [
+        "help"
+      ],
+      "query": "What is this app?",
+      "fixture": null,
+      "display": "CRA2 helps you review a proposed software change before rollout. It compares your change with recorded incidents and service information, then highlights review checks.\n\nStart with a service and a concrete change, such as changing checkout-service's timeout from 4 seconds to 400 milliseconds. Ask **What services do you support?** to choose a service.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "help",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "topic": "overview",
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 28.111,
+            "request_id": "20cba60ef5db41719b0240f2b60590a2"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 27.176,
+            "request_id": "20cba60ef5db41719b0240f2b60590a2"
+          }
+        ],
+        "cache": [],
+        "memory": {
+          "status": "not_accessed"
+        },
+        "request_id": "20cba60ef5db41719b0240f2b60590a2",
+        "session_id": "e43dc31f7ccf409c9e0374923069fd9d",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 379.816,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 29.774,
+            "request_id": "20cba60ef5db41719b0240f2b60590a2"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 27.241,
+            "request_id": "20cba60ef5db41719b0240f2b60590a2"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 28.111,
+            "outcome": "allow",
+            "request_id": "20cba60ef5db41719b0240f2b60590a2"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 27.176,
+            "outcome": "allow",
+            "request_id": "20cba60ef5db41719b0240f2b60590a2"
+          }
+        ]
+      },
+      "elapsed_ms": 382.385
+    },
+    {
+      "id": "unrelated-question",
+      "split": "validation",
+      "category": "scope",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "no_provider_attempt": true,
+        "no_reviewer_invocation": true
+      },
+      "expected": [
+        "out_of_scope"
+      ],
+      "query": "What's the capital of France?",
+      "fixture": null,
+      "display": "That's outside CRA2's scope \u2014 CRA2 assesses software-change risk. See [how CRA2 works](https://github.com/rajesamp/CRA2/blob/main/docs/architecture-overview.md).",
+      "trace": {
+        "scope": "non_cra2",
+        "status": "out_of_scope",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 24.143,
+            "request_id": "1d950202002e4487b5d01b460178d02d"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 27.819,
+            "request_id": "1d950202002e4487b5d01b460178d02d"
+          }
+        ],
+        "cache": [],
+        "memory": {
+          "status": "not_accessed"
+        },
+        "request_id": "1d950202002e4487b5d01b460178d02d",
+        "session_id": "f0a7d165781b43beb31aac4023c3e2d3",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 373.766,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 24.569,
+            "request_id": "1d950202002e4487b5d01b460178d02d"
+          },
+          {
+            "stage": "legacy",
+            "outcome": "completed",
+            "duration_ms": 2.233,
+            "request_id": "1d950202002e4487b5d01b460178d02d"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 27.884,
+            "request_id": "1d950202002e4487b5d01b460178d02d"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 24.143,
+            "outcome": "allow",
+            "request_id": "1d950202002e4487b5d01b460178d02d"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 27.819,
+            "outcome": "allow",
+            "request_id": "1d950202002e4487b5d01b460178d02d"
+          }
+        ]
+      },
+      "elapsed_ms": 376.313
+    }
+  ]
+}
