@@ -36,6 +36,15 @@ EMPTY_TRACE = "Run a query to inspect its supporting evidence and execution deta
 MAX_TRACES = 50
 
 
+def cache_badge(trace):
+    lookups = trace.get("cache", [])
+    hits = sum(e.get("outcome") == "hit" for e in lookups)
+    misses = sum(e.get("outcome") == "miss" for e in lookups)
+    state = "mixed" if hits and misses else "hit" if hits else "miss" if misses else "not used"
+    counts = f" · {hits} reused / {hits + misses} lookups" if lookups else ""
+    return f"**Last request cache: {state}**{counts}"
+
+
 def project_trace(trace):
     result = {key: trace[key] for key in TRACE_FIELDS if key in trace}
     guard(result)
@@ -77,6 +86,15 @@ def trace_summary(trace):
             lines.append(f"  Protected error: `{result['error']['code']}`")
     if not calls:
         lines.append("No tool result was returned for this request.")
+    reused = [e for e in trace.get("events", []) if e.get("event") == "cache_result"]
+    if reused:
+        lines.append("\n### Reused tool evidence")
+        for event in reused:
+            lines.append(f"- `{event['tool']}` · validated cache reuse; no new MCP call.")
+    if trace.get("rails"):
+        lines.append("\n### Guardrail checks")
+        for event in trace["rails"]:
+            lines.append(f"- {event['stage']}: **{event['outcome']}** ({event['engine']}).")
     lines.append("\n**Synthetic snapshots · freshness unknown · human decision required.**")
     return "\n\n".join(lines)
 
@@ -214,7 +232,7 @@ def build_app(*, memory_store=None, abuse_gate=None):
         summary, details, supporting, panel, choices = admin_trace_view(trace["turn"], updated, admin_unlocked)
         # Keep the panel's current open/closed state on a new answer.
         panel.pop("open", None)
-        return answer, summary, details, supporting, panel, updated, choices, *cooldown_view(gate, client)
+        return answer, summary, details, supporting, panel, updated, choices, *cooldown_view(gate, client), cache_badge(trace)
 
     def cooldown(request: gr.Request):
         try:
@@ -224,13 +242,13 @@ def build_app(*, memory_store=None, abuse_gate=None):
 
     def reset_trace(admin_unlocked):
         *view, choices = admin_trace_view(None, [], admin_unlocked)
-        return (*view, [], choices)
+        return (*view, [], choices, "**Last request cache:** no lookup yet")
 
     def undo_trace(traces, admin_unlocked):
         updated = traces[:-1]
         turn = updated[-1]["turn"] if updated else None
         *view, choices = admin_trace_view(turn, updated, admin_unlocked)
-        return (*view, updated, choices)
+        return (*view, updated, choices, cache_badge(updated[-1]) if updated else "**Last request cache:** no lookup yet")
 
     with gr.Blocks(title="CRA2 · Change risk advisor", analytics_enabled=False) as demo:
         gr.Markdown("# Change risk advisor\n**Advisory only · Synthetic evidence · A human makes the decision.**")
@@ -259,16 +277,17 @@ def build_app(*, memory_store=None, abuse_gate=None):
                             supporting = gr.Markdown(elem_id="agent-supporting-details")
                         details = gr.JSON(value={}, label="Execution details", elem_id="agent-trace-details", max_height=240)
         with conversation:
+            cache_status = gr.Markdown("**Last request cache:** no lookup yet", elem_id="cache-status")
             notice = gr.HTML(visible=False, elem_id="security-notice")
             with gr.Group(elem_id="chat-controls") as controls:
                 chatbot = gr.Chatbot(label="CRA2 conversation", height=490, elem_id="agent-chat")
                 gr.ChatInterface(reply, chatbot=chatbot, additional_inputs=[mode, session_id, trace_history, admin_unlocked],
-                    additional_outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector, notice, controls, timer], save_history=False, cache_examples=False,
+                    additional_outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector, notice, controls, timer, cache_status], save_history=False, cache_examples=False,
                     flagging_mode="never", api_visibility="private", api_name="ui_response",
                     description="Name the service and describe the proposed change. Never enter credentials.",
                     analytics_enabled=False)
-            chatbot.clear(reset_trace, inputs=[admin_unlocked], outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector], queue=False, api_visibility="private")
-            chatbot.undo(undo_trace, inputs=[trace_history, admin_unlocked], outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector], queue=False, api_visibility="private")
+            chatbot.clear(reset_trace, inputs=[admin_unlocked], outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector, cache_status], queue=False, api_visibility="private")
+            chatbot.undo(undo_trace, inputs=[trace_history, admin_unlocked], outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector, cache_status], queue=False, api_visibility="private")
             gr.Markdown("Ask **What is this app?**, **What services do you support?**, or **How do I get started?** Supporting evidence is available in **Admin → Agent trace**.")
             gr.Markdown("Out-of-scope questions and flagged requests are recorded privately for app-owner review.")
         trace_outputs = [summary, details, supporting, trace_panel, turn_selector]

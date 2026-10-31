@@ -288,3 +288,13 @@ boundary, rather than moving RAG orchestration into NeMo. Cache hits validate
 source/contract identity locally; actual RPCs retain discovery/pre-call checks.
 Authoritative policy is reloaded per request and preferences/sources are checked
 again before final output. See per-task evidence for observed acceptance.
+
+## Week 3 completion — 2026-10-31
+
+Tasks 19–25 are implemented and locally verified under the owner's standing
+authorization to proceed with learning updates. `week3/acceptance.py` records
+the six-intent walkthrough; Week 4 will reuse it within a versioned scorer.
+Task 25 also tightened the task-21 detail boundary after an existing help test
+exposed vague approval continuation. See `docs/evidence/week3-task-25.md` for
+actual gates, browser screenshots and remaining evidence limits. Task 26 is
+next; this closure does not infer live model quality or external delivery.

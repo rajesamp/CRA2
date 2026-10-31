@@ -154,7 +154,8 @@ class WorkflowCaches:
             cache_events.append(dict(event,layer='tool',tool=name,source_version=version))
             events.extend(actual)
             if event['outcome']=='hit':
-                events.append({'event':'cache_result','tool':name,'source_version':version})
+                events.append({'event':'cache_result','tool':name,'source_version':version,
+                    'input':args,'output':value})
         if self.tool_version()!=version:raise ValueError('source_changed')
         return {'status':'ok','outputs':outputs,'events':events,'cache_events':cache_events}
 

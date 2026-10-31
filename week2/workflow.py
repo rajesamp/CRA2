@@ -435,6 +435,8 @@ async def arespond(question, history=None, mode="Local evidence only", *, sessio
             raise ValueError("Invalid history")
         names = chat._services(question) if isinstance(question, str) else []
         approval = bool(len(names) == 1 and chat._specific_change(question, names[0])
+            and not parse_command(question)
+            and re.search(r"\b(?:from|to)\s+\d|\b(?:add|remove|replace|rotate|enable|disable)\b", routing.active_request(question))
             and re.search(r"\b(?:approve|authorize|merge|deploy|block)\b", routing.active_request(question)))
         effective_question = re.sub(r"\b(?:approve|authorize|merge|deploy|block)\b", "review", question, flags=re.I) if approval else question
         graph = build_workflow(**collaborators)
