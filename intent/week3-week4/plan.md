@@ -324,3 +324,14 @@ Late fixes preserve execution counts while withholding stale output, record
 explicit no-access for help and reject a changed trusted team identity before
 memory access. Original failing tests were retained; no existing tests weakened.
 Final scorecards/regression gates must run after these corrections.
+
+## Selected local completion — 2026-10-31
+
+Sequential tasks 19–33 and selected task-34 local delivery are implemented and
+verified. Final proof is `docs/evidence/week4-task-34.md`; source/scorer and
+raw evidence remain linked per task. Full gates ran after late task-32 fixes;
+only documentation and a clarifying dashboard label changed afterward, verified
+in a final fresh-process browser walkthrough. Public deployment/video, prior
+human acceptance and independent/live-model quality are not self-approved.
+No runtime, dependency or model changes are needed to reproduce the current
+local walkthrough; fresh-clone setup remains explicitly documented.

@@ -189,3 +189,39 @@ and a repeated browser walkthrough. Private learner notes remain ignored.
 No new provider call, global dependency installation or public deployment was
 performed for tasks 16–18. Week 1 human acceptance and Weeks 3–4 retain their
 separate status; synthetic snapshot limitations remain explicit.
+
+## Week 3 local engineering complete — 2026-10-31
+
+The owner accepted the sequential plan and authorized progress with learning
+notes while in meetings. Tasks 19–25 now have local implementation/evidence:
+actual NeMo 0.24.1 custom actions; approval refusal with detailed-review
+continuation; bounded mechanism coverage; exact versioned caches; measured
+graph reuse; all six local intents; and real browser miss/hit/refusal proof.
+
+[Week 3 close-out](evidence/week3-task-25.md) records 257 Week 2/3 tests,
+502 core tests (four live excluded), 494 unchanged Week 1 tests and 100/100
+fast calibration. Warm graph-query p50 was 906.635→167.889 ms (30 trials per
+condition, 81.48% lower); no provider request was made. These results do not
+establish general model quality or current production truth. Task 26 is next.
+Week 1 human acceptance and upstream task-34 deployment/video remain separate.
+
+## Weeks 3–4 selected local engineering verified — 2026-10-31
+
+The owner accepted sequential execution with learning updates. Week 3 tasks
+19–25 and Week 4 tasks 26–33 are locally implemented and verified. Task 34's
+selected local launch/rehearsal is verified; original upstream deployment/video
+items remain pending outside selected scope.
+
+[Final local close-out](evidence/week4-task-34.md),
+[learning guide](week3-week4-learning.md), and
+[demo script](local-demo-script.md) provide the handoff. Final gates:
+277 integration tests; 502 core (four live excluded); 494 unchanged Week 1;
+100/100 fast calibration; 18/18 original local evaluation; separately corrected
+4/4 label validation; 9/9 faults. Timed browser walkthroughs were 137 and 122
+seconds; these do not include spoken narration. Zero provider requests.
+
+Original 16/18 baseline, 2/4 reserved report and label corrections are retained.
+Local/synthetic checks do not establish independent human-labeled or live-model
+quality, current production state or production authentication. Week 1 human
+acceptance remains separate. Private learner notes for all tasks 19–34 exist
+and remain ignored; no owner audit records were deleted or published.

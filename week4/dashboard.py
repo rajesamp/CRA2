@@ -50,7 +50,7 @@ def dashboard_view(traces,unlocked):
         f"| Admission pauses | {sum(t.get('status')=='security_blocked' for t in rows)} |",
         f'| High-risk preferences applied / eligible reads | {rate(applied,len(eligible))} |',
         f'| Configured high-risk floors observed | {floors} |',
-        f"| Actual model-request attempts | {sum(bool(t.get('request_attempted')) for t in rows)} |",
+        f"| External model-request attempts | {sum(bool(t.get('request_attempted')) for t in rows)} |",
         f'| Workflow time p50 / p95 | {timing} |',
         '\n### Cache use','| Layer | Hits / eligible lookups |','|---|---|']
     for layer in ('query_embedding','retrieval','tool'):

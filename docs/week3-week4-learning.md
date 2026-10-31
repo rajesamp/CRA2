@@ -23,6 +23,8 @@ configuration around those checks. Model-based safety or factuality checks can
 interpret more language but introduce model error, latency, costs and data
 movement. These approaches can be combined. CRA2 starts with real local NeMo
 actions and retained host contracts to preserve zero provider calls locally.
+Existing admission screening and retrieval still use local BGE embeddings.
+Zero external model requests does not mean zero local model work.
 See [NVIDIA's rail types](https://docs.nvidia.com/nemo/guardrails/about-nemo-guardrails-library/rail-types)
 and [registered custom actions](https://docs.nvidia.com/nemo/guardrails/latest/configure-guardrails/actions/registering-actions).
 

@@ -210,3 +210,19 @@ offline tests are labeled separately from actual protocol and local-index runs.
 [Task 16 readback](../docs/evidence/week2-task-16.md) ·
 [Task 17 recall](../docs/evidence/week2-task-17.md) ·
 [Task 18 browser proof](../docs/evidence/week2-task-18.md).
+
+## Weeks 3–4 local continuation — 2026-10-31
+
+The same launch now includes actual NeMo custom-action checks, versioned
+query/retrieval/tool caches, correlated spans and bounded private metadata.
+**Last request cache** shows actual reuse; **Open run dashboard** selects Admin
+without bypassing its existing demo gate. Refresh the session dashboard after
+unlocking; replies/undo/clear update or reset it, and locking clears it.
+External model-request counts exclude local embedding/classifier work.
+
+[Learning guide](../docs/week3-week4-learning.md) ·
+[Local demo script](../docs/local-demo-script.md) ·
+[Final local evidence](../docs/evidence/week4-task-34.md). No new provider
+batch, public deployment, external telemetry or Slack delivery was performed
+for this selected local completion. The original deployment/video requirement
+and prior human acceptance remain separately pending.
