@@ -17,3 +17,11 @@ def test_bare_alias_refuses_without_external_work(question,tmp_path):
     def forbidden(*a,**k):pytest.fail('must not start external work')
     answer,t=respond(question,memory_store=MemoryStore(tmp_path/'m.sqlite3'),retriever=forbidden,tool_runner=forbidden,reviewer=forbidden)
     assert t['status']=='advisory_boundary'
+
+
+def test_description_negation_and_quoted_examples_are_not_execution_requests():
+    from week3.support import approval_request
+    assert not approval_request('Do not approve anything.')
+    assert not approval_request('Explain "greenlight this change" as an example.')
+    assert not approval_request('Review the plan to deploy checkout-service version from 1 to 2.')
+    assert approval_request('Please deploy checkout-service version from 1 to 2.')

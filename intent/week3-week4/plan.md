@@ -306,3 +306,12 @@ metadata is separate from raw session trace history and owner audit records;
 full storage fails safely without rotation/deletion. Actual MCP attempts are
 separate from operation failures. The dashboard will consume the bounded
 current browser session history, not other transports or owner records.
+
+## Task 30 label correction — 2026-10-31
+
+Original comparable scorecard improved 16/18→18/18 after the one diagnosed
+approval-intent fix. Initial reserved run was 2/4 because valid capability help
+and incident listing had overly narrow expected status names. Preserve original
+cases/reports; separately version corrected labels with explicit content gates.
+The corrected 4/4 validation is not a claimed application gain or independent
+quality gold. See the label-review evidence; original scorer logic remains.

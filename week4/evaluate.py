@@ -31,8 +31,8 @@ def score(case,answer,trace):
     return checks
 
 
-def manifest():
-    doc=json.loads(CASES.read_text())
+def manifest(case_path=CASES):
+    doc=json.loads(case_path.read_text())
     rows=doc['cases']
     if doc['version']!=1 or not rows or len({c['id'] for c in rows})!=len(rows):
         raise ValueError('invalid_case_manifest')
@@ -42,7 +42,7 @@ def manifest():
     return doc
 
 
-def run(split='development-validation'):
+def run(split='development-validation',case_path=CASES):
     started=datetime.now(timezone.utc).isoformat();rows=[]
     root=Path(tempfile.mkdtemp(prefix='cra2-eval-'));store=MemoryStore(root/'m.sqlite3')
     if split!='reserved':
@@ -54,7 +54,7 @@ def run(split='development-validation'):
                 checks['known_relevant_source_at_3']=bool(len(hits)<=3 and any(h['chunk_id'].startswith('pm-cx101') for h in hits))
             rows.append({'id':'contract-'+row['id'],'split':'contract','category':'contract',
                 'passed':all(checks.values()),'checks':checks,'actual':row})
-    doc=manifest()
+    doc=manifest(case_path)
     selected=[c for c in doc['cases'] if (c['split']=='reserved')==(split=='reserved')]
     if not selected:raise ValueError('empty_evaluation')
     for case in selected:
@@ -85,7 +85,7 @@ def run(split='development-validation'):
     if not rows:raise ValueError('empty_evaluation')
     revision=subprocess.run(['git','rev-parse','HEAD'],capture_output=True,text=True,check=True).stdout.strip()
     root_path=Path(__file__).resolve().parents[1]
-    versions={str(p.relative_to(root_path) if p.is_absolute() else p):file_version(p) for p in [CASES,Path(__file__),Path('week2/workflow.py'),
+    versions={str(p.relative_to(root_path) if p.is_absolute() else p):file_version(p) for p in [case_path,Path(__file__),Path('week2/workflow.py'),
         Path('week3/support.py'),Path('week3/guardrails.py'),Path('week3/cache.py'),Path('week2/uv.lock')]}
     versions.update(index_and_corpus=WorkflowCaches.retrieval_version(chat.INDEX),
         tool_source=WorkflowCaches.tool_version(),team_policy=identity(load_settings(config.DATA_DIR,chat.CATALOG)))
@@ -101,12 +101,13 @@ def main():
     p.add_argument('--out',type=Path)
     p.add_argument('--split',choices=['development-validation','reserved'],default='development-validation')
     p.add_argument('--canary',action='store_true')
+    p.add_argument('--cases',type=Path,default=CASES)
     args=p.parse_args()
     if args.canary:
         checks=score({'expected':['help']},'',{'status':'unavailable','request_attempted':False})
         print('Known failing canary detected:',not all(checks.values()))
         return 1 if not all(checks.values()) else 0
-    result=run(args.split)
+    result=run(args.split,args.cases)
     if args.out:
         args.out.parent.mkdir(parents=True,exist_ok=True)
         args.out.write_text(json.dumps(result,indent=2)+'\n')

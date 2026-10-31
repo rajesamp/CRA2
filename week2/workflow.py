@@ -29,7 +29,7 @@ from week2.memory import MemoryStore, MemoryUnavailable
 from week2.preferences import parse_command, effective_policy
 from week2.help import capability_lines, help_answer, help_topic
 from week3.guardrails import LocalRails, RailUnavailable
-from week3.support import coverage
+from week3.support import coverage, approval_request, advisory_question
 from week3.cache import identity, CacheToolError
 from week4.telemetry import TelemetryUnavailable, TRANSPORTS
 
@@ -208,7 +208,7 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
         command = parse_command(question)
         if command:
             return {"route": "memory_write", "service": command["service"], "memory_updates": command["updates"]}
-        if re.search(r"\b(?:approve|authorize|merge|deploy|block)\b", active):
+        if approval_request(question):
             return _answer(responses.message(catalog, "advisory_boundary"), "advisory_boundary")
         if re.search(r"\bremember\b|\b(?:save|store)\b.*\bpreference", active):
             return _answer(copy["memory_help"], "needs_clarification")
@@ -466,8 +466,8 @@ async def arespond(question, history=None, mode="Local evidence only", *, sessio
         approval = bool(len(names) == 1 and chat._specific_change(question, names[0])
             and not parse_command(question)
             and re.search(r"\b(?:from|to)\s+\d|\b(?:add|remove|replace|rotate|enable|disable)\b", routing.active_request(question))
-            and re.search(r"\b(?:approve|authorize|merge|deploy|block)\b", routing.active_request(question)))
-        effective_question = re.sub(r"\b(?:approve|authorize|merge|deploy|block)\b", "review", question, flags=re.I) if approval else question
+            and approval_request(question))
+        effective_question = advisory_question(question) if approval else question
         graph = build_workflow(**collaborators,spans=spans)
         # Environment-enabled LangSmith tracing must not upload raw state.
         with tracing_context(enabled=False):

@@ -17,3 +17,11 @@ def test_manifest_has_unique_cases_and_reserved_split():
     cases=manifest()['cases']
     assert len(cases)==16 and len({c['id'] for c in cases})==16
     assert sum(c['split']=='reserved' for c in cases)==4
+
+
+def test_corrected_reserved_routes_still_require_the_right_content():
+    case={'expected':['help','advisory_boundary'],'display_contains':['cannot approve']}
+    assert not all(score(case,'I approve',{'status':'help'}).values())
+    assert all(score(case,'I cannot approve this change',{'status':'help'}).values())
+    case={'expected':['history_only','dataset_listing'],'display_contains':['TLS upgrade','NAT gateway']}
+    assert not all(score(case,'Unrelated checkout incidents',{'status':'dataset_listing'}).values())

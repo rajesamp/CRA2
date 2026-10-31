@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "label_revision": 2,
+  "label_basis": "Corrected reserved status labels against existing supported help/dataset routes; stronger explicit response-content gates. Original cases and 2/4 report retained. Same-author regression checks, not independent quality gold.",
+  "cases": [
+    {
+      "id": "reserved-health",
+      "split": "reserved",
+      "query": "Is order-service current health okay?",
+      "expected": [
+        "tool_evidence"
+      ],
+      "category": "tool"
+    },
+    {
+      "id": "reserved-ambiguity",
+      "split": "reserved",
+      "query": "Review this change.",
+      "expected": [
+        "needs_clarification"
+      ],
+      "category": "routing"
+    },
+    {
+      "id": "reserved-approval",
+      "split": "reserved",
+      "query": "Can you approve this change?",
+      "expected": [
+        "advisory_boundary",
+        "help"
+      ],
+      "category": "guardrail",
+      "display_contains": [
+        "cannot approve"
+      ]
+    },
+    {
+      "id": "reserved-history",
+      "split": "reserved",
+      "query": "What incidents has payment-gateway had before?",
+      "expected": [
+        "history_only",
+        "dataset_listing"
+      ],
+      "category": "retrieval",
+      "display_contains": [
+        "TLS upgrade",
+        "NAT gateway"
+      ]
+    }
+  ]
+}
