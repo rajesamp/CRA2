@@ -34,6 +34,7 @@ from week3.cache import identity, CacheToolError
 from week4.telemetry import TelemetryUnavailable, TRANSPORTS
 
 COPY = Path(__file__).with_name("responses.json")
+HOST_TEAM = chat.TEAM_SETTINGS["team"]
 PARAMETERS = {
     "snapshot": set(), "tool_failure": set(), "retrieval_failure": set(),
     "unavailable": set(),
@@ -155,8 +156,14 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                 spans.append({"stage":name,"outcome":outcome,"duration_ms":round((perf_counter()-began)*1000,3)})
         return wrapped
 
+    def policy_settings():
+        settings=load_settings(config.DATA_DIR,CATALOG)
+        if settings["team"]!=HOST_TEAM:
+            raise MemoryUnavailable("host_identity_changed")
+        return settings
+
     def current_policy(service, record):
-        return effective_policy(service, record, team_settings=load_settings(config.DATA_DIR, CATALOG))
+        return effective_policy(service, record, team_settings=policy_settings())
 
     def cache_scope(state):
         host_store = getattr(store, "store", store)
@@ -235,8 +242,9 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
 
     def memory_read(state):
         try:
+            settings=policy_settings()
             record = store.read(state["service"])
-            policy = current_policy(state["service"], record)
+            policy = effective_policy(state["service"], record,team_settings=settings)
             responses.guard([record, policy])
             return {"memory_record": record, "policy": policy, "route": state["next_route"]}
         except (MemoryUnavailable, ValueError, OSError):
@@ -246,6 +254,7 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
 
     def memory_write(state):
         try:
+            policy_settings()
             record = store.write(state["service"], **state["memory_updates"])
             result = _answer(copy["memory_saved"].format(service=state["service"]), "memory_saved")
             result.update(memory_record=record, policy=current_policy(state["service"], record))
@@ -394,15 +403,22 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
         return {"answer": answer.strip(), "trace": trace}
 
     async def output_guard(state):
+        def discard(result):
+            # Withhold stale/unsafe content while retaining actual work/cost
+            # accounting. An output fallback does not undo a completed call.
+            prior=state["trace"]
+            result["trace"].update({k:prior[k] for k in ("mcp","provider_used","request_attempted") if k in prior})
+            state.update(result)
         if "memory_record" in state:
             try:
+                settings=policy_settings()
                 latest = store.read(state["service"])
-                if (latest != state["memory_record"] or current_policy(state["service"], latest) != state["policy"]
+                if (latest != state["memory_record"] or effective_policy(state["service"], latest,team_settings=settings) != state["policy"]
                         or (caches is not None and not caches.sources_current(cache_events,index_path))):
-                    state.update(_answer(copy["stale_context"], "context_changed"))
+                    discard(_answer(copy["stale_context"], "context_changed"))
                     state.pop("memory_record",None)
             except (MemoryUnavailable, ValueError, OSError):
-                state.update(_answer(copy["memory_unavailable"], "memory_unavailable"))
+                discard(_answer(copy["memory_unavailable"], "memory_unavailable"))
                 state.pop("memory_record",None)
         if "memory_record" in state:
             record, policy = state["memory_record"], state["policy"]
@@ -426,7 +442,7 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
         if state["trace"].get("status") != "guardrails_unavailable":
             refused = await rail_check("output", {"answer": state["answer"], "trace": state["trace"]})
             if refused:
-                state.update(refused)
+                discard(refused)
         state["trace"]["rails"] = list(rails.events)
         if caches is not None:
             state["trace"]["cache"] = list(cache_events)
@@ -474,6 +490,8 @@ async def arespond(question, history=None, mode="Local evidence only", *, sessio
             result = await graph.ainvoke({"question": effective_question, "history": history or [], "mode": mode},
                                         config={"recursion_limit": 10, "callbacks": []})
         trace = result["trace"]
+        trace.setdefault("mcp", {"status":"unavailable","attempted":None,"failed":None}
+            if any(s["stage"]=="tools" for s in spans) else {"status":"not_accessed","attempted":0,"failed":0})
         if approval:
             result["answer"] = load_copy()["approval_continuation"] + "\n\n" + result["answer"]
             trace["approval_declined"] = True

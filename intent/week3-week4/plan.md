@@ -315,3 +315,12 @@ and incident listing had overly narrow expected status names. Preserve original
 cases/reports; separately version corrected labels with explicit content gates.
 The corrected 4/4 validation is not a claimed application gain or independent
 quality gold. See the label-review evidence; original scorer logic remains.
+
+## Task 32 failure-path corrections — 2026-10-31
+
+Nine fault demonstrations include an actual admitted health-call timeout,
+source/policy mutation, pinned runtime team identity and full metadata storage.
+Late fixes preserve execution counts while withholding stale output, record
+explicit no-access for help and reject a changed trusted team identity before
+memory access. Original failing tests were retained; no existing tests weakened.
+Final scorecards/regression gates must run after these corrections.
