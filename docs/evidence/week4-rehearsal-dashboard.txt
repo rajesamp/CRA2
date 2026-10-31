@@ -1,0 +1,24 @@
+Run dashboard
+
+Current browser session · latest 4 measured requests (maximum 50).
+
+Metric	Observed value
+Tool-call failure rate	0.0% (0/3)
+Actual tool invocations	3
+Requests with unavailable tool accounting	0
+Guardrail interventions / checks	0/10
+Admission pauses	0
+High-risk preferences applied / eligible reads	50.0% (2/4)
+Configured high-risk floors observed	0
+Actual model-request attempts	0
+Workflow time p50 / p95	840.0 / 5011.1 ms (n=4)
+Cache use
+Layer	Hits / eligible lookups
+query embedding	0.0% (0/2)
+retrieval	0.0% (0/2)
+tool	50.0% (3/6)
+Recorded local scorecard
+
+Original baseline: 16/18 → application fix: 18/18. Corrected reserved-label validation: 4/4; the original 2/4 report is retained. Synthetic contract cases only. Live model quality remains unmeasured.
+
+Cache hits are reuse, not new tool calls. Zero eligible calls has no failure rate. Workflow time excludes admission screening and browser rendering. Other or unlabeled transports excluded: 0. Owner audit records are not read.
