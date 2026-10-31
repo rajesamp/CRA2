@@ -1,0 +1,112 @@
+[
+  {
+    "question": "What services depend on payment-gateway?",
+    "status": "tool_evidence",
+    "request_id": "9706c6780c9449acbf19da0e4d3bde21",
+    "cache": [
+      {
+        "outcome": "miss",
+        "stored": true,
+        "age_ms": 0,
+        "ttl_seconds": 300,
+        "layer": "tool",
+        "tool": "get_dependency_graph",
+        "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+      }
+    ],
+    "actual_tool_results": 1,
+    "provider_attempted": false
+  },
+  {
+    "question": "What services depend on payment-gateway?",
+    "status": "tool_evidence",
+    "request_id": "851382e841c3405086c4e9cda0c5a26b",
+    "cache": [
+      {
+        "age_ms": 170.268,
+        "ttl_seconds": 300,
+        "outcome": "hit",
+        "layer": "tool",
+        "tool": "get_dependency_graph",
+        "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+      }
+    ],
+    "actual_tool_results": 0,
+    "provider_attempted": false
+  },
+  {
+    "question": "Change checkout-service config timeout from 4 seconds to 400 milliseconds.",
+    "status": "evidence_only",
+    "request_id": "fb296bb307c24afdb6b76220e92eb227",
+    "cache": [
+      {
+        "outcome": "miss",
+        "stored": true,
+        "age_ms": 0,
+        "ttl_seconds": 86400,
+        "layer": "query_embedding",
+        "source_version": "fastembed-artifacts-sha256:6df0bb4a5b7e0d3b1524076116a802509249de2cea5c8b1be7a443d66b7d4338"
+      },
+      {
+        "outcome": "miss",
+        "stored": true,
+        "age_ms": 0,
+        "ttl_seconds": 300,
+        "layer": "retrieval",
+        "source_version": "297db973dcd1e449ff7668d6dc0374944134594c528c98666a0d2041b84ecfe0"
+      },
+      {
+        "outcome": "miss",
+        "stored": true,
+        "age_ms": 0,
+        "ttl_seconds": 300,
+        "layer": "tool",
+        "tool": "check_system_health",
+        "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+      },
+      {
+        "outcome": "miss",
+        "stored": true,
+        "age_ms": 0,
+        "ttl_seconds": 300,
+        "layer": "tool",
+        "tool": "get_dependency_graph",
+        "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+      }
+    ],
+    "actual_tool_results": 2,
+    "provider_attempted": false
+  },
+  {
+    "question": "Change checkout-service config timeout from 4 seconds to 400 milliseconds.",
+    "status": "evidence_only",
+    "request_id": "1a110f942bfd44b2951903e223f97670",
+    "cache": [
+      {
+        "age_ms": 1614.787,
+        "ttl_seconds": 300,
+        "outcome": "hit",
+        "layer": "retrieval",
+        "source_version": "297db973dcd1e449ff7668d6dc0374944134594c528c98666a0d2041b84ecfe0"
+      },
+      {
+        "age_ms": 953.444,
+        "ttl_seconds": 300,
+        "outcome": "hit",
+        "layer": "tool",
+        "tool": "check_system_health",
+        "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+      },
+      {
+        "age_ms": 207.097,
+        "ttl_seconds": 300,
+        "outcome": "hit",
+        "layer": "tool",
+        "tool": "get_dependency_graph",
+        "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+      }
+    ],
+    "actual_tool_results": 0,
+    "provider_attempted": false
+  }
+]

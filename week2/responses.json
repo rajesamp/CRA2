@@ -41,5 +41,6 @@
   "guardrail_failure": "A required safety check is unavailable. No risk indication is assigned. Please try again later.",
   "guardrail_blocked": "This request or evidence could not pass the advisory contract. I cannot perform protected actions or provide unsupported claims. No risk indication is assigned.",
   "approval_continuation": "I cannot approve, block, merge or deploy a change. I can review the evidence for the concrete change you described.",
-  "unsupported_mechanism": "Retrieved history does not support this failure mechanism. No risk indication is assigned; unrelated incidents remain context only."
+  "unsupported_mechanism": "Retrieved history does not support this failure mechanism. No risk indication is assigned; unrelated incidents remain context only.",
+  "stale_context": "Team policy or source context changed during this request. Please repeat the query for a current review. No risk indication is assigned."
 }

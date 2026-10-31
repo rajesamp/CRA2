@@ -277,3 +277,14 @@ Escalate only a material change of scope or a required external/payload decision
 Local delivery, privacy and no-new-provider/no-posting boundaries remain.
 Learning updates explain what a component does, alternatives, tradeoffs and
 what actual checks prove. Private per-task notes remain ignored.
+
+## Task 22 implementation details — 2026-10-31
+
+Cache reuse is host-owned/injected because the graph is built per request.
+The app callbacks reuse one cache; low-level calls remain explicit and separate
+CLI processes do not share it. Custom retrievers retain their existing injection
+path. Context validation uses a genuine NeMo input rail at the host retrieval
+boundary, rather than moving RAG orchestration into NeMo. Cache hits validate
+source/contract identity locally; actual RPCs retain discovery/pre-call checks.
+Authoritative policy is reloaded per request and preferences/sources are checked
+again before final output. See per-task evidence for observed acceptance.

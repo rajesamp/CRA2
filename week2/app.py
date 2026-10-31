@@ -19,6 +19,9 @@ from week2.workflow import load_copy, respond
 from week2.abuse import AbuseGate
 from week2.owner_audit import OwnerAuditStore
 from week2.presentation import review_summary
+from week3.cache import WorkflowCaches
+
+HOST_CACHES = WorkflowCaches()
 
 TRACE_FIELDS = (
     "status", "request_id", "session_id", "orchestration", "memory", "events",
@@ -27,6 +30,7 @@ TRACE_FIELDS = (
     "assessment", "response_details", "turn", "review_mode", "question", "topic",
     "rails",
     "support", "approval_declined",
+    "cache",
 )
 EMPTY_TRACE = "Run a query to inspect its supporting evidence and execution details."
 MAX_TRACES = 50
@@ -103,7 +107,7 @@ def chat_response(answer, trace):
 
 
 def ui_reply(message, history, mode, session_id, *, memory_store=None):
-    answer, trace = respond(message, history, mode, session_id=session_id, memory_store=memory_store)
+    answer, trace = respond(message, history, mode, session_id=session_id, memory_store=memory_store, caches=HOST_CACHES)
     turn = 1 + sum(1 for item in (history or []) if isinstance(item, dict) and item.get("role") == "user")
     question = message if trace.get("status") != "unavailable" and isinstance(message, str) and 0 < len(message) <= 4000 else "Input withheld"
     review_mode = mode if mode in ("Local evidence only", "Groq assessment") else "Unavailable"
