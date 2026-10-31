@@ -21,6 +21,7 @@ from week2.owner_audit import OwnerAuditStore
 from week2.presentation import review_summary
 from week3.cache import WorkflowCaches
 from week4.telemetry import TelemetryStore
+from week4.dashboard import dashboard_view
 
 HOST_CACHES = WorkflowCaches()
 
@@ -239,7 +240,7 @@ def build_app(*, memory_store=None, abuse_gate=None):
         summary, details, supporting, panel, choices = admin_trace_view(trace["turn"], updated, admin_unlocked)
         # Keep the panel's current open/closed state on a new answer.
         panel.pop("open", None)
-        return answer, summary, details, supporting, panel, updated, choices, *cooldown_view(gate, client), cache_badge(trace)
+        return answer, summary, details, supporting, panel, updated, choices, *cooldown_view(gate, client), cache_badge(trace), dashboard_view(updated,admin_unlocked)
 
     def cooldown(request: gr.Request):
         try:
@@ -249,13 +250,13 @@ def build_app(*, memory_store=None, abuse_gate=None):
 
     def reset_trace(admin_unlocked):
         *view, choices = admin_trace_view(None, [], admin_unlocked)
-        return (*view, [], choices, "**Last request cache:** no lookup yet")
+        return (*view, [], choices, "**Last request cache:** no lookup yet", "")
 
     def undo_trace(traces, admin_unlocked):
         updated = traces[:-1]
         turn = updated[-1]["turn"] if updated else None
         *view, choices = admin_trace_view(turn, updated, admin_unlocked)
-        return (*view, updated, choices, cache_badge(updated[-1]) if updated else "**Last request cache:** no lookup yet")
+        return (*view, updated, choices, cache_badge(updated[-1]) if updated else "**Last request cache:** no lookup yet",dashboard_view(updated,admin_unlocked))
 
     with gr.Blocks(title="CRA2 · Change risk advisor", analytics_enabled=False) as demo:
         gr.Markdown("# Change risk advisor\n**Advisory only · Synthetic evidence · A human makes the decision.**")
@@ -263,11 +264,11 @@ def build_app(*, memory_store=None, abuse_gate=None):
         trace_history = gr.State(value=[])
         admin_unlocked = gr.State(value=False)
         timer = gr.Timer(value=.5, active=False)
-        with gr.Tabs():
+        with gr.Tabs() as app_tabs:
             with gr.Tab("Change Risk Advisor"):
                 with gr.Column() as conversation:
                     mode = gr.Radio(["Local evidence only", "Groq assessment"], value="Local evidence only", label="Review mode")
-            with gr.Tab("Admin"):
+            with gr.Tab("Admin",id="admin"):
                 gr.Markdown("## Admin\nSession trace history and execution details.")
                 admin_status = gr.Markdown(visible=False, elem_id="admin-status")
                 with gr.Group() as login_controls:
@@ -283,25 +284,30 @@ def build_app(*, memory_store=None, abuse_gate=None):
                         with gr.Accordion("Evidence and policy details", open=False):
                             supporting = gr.Markdown(elem_id="agent-supporting-details")
                         details = gr.JSON(value={}, label="Execution details", elem_id="agent-trace-details", max_height=240)
+                    dashboard_refresh = gr.Button("Refresh run dashboard")
+                    dashboard = gr.Markdown("Run a query, then refresh this session's dashboard.",elem_id="run-dashboard")
         with conversation:
             cache_status = gr.Markdown("**Last request cache:** no lookup yet", elem_id="cache-status")
             notice = gr.HTML(visible=False, elem_id="security-notice")
             with gr.Group(elem_id="chat-controls") as controls:
                 chatbot = gr.Chatbot(label="CRA2 conversation", height=490, elem_id="agent-chat")
                 gr.ChatInterface(reply, chatbot=chatbot, additional_inputs=[mode, session_id, trace_history, admin_unlocked],
-                    additional_outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector, notice, controls, timer, cache_status], save_history=False, cache_examples=False,
+                    additional_outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector, notice, controls, timer, cache_status, dashboard], save_history=False, cache_examples=False,
                     flagging_mode="never", api_visibility="private", api_name="ui_response",
                     description="Name the service and describe the proposed change. Never enter credentials.",
                     analytics_enabled=False)
-            chatbot.clear(reset_trace, inputs=[admin_unlocked], outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector, cache_status], queue=False, api_visibility="private")
-            chatbot.undo(undo_trace, inputs=[trace_history, admin_unlocked], outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector, cache_status], queue=False, api_visibility="private")
+            chatbot.clear(reset_trace, inputs=[admin_unlocked], outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector, cache_status, dashboard], queue=False, api_visibility="private")
+            chatbot.undo(undo_trace, inputs=[trace_history, admin_unlocked], outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector, cache_status, dashboard], queue=False, api_visibility="private")
             gr.Markdown("Ask **What is this app?**, **What services do you support?**, or **How do I get started?** Supporting evidence is available in **Admin → Agent trace**.")
             gr.Markdown("Out-of-scope questions and flagged requests are recorded privately for app-owner review.")
+            open_dashboard = gr.Button("Open run dashboard")
+        open_dashboard.click(lambda: gr.Tabs(selected="admin"),outputs=app_tabs,queue=False,api_visibility="private")
+        dashboard_refresh.click(dashboard_view,inputs=[trace_history,admin_unlocked],outputs=dashboard,queue=False,api_visibility="private")
         trace_outputs = [summary, details, supporting, trace_panel, turn_selector]
         admin_outputs = [admin_unlocked, pin, admin_status, login_controls, admin_controls, *trace_outputs]
         unlock.click(unlock_admin, inputs=[pin, trace_history], outputs=admin_outputs, queue=False, api_visibility="private")
         pin.submit(unlock_admin, inputs=[pin, trace_history], outputs=admin_outputs, queue=False, api_visibility="private")
-        lock.click(lock_admin, outputs=admin_outputs, queue=False, api_visibility="private")
+        lock.click(lock_admin, outputs=admin_outputs, queue=False, api_visibility="private").then(lambda:"",outputs=dashboard,queue=False,api_visibility="private")
         turn_selector.input(admin_trace_view, inputs=[turn_selector, trace_history, admin_unlocked], outputs=trace_outputs, queue=False, api_visibility="private")
         timer.tick(cooldown, outputs=[notice, controls, timer], queue=False, api_visibility="private")
         demo.load(cooldown, outputs=[notice, controls, timer], queue=False, api_visibility="private")
