@@ -25,6 +25,7 @@ TRACE_FIELDS = (
     "retrieved", "provider_used", "request_attempted", "risk_floor",
     "assessment_tool_citations", "source_scope", "model", "tokens", "groq_ms",
     "assessment", "response_details", "turn", "review_mode", "question", "topic",
+    "rails",
 )
 EMPTY_TRACE = "Run a query to inspect its supporting evidence and execution details."
 MAX_TRACES = 50

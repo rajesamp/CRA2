@@ -24,6 +24,7 @@ from week2.mcp_client import call_tools
 from week2.memory import MemoryStore, MemoryUnavailable
 from week2.preferences import parse_command, effective_policy
 from week2.help import capability_lines, help_answer, help_topic
+from week3.guardrails import LocalRails, RailUnavailable
 
 COPY = Path(__file__).with_name("responses.json")
 PARAMETERS = {
@@ -49,6 +50,7 @@ PARAMETERS = {
     "help_trace": set(), "help_limits": set(), "help_tools": set(),
     "help_preference_commands": {"service"},
     "help_security": set(),
+    "guardrail_failure": set(), "guardrail_blocked": set(),
 }
 
 
@@ -119,7 +121,7 @@ def _context_service(question, history):
     return None
 
 
-def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_path=chat.INDEX, memory_store=None):
+def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_path=chat.INDEX, memory_store=None, guardrails=None):
     """Dependencies are runtime collaborators, never serialized graph state."""
     retrieve = retriever or chat.search
     review = reviewer or provider.assess
@@ -127,8 +129,17 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
     copy = load_copy()
     catalog = responses.load()
     store = MemoryStore() if memory_store is None else memory_store
+    rails = LocalRails() if guardrails is None else guardrails
 
-    def classify(state):
+    async def rail_check(stage, payload):
+        try:
+            if not await rails.check(stage, payload):
+                return _answer(copy["guardrail_blocked"], "guardrail_blocked")
+        except Exception:
+            return _answer(copy["guardrail_failure"], "guardrails_unavailable")
+        return None
+
+    async def classify(state):
         question, mode, history = state["question"], state["mode"], state["history"]
         if not isinstance(question, str) or not question.strip() or len(question) > chat.MAX_QUESTION:
             return _answer(responses.message(catalog, "input_length"), "needs_clarification")
@@ -136,6 +147,9 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
             return _answer(responses.message(catalog, "control_characters"), "needs_clarification")
         if mode not in {"Local evidence only", "Groq assessment"}:
             return _answer(responses.message(catalog, "invalid_mode"), "needs_clarification")
+        refused = await rail_check("input", question)
+        if refused:
+            return refused
         decision = routing.task(question, dict(catalog, capabilities=capability_lines(copy)))
         active = routing.active_request(question)
         if decision and decision["kind"] == "clarify":
@@ -204,15 +218,22 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
             result["trace"]["memory"] = {"status": "unavailable"}
             return result
 
-    def legacy(state):
+    async def legacy(state):
         answer, trace = chat.respond(state["question"], state["history"], state["mode"],
                                      index_path=index_path, retriever=retrieve, reviewer=review)
+        if trace.get("retrieved"):
+            refused = await rail_check("context", trace["retrieved"])
+            if refused:
+                return refused
         return {"answer": answer, "trace": trace}
 
-    def retrieval(state):
+    async def retrieval(state):
         try:
             hits = retrieve(state["question"], index_path, limit=3, service=state["service"])
             checked(hits, "invalid_evidence")
+            refused = await rail_check("context", hits)
+            if refused:
+                return refused
             return {"hits": hits, "route": "tools"}
         except Exception:
             return _answer(copy["retrieval_failure"], "retrieval_unavailable")
@@ -309,7 +330,7 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
         trace.update(events=bundle["events"], source_scope="Historical evidence and MCP synthetic snapshots; current state unverified")
         return {"answer": answer.strip(), "trace": trace}
 
-    def output_guard(state):
+    async def output_guard(state):
         if "memory_record" in state:
             record, policy = state["memory_record"], state["policy"]
             state["trace"]["memory"] = {"status": "recalled" if record else "empty", "record": record,
@@ -329,6 +350,11 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                     sections.append(copy["memory_conflict"])
                 state["answer"] = state["answer"].removesuffix(ADVISORY).rstrip() + "\n\n" + "\n\n".join(sections) + "\n\n" + ADVISORY
         responses.guard([state["answer"], state["trace"]])
+        if state["trace"].get("status") != "guardrails_unavailable":
+            refused = await rail_check("output", {"answer": state["answer"], "trace": state["trace"]})
+            if refused:
+                state.update(refused)
+        state["trace"]["rails"] = list(rails.events)
         return {"answer": state["answer"], "trace": state["trace"]}
 
     builder = StateGraph(State)

@@ -1,0 +1,7 @@
+models: []
+colang_version: "1.0"
+rails:
+  input:
+    flows: [cra contract input]
+  output:
+    flows: [cra contract output]
