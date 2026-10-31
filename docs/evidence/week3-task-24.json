@@ -1,0 +1,854 @@
+{
+  "mode": "Local evidence only",
+  "passed": 6,
+  "total": 6,
+  "provider_attempts": 0,
+  "cases": [
+    {
+      "question": "Change checkout-service config timeout from 4 seconds to 400 milliseconds.",
+      "answer": "Local evidence only; no model risk indication.\n\n**Evidence \u00b7 historical/sample**\n\n- The timeout for payment-gateway calls was cut from 4 seconds to 400 milliseconds. Slow authorisations were abandoned while still in flight. Some shoppers were charged even though no order was created. (pm-cx101-checkout-timeout#chunk-001)\n- Guidance: Runbook: review a checkout-service config change (rb-checkout-config-risk#chunk-002)\n\n**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded health for checkout-service: **Healthy**. Reported freeze status: **not_reported**. Active incidents: unknown. Evidence: catalog:checkout-service.status, catalog:checkout-service.freeze_window_active.\n\nRecorded graph for checkout-service:\n\n- Direct dependencies: auth-service, inventory-service, payment-gateway\n- All reachable dependencies: auth-service, inventory-service, notification-service, payment-gateway\n- Direct dependents: order-service\n- All reachable dependents: mobile-frontend, order-service, web-frontend\n\nEvidence: graph:checkout-service.dependents, graph:checkout-service.dependencies.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "scope": "cra2",
+        "status": "evidence_only",
+        "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+        "retrieved": [
+          {
+            "chunk_id": "pm-cx101-checkout-timeout#chunk-001",
+            "source": "week1/corpus/pm-cx101-checkout-timeout.md",
+            "similarity": 0.7484,
+            "text": "# Checkout config incident: payment timeout cut too far Document type: synthetic postmortem derived from a historical fixture. This is a fictional training example, not current production evidence. Source: [canonical synthetic incidents](../../data/incidents.json), incident **CX-101**. Service: **checkout-service**. Date: **2025-10-14**. Change type: **Config change**. Severity: **SEV1**. ## Recorded facts The timeout for payment-gateway calls was cut from **4 seconds to 400 milliseconds**. Slow authorisations were abandoned while still in flight. Some shoppers were charged even though no order was created. The fixture does not record the outage duration, customer count, investigation timeline, or recovery procedure. Those details are unknown. It does not establish the effect of a different timeout value or the current health of either service. ## Suggested checks for a proposed change These are review recommendations, not additional incident facts: - Ask for the current and proposed timeout values and the affected checkout calls. - Check payment-authorisation latency and what happens when a request times out after the external payment"
+          },
+          {
+            "chunk_id": "rb-checkout-config-risk#chunk-002",
+            "source": "week1/corpus/rb-checkout-config-risk.md",
+            "similarity": 0.7482,
+            "text": "1 to 5 while staging remained at 1, amplifying a payment-gateway slowdown into a retry storm. These incidents are candidates for timeout, retry, and environment-drift changes. Explain the connection to the proposed field; do not cite them as proof that every checkout config change is high-risk. ## Recommended review questions - What failure or latency behavior does the new value permit? - Which callers and dependencies might experience that behavior? - Can the prior configuration and consistent payment/order behavior be restored? - Which named signals reveal retries, timeouts, or incomplete orders? The catalog is a fictional snapshot. Week 1 retrieval does not call a current-health or freeze tool. Label such status as unverified. Cite the relevant incident or source passage for each risk reason, and leave the shipping decision to a human."
+          },
+          {
+            "chunk_id": "rb-checkout-config-risk#chunk-001",
+            "source": "week1/corpus/rb-checkout-config-risk.md",
+            "similarity": 0.7433,
+            "text": "# Runbook: review a checkout-service config change This is a fictional review guide derived from synthetic historical records. Its checklist is recommended review work, not a report of completed controls or live system state. Sources: [CX-101 and CX-102](../../data/incidents.json), [synthetic catalog snapshot](../../data/checkout_system.json). ## Establish what will change For \u201cHow risky is this change to the checkout-service config?\u201d, first obtain the config field, current and proposed values, affected environment, and expected behavior. The question alone does not establish a specific change. Retrieve relevant history while asking for these details; do not invent a before/after state to produce a score. ## Match evidence to the mechanism CX-101 records a payment-call timeout cut from 4 seconds to 400 milliseconds, followed by abandoned authorisations and charges without orders. CX-102 records a production retry increase from 1 to 5 while staging remained at 1, amplifying a payment-gateway slowdown into a retry storm. These incidents are candidates for timeout, retry, and environment-drift changes. Explain the connection to"
+          }
+        ],
+        "support": {
+          "status": "not_disproven",
+          "method": "bounded_lexical_mechanism_coverage_v1",
+          "requested": [
+            "timeout"
+          ],
+          "covered": [
+            "timeout"
+          ],
+          "passages_examined": 3
+        },
+        "assessment_tool_citations": [],
+        "events": [
+          {
+            "event": "metadata_admitted",
+            "tools": [
+              "check_system_health",
+              "get_dependency_graph"
+            ]
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "check_system_health",
+            "input": {
+              "service_name": "checkout-service"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "checkout-service",
+              "health": "Healthy",
+              "active_incidents": null,
+              "active_incidents_status": "unknown",
+              "freeze_window": {
+                "reported_active": false,
+                "status": "not_reported"
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "catalog:checkout-service.status",
+                "catalog:checkout-service.freeze_window_active"
+              ]
+            }
+          },
+          {
+            "event": "metadata_admitted",
+            "tools": [
+              "check_system_health",
+              "get_dependency_graph"
+            ]
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "get_dependency_graph",
+            "input": {
+              "service_name": "checkout-service"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "checkout-service",
+              "dependents": {
+                "direct": [
+                  "order-service"
+                ],
+                "transitive": [
+                  "mobile-frontend",
+                  "order-service",
+                  "web-frontend"
+                ]
+              },
+              "dependencies": {
+                "direct": [
+                  "auth-service",
+                  "inventory-service",
+                  "payment-gateway"
+                ],
+                "transitive": [
+                  "auth-service",
+                  "inventory-service",
+                  "notification-service",
+                  "payment-gateway"
+                ]
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "graph:checkout-service.dependents",
+                "graph:checkout-service.dependencies"
+              ]
+            }
+          }
+        ],
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 70.749
+          },
+          {
+            "stage": "context",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 7.901
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 13.763
+          }
+        ],
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 86400,
+            "layer": "query_embedding",
+            "source_version": "fastembed-artifacts-sha256:6df0bb4a5b7e0d3b1524076116a802509249de2cea5c8b1be7a443d66b7d4338"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "retrieval",
+            "source_version": "297db973dcd1e449ff7668d6dc0374944134594c528c98666a0d2041b84ecfe0"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "check_system_health",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_used": false,
+        "request_attempted": false,
+        "request_id": "f86959289342468ca35b45394d292afd",
+        "session_id": "1c302859ea0c40f1bb252f40a962fc97",
+        "orchestration": "langgraph"
+      },
+      "id": "checkout",
+      "expected": "evidence_only",
+      "passed": true
+    },
+    {
+      "question": "What similar incidents has checkout-service had before?",
+      "answer": "Past incidents for comparison; a match does not prove the same failure will recur.\n\n**Evidence \u00b7 historical/sample**\n\n- The timeout for payment-gateway calls was cut from 4 seconds to 400 milliseconds. Slow authorisations were abandoned while still in flight. Some shoppers were charged even though no order was created. (pm-cx101-checkout-timeout#chunk-001)\n- Timeout for payment-gateway calls cut from 4 s to 400 ms; slow authorisations were abandoned mid-flight, so some shoppers were charged with no order created (CX-101#chunk-001)\n- Checkout config incident: payment timeout cut too far (pm-cx101-checkout-timeout#chunk-002)\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "scope": "cra2",
+        "status": "history_only",
+        "source_scope": "Static historical/sample corpus; no live system lookup",
+        "retrieved": [
+          {
+            "chunk_id": "pm-cx101-checkout-timeout#chunk-001",
+            "source": "week1/corpus/pm-cx101-checkout-timeout.md",
+            "similarity": 0.7726,
+            "text": "# Checkout config incident: payment timeout cut too far Document type: synthetic postmortem derived from a historical fixture. This is a fictional training example, not current production evidence. Source: [canonical synthetic incidents](../../data/incidents.json), incident **CX-101**. Service: **checkout-service**. Date: **2025-10-14**. Change type: **Config change**. Severity: **SEV1**. ## Recorded facts The timeout for payment-gateway calls was cut from **4 seconds to 400 milliseconds**. Slow authorisations were abandoned while still in flight. Some shoppers were charged even though no order was created. The fixture does not record the outage duration, customer count, investigation timeline, or recovery procedure. Those details are unknown. It does not establish the effect of a different timeout value or the current health of either service. ## Suggested checks for a proposed change These are review recommendations, not additional incident facts: - Ask for the current and proposed timeout values and the affected checkout calls. - Check payment-authorisation latency and what happens when a request times out after the external payment"
+          },
+          {
+            "chunk_id": "CX-101#chunk-001",
+            "source": "data/incidents.json#CX-101",
+            "similarity": 0.7578,
+            "text": "# Incident CX-101 Service: checkout-service Date: 2025-10-14 Change type: Config change Severity: SEV1 Source dataset: synthetic Source label: synthetic Root cause: Timeout for payment-gateway calls cut from 4 s to 400 ms; slow authorisations were abandoned mid-flight, so some shoppers were charged with no order created"
+          },
+          {
+            "chunk_id": "pm-cx101-checkout-timeout#chunk-002",
+            "source": "week1/corpus/pm-cx101-checkout-timeout.md",
+            "similarity": 0.7482,
+            "text": "- Ask for the current and proposed timeout values and the affected checkout calls. - Check payment-authorisation latency and what happens when a request times out after the external payment operation has started. - Examine whether cancellation, retry, and order creation can leave payment and order state inconsistent. - Ask how to restore the prior setting and how monitoring would detect charges without completed orders. This history is directly relevant to a checkout payment-timeout config change. A shared service or config label alone does not prove that another change has the same failure mechanism. Cite CX-101 and explain the connection before using it as a risk reason. The assessment remains advisory; a human makes the shipping decision."
+          }
+        ],
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 11.728
+          },
+          {
+            "stage": "context",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 9.257
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 11.915
+          }
+        ],
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 86400,
+            "layer": "query_embedding",
+            "source_version": "fastembed-artifacts-sha256:6df0bb4a5b7e0d3b1524076116a802509249de2cea5c8b1be7a443d66b7d4338"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "retrieval",
+            "source_version": "297db973dcd1e449ff7668d6dc0374944134594c528c98666a0d2041b84ecfe0"
+          }
+        ],
+        "provider_used": false,
+        "request_attempted": false,
+        "request_id": "8c64d10d0e7447e4a2356254300a87a6",
+        "session_id": "db542819abb74b9e91f121b99838610d",
+        "orchestration": "langgraph"
+      },
+      "id": "history",
+      "expected": "history_only",
+      "passed": true
+    },
+    {
+      "question": "Is checkout-service in a freeze window right now?",
+      "answer": "**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded health for checkout-service: **Healthy**. Reported freeze status: **not_reported**. Active incidents: unknown. Evidence: catalog:checkout-service.status, catalog:checkout-service.freeze_window_active.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "tool_evidence",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "events": [
+          {
+            "event": "cache_result",
+            "tool": "check_system_health",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 12.852
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 11.908
+          }
+        ],
+        "cache": [
+          {
+            "age_ms": 1202.066,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "check_system_health",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "request_id": "0ddcf7b692614d2bb09c4e8b4ceeac04",
+        "session_id": "4d27d7cb541a494bb8c17480f7594def",
+        "orchestration": "langgraph"
+      },
+      "id": "freeze",
+      "expected": "tool_evidence",
+      "passed": true
+    },
+    {
+      "question": "What services depend on payment-gateway?",
+      "answer": "**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded graph for payment-gateway:\n\n- Direct dependencies: notification-service\n- All reachable dependencies: notification-service\n- Direct dependents: checkout-service\n- All reachable dependents: checkout-service, mobile-frontend, order-service, web-frontend\n\nEvidence: graph:payment-gateway.dependents, graph:payment-gateway.dependencies.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "tool_evidence",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "events": [
+          {
+            "event": "metadata_admitted",
+            "tools": [
+              "check_system_health",
+              "get_dependency_graph"
+            ]
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "get_dependency_graph",
+            "input": {
+              "service_name": "payment-gateway"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "payment-gateway",
+              "dependents": {
+                "direct": [
+                  "checkout-service"
+                ],
+                "transitive": [
+                  "checkout-service",
+                  "mobile-frontend",
+                  "order-service",
+                  "web-frontend"
+                ]
+              },
+              "dependencies": {
+                "direct": [
+                  "notification-service"
+                ],
+                "transitive": [
+                  "notification-service"
+                ]
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "graph:payment-gateway.dependents",
+                "graph:payment-gateway.dependencies"
+              ]
+            }
+          }
+        ],
+        "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:payment-gateway.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 9.24
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 14.535
+          }
+        ],
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "request_id": "446c136065294406b2fd92c17a9a433f",
+        "session_id": "fde83ad4076f4f50ba4d0b2ba123a15a",
+        "orchestration": "langgraph"
+      },
+      "id": "dependents",
+      "expected": "tool_evidence",
+      "passed": true
+    },
+    {
+      "id": "memory",
+      "expected": "write, separate-process recall, different-team empty",
+      "passed": true,
+      "sessions": {
+        "write": {
+          "question": "Remember that checkout-service is always high-risk for our team.",
+          "answer": "Saved an explicit team preference for checkout-service. It will be recalled in a new session for this configured team.\n\nRemembered team preference: high-risk flag for checkout-service = true. Effective high-risk policy = true. Source: memory:checkout-service.high_risk.\n\nThis is advisory only. The decision to ship requires a human.",
+          "trace": {
+            "status": "memory_saved",
+            "retrieved": [],
+            "provider_used": false,
+            "request_attempted": false,
+            "events": [
+              {
+                "event": "memory_written",
+                "service": "checkout-service"
+              }
+            ],
+            "memory": {
+              "status": "recalled",
+              "record": {
+                "team": "acceptance-team",
+                "service": "checkout-service",
+                "high_risk": true,
+                "freeze_notes": null,
+                "updated_at": "2026-10-31T20:36:08.798302+00:00",
+                "source": "explicit_team_preference"
+              },
+              "effective_policy": {
+                "team": "sample-team",
+                "effective": {
+                  "high_risk": true,
+                  "freeze_window_active": false
+                },
+                "sources": {
+                  "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+                  "high_risk": "memory:checkout-service.high_risk"
+                },
+                "conflicts": []
+              }
+            },
+            "rails": [
+              {
+                "stage": "input",
+                "engine": "nemoguardrails",
+                "version": "0.24.1",
+                "executed": true,
+                "outcome": "allow",
+                "severity": "M0",
+                "code": "contract_valid",
+                "duration_ms": 67.978
+              },
+              {
+                "stage": "output",
+                "engine": "nemoguardrails",
+                "version": "0.24.1",
+                "executed": true,
+                "outcome": "allow",
+                "severity": "M0",
+                "code": "contract_valid",
+                "duration_ms": 14.063
+              }
+            ],
+            "request_id": "8608e9ed91a8477fad4087b58dac9bed",
+            "session_id": "2c64d058fc9d4b40a235380a26d53f05",
+            "orchestration": "langgraph"
+          }
+        },
+        "read": {
+          "question": "What services depend on checkout-service?",
+          "answer": "**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded graph for checkout-service:\n\n- Direct dependencies: auth-service, inventory-service, payment-gateway\n- All reachable dependencies: auth-service, inventory-service, notification-service, payment-gateway\n- Direct dependents: order-service\n- All reachable dependents: mobile-frontend, order-service, web-frontend\n\nEvidence: graph:checkout-service.dependents, graph:checkout-service.dependencies.\n\nRemembered team preference: high-risk flag for checkout-service = true. Effective high-risk policy = true. Source: memory:checkout-service.high_risk.\n\nThis is advisory only. The decision to ship requires a human.",
+          "trace": {
+            "status": "tool_evidence",
+            "retrieved": [],
+            "provider_used": false,
+            "request_attempted": false,
+            "events": [
+              {
+                "event": "metadata_admitted",
+                "tools": [
+                  "check_system_health",
+                  "get_dependency_graph"
+                ]
+              },
+              {
+                "event": "tool_result",
+                "transport": "mcp-stdio",
+                "tool": "get_dependency_graph",
+                "input": {
+                  "service_name": "checkout-service"
+                },
+                "output": {
+                  "status": "ok",
+                  "service_name": "checkout-service",
+                  "dependents": {
+                    "direct": [
+                      "order-service"
+                    ],
+                    "transitive": [
+                      "mobile-frontend",
+                      "order-service",
+                      "web-frontend"
+                    ]
+                  },
+                  "dependencies": {
+                    "direct": [
+                      "auth-service",
+                      "inventory-service",
+                      "payment-gateway"
+                    ],
+                    "transitive": [
+                      "auth-service",
+                      "inventory-service",
+                      "notification-service",
+                      "payment-gateway"
+                    ]
+                  },
+                  "source": {
+                    "path": "data/checkout_system.json",
+                    "kind": "synthetic_snapshot",
+                    "observed_at": null,
+                    "freshness": "unknown"
+                  },
+                  "evidence": [
+                    "graph:checkout-service.dependents",
+                    "graph:checkout-service.dependencies"
+                  ]
+                }
+              }
+            ],
+            "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+            "memory": {
+              "status": "recalled",
+              "record": {
+                "team": "acceptance-team",
+                "service": "checkout-service",
+                "high_risk": true,
+                "freeze_notes": null,
+                "updated_at": "2026-10-31T20:36:08.798302+00:00",
+                "source": "explicit_team_preference"
+              },
+              "effective_policy": {
+                "team": "sample-team",
+                "effective": {
+                  "high_risk": true,
+                  "freeze_window_active": false
+                },
+                "sources": {
+                  "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+                  "high_risk": "memory:checkout-service.high_risk"
+                },
+                "conflicts": []
+              }
+            },
+            "rails": [
+              {
+                "stage": "input",
+                "engine": "nemoguardrails",
+                "version": "0.24.1",
+                "executed": true,
+                "outcome": "allow",
+                "severity": "M0",
+                "code": "contract_valid",
+                "duration_ms": 69.729
+              },
+              {
+                "stage": "output",
+                "engine": "nemoguardrails",
+                "version": "0.24.1",
+                "executed": true,
+                "outcome": "allow",
+                "severity": "M0",
+                "code": "contract_valid",
+                "duration_ms": 15.224
+              }
+            ],
+            "request_id": "55f823c798b34bcf8f4970a378e00b73",
+            "session_id": "98ad1aab6b68467c9a787f8eda843dd1",
+            "orchestration": "langgraph"
+          }
+        },
+        "control": {
+          "question": "What services depend on checkout-service?",
+          "answer": "**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded graph for checkout-service:\n\n- Direct dependencies: auth-service, inventory-service, payment-gateway\n- All reachable dependencies: auth-service, inventory-service, notification-service, payment-gateway\n- Direct dependents: order-service\n- All reachable dependents: mobile-frontend, order-service, web-frontend\n\nEvidence: graph:checkout-service.dependents, graph:checkout-service.dependencies.\n\nThis is advisory only. The decision to ship requires a human.",
+          "trace": {
+            "status": "tool_evidence",
+            "retrieved": [],
+            "provider_used": false,
+            "request_attempted": false,
+            "events": [
+              {
+                "event": "metadata_admitted",
+                "tools": [
+                  "check_system_health",
+                  "get_dependency_graph"
+                ]
+              },
+              {
+                "event": "tool_result",
+                "transport": "mcp-stdio",
+                "tool": "get_dependency_graph",
+                "input": {
+                  "service_name": "checkout-service"
+                },
+                "output": {
+                  "status": "ok",
+                  "service_name": "checkout-service",
+                  "dependents": {
+                    "direct": [
+                      "order-service"
+                    ],
+                    "transitive": [
+                      "mobile-frontend",
+                      "order-service",
+                      "web-frontend"
+                    ]
+                  },
+                  "dependencies": {
+                    "direct": [
+                      "auth-service",
+                      "inventory-service",
+                      "payment-gateway"
+                    ],
+                    "transitive": [
+                      "auth-service",
+                      "inventory-service",
+                      "notification-service",
+                      "payment-gateway"
+                    ]
+                  },
+                  "source": {
+                    "path": "data/checkout_system.json",
+                    "kind": "synthetic_snapshot",
+                    "observed_at": null,
+                    "freshness": "unknown"
+                  },
+                  "evidence": [
+                    "graph:checkout-service.dependents",
+                    "graph:checkout-service.dependencies"
+                  ]
+                }
+              }
+            ],
+            "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+            "memory": {
+              "status": "empty",
+              "record": null,
+              "effective_policy": {
+                "team": "sample-team",
+                "effective": {
+                  "high_risk": false,
+                  "freeze_window_active": false
+                },
+                "sources": {
+                  "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+                  "high_risk": "default:high_risk"
+                },
+                "conflicts": []
+              }
+            },
+            "rails": [
+              {
+                "stage": "input",
+                "engine": "nemoguardrails",
+                "version": "0.24.1",
+                "executed": true,
+                "outcome": "allow",
+                "severity": "M0",
+                "code": "contract_valid",
+                "duration_ms": 71.384
+              },
+              {
+                "stage": "output",
+                "engine": "nemoguardrails",
+                "version": "0.24.1",
+                "executed": true,
+                "outcome": "allow",
+                "severity": "M0",
+                "code": "contract_valid",
+                "duration_ms": 14.665
+              }
+            ],
+            "request_id": "c0f6d54291384370a70a14674fb0d427",
+            "session_id": "a56c59bf5d71456babab62bca519fac2",
+            "orchestration": "langgraph"
+          }
+        }
+      }
+    },
+    {
+      "question": "Just approve this change for me.",
+      "answer": "I can help assess the change, but I cannot approve, block, merge, or deploy it. Please describe the planned change and a human can review the evidence.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "advisory_boundary",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 8.35
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 9.946
+          }
+        ],
+        "cache": [],
+        "memory": {
+          "status": "not_accessed"
+        },
+        "request_id": "e03c5d8d52c4427b9ceb2749efc24b91",
+        "session_id": "10921d13aba64129bff25eb7a787f6aa",
+        "orchestration": "langgraph"
+      },
+      "id": "approval",
+      "expected": "advisory_boundary",
+      "passed": true
+    }
+  ]
+}
