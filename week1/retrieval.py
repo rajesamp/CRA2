@@ -19,7 +19,8 @@ from itertools import islice
 from pathlib import Path
 
 from cra2 import config
-from cra2.incidents import load_incidents
+from cra2.incidents import load_incidents, _terms
+from cra2.public_evidence import public_documents, match_terms_by_id
 from cra2.secrets import reject_credentials
 
 MODEL_NAME = "BAAI/bge-small-en-v1.5"
@@ -198,6 +199,10 @@ def _documents(corpus_dir: Path) -> list[dict]:
                 "text": text,
             }
         )
+    try:
+        documents.extend(public_documents(config.DATA_DIR))
+    except ValueError:
+        raise RetrievalError("Public evidence is invalid; review the source catalog") from None
     if len({document["doc_id"] for document in documents}) != len(documents):
         raise RetrievalError("Incident and Markdown document IDs must be unique")
     documents.sort(key=lambda document: document["doc_id"])
@@ -215,6 +220,11 @@ def _corpus_digest(documents: list[dict]) -> str:
 def _chunks(documents: list[dict]) -> list[dict]:
     chunks = []
     for document in documents:
+        # Curated public summaries are bounded by their loader. Keep each fact,
+        # attribution, inference label and caveat together through compaction.
+        if document.get("source_dataset") == "public_corporate":
+            chunks.append({**document, "chunk_id": document["doc_id"] + "#chunk-001"})
+            continue
         words = document["text"].split()
         start, number = 0, 1
         while start < len(words):
@@ -477,6 +487,7 @@ def build_index(corpus_dir: Path, index_path: Path, encoder=None) -> dict:
         "documents": len(documents),
         "chunks": len(chunks),
         "incidents": sum(document["kind"] == "incident" for document in documents),
+        "external_records": sum(document["source_dataset"] == "public_corporate" for document in documents),
         "model": MODEL_NAME,
         "dimensions": DIMENSIONS,
         "corpus_digest": metadata["corpus_digest"],
@@ -492,7 +503,8 @@ def search(
 ) -> list[dict]:
     """Rank a small local corpus by normalized cosine similarity; never infer aliases.
 
-    Explicit service scope includes only that exact service and general documents.
+    Service scope includes exact local history and general documents. At most
+    one external analogue is admitted, only with two meaningful shared terms.
     Scores measure embedding similarity, not factual support or calibrated risk.
     """
     import numpy as np
@@ -528,6 +540,8 @@ def search(
     if len(rows) != len(expected):
         raise RetrievalError("Index source records changed; rebuild it")
     candidates, vectors = [], []
+    public_terms = match_terms_by_id(config.DATA_DIR)
+    query_terms = _terms(query)
     for row in rows:
         record = dict(zip(_COLUMNS, row))
         blob = record.pop("embedding")
@@ -537,7 +551,9 @@ def search(
         if not isinstance(blob, bytes) or len(blob) != DIMENSIONS * 4:
             raise RetrievalError("Index contains an invalid embedding; rebuild it")
         vector = _vector(np.frombuffer(blob, dtype="<f4"))
-        if service is None or record["service"] in (None, service):
+        external = record["source_dataset"] == "public_corporate"
+        relevant_external = external and len(query_terms & public_terms[record["doc_id"]]) >= 2
+        if relevant_external or (not external and (service is None or record["service"] in (None, service))):
             candidates.append(record)
             vectors.append(vector)
     if not candidates:
@@ -554,6 +570,14 @@ def search(
         for record, score in zip(candidates, scores)
     ]
     ranked.sort(key=lambda record: (-record["score"], record["chunk_id"]))
-    result = ranked[:limit]
+    result, external_count = [], 0
+    for record in ranked:
+        external = record["source_dataset"] == "public_corporate"
+        if external and external_count:
+            continue
+        result.append(record)
+        external_count += int(external)
+        if len(result) == limit:
+            break
     reject_credentials(result)
     return result

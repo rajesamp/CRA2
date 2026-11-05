@@ -13,6 +13,7 @@ windows, configuration state, or an incident service.
 | `checkout_system.json` | Eight services: tier, direct dependencies, health, freeze state, rollback guidance, monitors, config-source/drift fields |
 | `incidents.json` | 16 original synthetic examples, `CX-101`–`CX-116`, with service, date, change type, severity, root cause |
 | `sample_incidents.json` | 30 user-provided sanitized samples, keeping original service/type labels and provenance |
+| `public_evidence.json` | 13 curated corporate analogues: 12 incident reports and one staging change plan; original company/service, official URLs, facts, recovery, separate inferences and caveats |
 | `team_settings.json` | Bundled `sample-team` policy: `auth-service.high_risk = true`; unspecified fields keep lower-precedence values |
 
 The samples span 2022-11-30 through 2026-09-27 and hold 28 distinct external
@@ -23,6 +24,14 @@ supplied `source: "internal"`; `source_dataset` separates the sample
 collection from synthetic history at runtime. External labels never create or
 map to catalog services, tiers, edges, or health states. The catalog stays
 the same eight services.
+
+The public corporate collection is an additional Week 1/2 retrieval source,
+separate from these 46 local incident records and from root CLI scoring. It
+does not supply same-service repeat history, live health, policy authority or
+failure probabilities. Severity remains unextracted and prospective risk
+unassigned. The staging plan does not establish a successful change. See the
+[public evidence guide](../docs/public-evidence.md) for validation and index
+rebuild commands, provenance rules and the process for adding records.
 
 The snapshot marks `payment-gateway` **Degraded** and reports active freeze
 flags for `auth-service` and `mobile-frontend`. Those flags are unconfirmed

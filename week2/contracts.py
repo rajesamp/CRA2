@@ -161,12 +161,14 @@ def validate_semantic_context(context):
     record = obj({
         "id": EVIDENCE_IDENTIFIER, "service": NAME,
         "origin": {"enum": list(ACTIONS[:-1])},
-        "kind": {"enum": ["historical", "synthetic_snapshot"]},
+        "kind": {"enum": ["historical", "external_public", "synthetic_snapshot"]},
         "source_id": {"type": "string", "minLength": 1, "maxLength": 500}, "content_digest": DIGEST,
     })
-    # Optional for P1 compatibility; P2 records the original global/source scope
-    # separately from the request service to avoid relabeling general documents.
-    record["properties"]["source_service"] = {"anyOf": [NAME, {"type": "null"}]}
+    # Local records retain their original P1/P2 scope rules. Public evidence has
+    # a required human-readable company/service label, never a catalog alias.
+    record["properties"]["source_service"] = {"anyOf": [
+        {"type": "string", "minLength": 1, "maxLength": 200}, {"type": "null"},
+    ]}
     plan_item = obj({"id": IDENTIFIER, "action": {"enum": list(ACTIONS)}})
     result = obj({
         "id": IDENTIFIER, "action": {"enum": list(ACTIONS)}, "service": NAME,
@@ -212,10 +214,19 @@ def validate_semantic_context(context):
         for item in evidence.values():
             if item["service"] != context["service"]:
                 raise ValueError
-            if item.get("source_service", context["service"]) not in (None, context["service"]):
+            if item["kind"] == "external_public":
+                source_service = item.get("source_service")
+                if (not isinstance(source_service, str) or not source_service.strip()
+                        or source_service != source_service.strip()
+                        or source_service.casefold() in {name.casefold() for name in CATALOG}
+                        or not item["id"].startswith("public-")
+                        or not item["source_id"].startswith("https://")):
+                    raise ValueError
+            elif (item.get("source_service", context["service"]) not in (None, context["service"])
+                  or item["id"].startswith("public-")):
                 raise ValueError
             if item["origin"] == "retrieve":
-                if item["kind"] != "historical":
+                if item["kind"] not in ("historical", "external_public"):
                     raise ValueError
                 # Reserved tool/policy namespaces cannot masquerade as history.
                 if (item["id"].startswith(("catalog:", "graph:", "team:", "memory:", "change:", "default:"))
@@ -242,7 +253,9 @@ def validate_semantic_context(context):
                 raise ValueError
             if action["action"] == "assess":
                 # This records a validated assessment action, never its decision.
-                if not set(refs) <= seen or not any(evidence[ref]["kind"] == "historical" for ref in refs):
+                if not set(refs) <= seen or not any(
+                    evidence[ref]["kind"] in ("historical", "external_public") for ref in refs
+                ):
                     raise ValueError
             else:
                 if any(evidence[ref]["origin"] != action["action"] for ref in refs):

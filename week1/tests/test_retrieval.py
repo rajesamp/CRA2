@@ -82,7 +82,8 @@ def metadata(path):
 
 def test_build_ingests_all_original_incidents_and_explicit_markdown(index):
     path, encoder, counts = index
-    assert counts["incidents"] == 46 and counts["documents"] == 49
+    assert counts["incidents"] == 46 and counts["external_records"] == 13
+    assert counts["documents"] == 62  # 46 local incidents + 3 fixture docs + 13 public summaries
     assert counts["chunks"] == len(encoder.passages) > counts["documents"]
     assert counts["dimensions"] == 384
     assert metadata(path)["model"] == "BAAI/bge-small-en-v1.5"

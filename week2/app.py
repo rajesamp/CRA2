@@ -13,6 +13,9 @@ import gradio as gr
 
 from cra2.secrets import configure_sdk_logging
 from cra2.advisor import ADVISORY, LEVELS, _inline
+from cra2 import config
+from cra2.incidents import load_incidents
+from cra2.public_evidence import load_public_evidence, public_documents
 from week1.responses import guard
 from week2.memory import MemoryStore
 from week2.workflow import load_copy, respond
@@ -28,6 +31,70 @@ TRACE_FIELDS = (
 )
 EMPTY_TRACE = "Run a query to inspect its supporting evidence and execution details."
 MAX_TRACES = 50
+SOURCES_UNAVAILABLE = "Evidence source details are unavailable. Review the source catalog before rebuilding the index."
+
+
+def evidence_sources():
+    """Describe bundled sources from validated canonical data, without network access."""
+    try:
+        incidents = load_incidents(config.DATA_DIR)
+        records = load_public_evidence()
+        synthetic = sum(item["source_dataset"] == "synthetic" for item in incidents)
+        sanitized = sum(item["source_dataset"] == "sanitized_samples" for item in incidents)
+        reports = sum(item["record_type"] == "incident_report" for item in records)
+        plans = sum(item["record_type"] == "change_plan" for item in records)
+        lines = [
+            "## Evidence sources",
+            f"**{synthetic} synthetic incidents · {sanitized} sanitized samples · {len(records)} external corporate records**",
+            f"The external collection contains {reports} incident reports and {plans} change plan(s). "
+            "These are static summaries from company publications, used as historical analogues. "
+            "They are not local incident history, current health, or policy authority.",
+            "Change plans do not establish successful outcomes. Severity and prospective risk remain unknown; "
+            "this selected collection cannot establish failure probabilities. "
+            "Reported facts are separate from CRA2's inferred topics and review questions.",
+            "| Company | Original service | Incident / planned date | Record type | Source |",
+            "| --- | --- | --- | --- | --- |",
+        ]
+        for record in records:
+            kind = "Incident report" if record["record_type"] == "incident_report" else "Change plan · outcome unverified"
+            values = (record["company"], record["original_service"],
+                      record["incident_date"] or record["planned_change_date"], kind)
+            cells = [_inline(value).replace("|", "\\|") for value in values]
+            lines.append("| " + " | ".join(cells) + " | [Company publication](" + record["source_url"] + ") |")
+        lines.append("\nPublic access does not establish unrestricted reuse rights. "
+                     "CRA2 includes concise paraphrases and source links; full articles are not mirrored.")
+        rendered = "\n\n".join(lines[:4]) + "\n\n" + "\n".join(lines[4:])
+        guard(rendered)
+        return rendered
+    except (OSError, ValueError, KeyError, TypeError):
+        return SOURCES_UNAVAILABLE
+
+
+def external_analogue_note(trace):
+    """Render a retrieved source only after matching the canonical source record."""
+    hits = trace.get("retrieved", [])
+    if not isinstance(hits, list):
+        return ""
+    external = [hit for hit in hits if isinstance(hit, dict)
+                and hit.get("source_dataset") == "public_corporate"]
+    if not external:
+        return ""
+    try:
+        records = {record["id"]: record for record in load_public_evidence()}
+        documents = {doc["doc_id"] + "#chunk-001": doc for doc in public_documents()}
+        for hit in external:
+            doc = documents.get(hit.get("chunk_id"))
+            if (doc is None or hit.get("source_service") != doc["service"]
+                    or any(hit.get(key) != doc[key] for key in ("source", "kind", "source_dataset", "text"))):
+                continue
+            record = records[doc["doc_id"]]
+            label = _inline(record["company"] + " · " + record["original_service"])
+            detail = ("Historical incident report; not local incident history."
+                      if record["record_type"] == "incident_report" else "Planned change; outcome unverified.")
+            return "External analogue retrieved: [" + label + "](" + record["source_url"] + "). " + detail
+    except (OSError, ValueError, KeyError, TypeError):
+        pass
+    return "External source details are unavailable."
 
 
 def project_trace(trace):
@@ -102,6 +169,9 @@ def chat_response(answer, trace):
         text = copy[key]
     if trace.get("status") in {"assessed", "evidence_only"}:
         text = "\n\n".join([text, *review_summary(trace, copy)])
+        source_note = external_analogue_note(trace)
+        if source_note:
+            text += "\n\n" + source_note
     return text + "\n\n" + ADVISORY
 
 
@@ -232,7 +302,7 @@ def build_app(*, memory_store=None, abuse_gate=None):
         return (*view, updated, choices)
 
     with gr.Blocks(title="CRA2 · Change risk advisor", analytics_enabled=False) as demo:
-        gr.Markdown("# Change risk advisor\n**Advisory only · Synthetic evidence · A human makes the decision.**")
+        gr.Markdown("# Change risk advisor\n**Advisory only · Sample history and external analogues · A human makes the decision.**")
         session_id = gr.State(value=lambda: uuid4().hex)
         trace_history = gr.State(value=[])
         admin_unlocked = gr.State(value=False)
@@ -241,6 +311,8 @@ def build_app(*, memory_store=None, abuse_gate=None):
             with gr.Tab("Change Risk Advisor"):
                 with gr.Column() as conversation:
                     mode = gr.Radio(["Local evidence only", "Groq assessment"], value="Local evidence only", label="Review mode")
+            with gr.Tab("Evidence sources"):
+                gr.Markdown(evidence_sources(), elem_id="evidence-sources")
             with gr.Tab("Admin"):
                 gr.Markdown("## Admin\nSession trace history and execution details.")
                 admin_status = gr.Markdown(visible=False, elem_id="admin-status")

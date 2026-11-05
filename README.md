@@ -24,6 +24,12 @@ the user for public distribution and Groq context. Calibration scores measure
 calibration, not production accuracy. See the
 [code review](docs/evidence/code-review.md) for scope and findings.
 
+The chat also retrieves 13 curated [public corporate evidence records](docs/public-evidence.md)
+from nine companies. These retain their original service identities as external
+analogues. Browse the **Evidence sources** tab; rebuild the local index after
+adding or correcting records. The collection includes a staging change plan
+whose outcome is unverified, and does not establish failure probabilities.
+
 ## Run it
 
 CRA2 is a local chat app. You need Python 3.13 and
