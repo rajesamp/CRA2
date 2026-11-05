@@ -357,7 +357,16 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                     def bounded_review(_payload, weights):
                         execution.check()
                         execution.review_started.set()
-                        return projected_review(bounded_provider(deepcopy(fresh), weights), fresh)
+                        try:
+                            received = bounded_provider(deepcopy(fresh), weights)
+                        except system2.System2Unavailable as failure:
+                            safe = projected_review({"out": {"comments": []}, "cache_hit": False,
+                                "request_attempted": failure.request_attempted, "tokens": failure.tokens,
+                                "groq_ms": failure.groq_ms}, fresh)
+                            raise system2.System2Unavailable("Provider unavailable",
+                                request_attempted=safe["request_attempted"], tokens=safe["tokens"],
+                                groq_ms=safe["groq_ms"]) from None
+                        return projected_review(received, fresh)
                     return await anyio.to_thread.run_sync(partial(compose, deepcopy(prepared),
                         assessment_review=bounded_review), abandon_on_cancel=True)
                 result = await execution.invoke("assess", assess_action)

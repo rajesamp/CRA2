@@ -62,3 +62,6 @@ identical experimental action order across modes, no provider calls for local
 requests, strict citation/floor preservation and isolation between requests.
 P3 genuine multi-step comparisons, tokenizer/provider cost measurements and
 separately authorized paid calls remain outstanding; no efficiency claims.
+
+Review refinement: typed metadata checks apply both to returned reviews and to
+provider failure accounting, so exception metadata is not a raw trace channel.

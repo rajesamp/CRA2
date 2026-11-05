@@ -328,6 +328,20 @@ def test_provider_failure_preserves_attempt_usage_and_never_retries(memory_store
     assert "private-provider-failure" not in answer + json.dumps(trace)
 
 
+@pytest.mark.parametrize("field", ["tokens", "request_attempted", "groq_ms"])
+def test_malformed_provider_failure_accounting_cannot_enter_trace(field, memory_store):
+    collaborators = Collaborators()
+    def failed(_payload, _weights):
+        accounting = {"request_attempted": True, "tokens": [100, 7], "groq_ms": 3}
+        accounting[field] = {"owner": "private-failure-accounting-canary"}
+        raise system2.System2Unavailable("private-error", **accounting)
+    options = collaborators.options(memory_store)
+    options["reviewer"] = failed
+    answer, trace = workflow.respond(CHANGE, mode="Groq assessment", context_mode="sac", **options)
+    stopped(answer, trace)
+    assert "private-" not in answer + json.dumps(trace) + json.dumps(collaborators.events)
+
+
 def test_builtin_provider_receives_remaining_deadline_and_output_ceiling(memory_store, monkeypatch):
     collaborators = Collaborators()
     dispatched = []
