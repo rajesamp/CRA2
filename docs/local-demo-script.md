@@ -46,3 +46,14 @@ command. The timing is a script budget, not claimed rehearsal performance.
   as recorded evidence and label the live demonstration unavailable. Do not
   imitate a successful live query. No backup video is claimed or required by
   this selected local scope; original upstream task 34 still lists it separately.
+
+## Subsequent LangSmith trace showcase — 2026-11-05
+
+The timed local rehearsals above describe the earlier Admin/PIN UI. The current
+trace entry point is **LangSmith** beside Change Risk Advisor. Configure the
+private key using [the current setup guide](../week2/LANGSMITH.md). After a local
+change question, select its original turn/mode and open the private LangSmith
+trace. Show memory recall, retrieval source IDs, actual MCP operations, NeMo
+checks and cache reuse. Session metrics stay collapsed in the same tab.
+No PIN is needed in CRA2; LangSmith sign-in controls its private trace view.
+This change does not turn the historical rehearsal times into new measurements.

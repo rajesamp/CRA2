@@ -12,6 +12,7 @@ def test_memory_write_callback_and_distinct_session_recall(tmp_path):
     answer, summary, trace = app.ui_reply(
         "Remember that checkout-service is always high-risk for our team.", [], "Local evidence only", a, memory_store=store)
     assert trace["status"] == "memory_saved" and trace["session_id"] == a
+    assert trace["langsmith"]["status"] == "not_configured"
     answer, summary, trace = app.ui_reply("What services depend on checkout-service?", [], "Local evidence only", b, memory_store=store)
     assert trace["session_id"] == b and trace["memory"]["status"] == "recalled"
     assert "Remembered high-risk flag: **true**" in summary
@@ -23,11 +24,11 @@ def test_projection_does_not_export_arbitrary_state():
     assert app.project_trace({"status": "ok", "raw_sdk": object(), "prompt": "private", "environment": "secret"}) == {"status": "ok"}
 
 
-def test_build_has_collapsed_operational_trace_and_no_team_selector(tmp_path):
+def test_build_has_langsmith_trace_view_and_no_team_selector(tmp_path):
     demo = app.build_app(memory_store=MemoryStore(tmp_path / "memory.sqlite3"))
     components = demo.config["components"]
-    accordion = next(c for c in components if c["type"] == "accordion" and c["props"].get("label") == "Agent trace")
-    assert accordion["props"]["open"] is False
+    assert any(c["props"].get("elem_id") == "langsmith-trace" for c in components)
+    assert not any(c["type"] == "json" and c["props"].get("visible", True) for c in components)
     assert not any(c["props"].get("label") in {"Team", "Database path"} for c in components)
     assert any(c["type"] == "state" for c in components)
     assert demo.analytics_enabled is False

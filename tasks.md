@@ -206,6 +206,21 @@ recorded. Synthetic data limits and advisory boundaries remain explicit.
 Private learner notes for tasks 16–18 are updated and ignored. Week 1 human
 acceptance and Weeks 3–4 are not inferred from this engineering completion.
 
+## Weeks 3–4 mentor planning — 2026-10-27
+
+The owner requested a plan and estimates before implementation for NeMo
+Guardrails, evaluations, caching TTL/invalidation, and log/MCP sizing. The
+prepared [intent](intent/week3-week4/intent.md),
+[design and measured sizing](intent/week3-week4/spec.md), and
+[task 19–34 implementation plan](intent/week3-week4/plan.md) are review drafts.
+All sixteen current tool/service combinations and one real local RAG/MCP
+workflow supplied the bounded payload-size measurements. No new provider
+request, dependency installation or runtime change was performed.
+
+**This planning addition establishes no completion of tasks 19–34.**
+The proposed next implementation slice is task 19's requirement-mapped
+guardrail checklist; later tasks require their named acceptance evidence.
+
 ## Weeks 3–4 sequential local plan — 2026-10-31
 
 The owner requested an end-to-end plan with one task completed at a time and
@@ -258,3 +273,19 @@ Local/synthetic checks do not establish independent human-labeled or live-model
 quality, current production state or production authentication. Week 1 human
 acceptance remains separate. Private learner notes for all tasks 19–34 exist
 and remain ignored; no owner audit records were deleted or published.
+
+## LangSmith trace showcase verified — 2026-11-05
+
+The owner requested LangSmith in place of the browser Admin/PIN trace layer,
+approved the explicit execution-fact export to their configured workspace,
+and requested safe GitHub publication. Original per-turn/mode links and local
+session metrics now live in the LangSmith tab. Browser exports exclude raw
+question/answer text, prompts, passages, saved notes, identity, credentials and
+owner audit; Slack/CLI/evaluation stay local.
+
+[Integration evidence](docs/evidence/langsmith-traces.md) records **289** passing
+Week 2–4 tests, including 20 LangSmith cases, and real cloud readback with memory
+recalled, three source IDs, two MCP calls and three NeMo checks. The real browser
+private link is verified. No Groq call or public trace share was made. See
+[setup and export boundaries](week2/LANGSMITH.md). Private learning notes remain
+ignored; unrelated local documentation changes are outside this publication.

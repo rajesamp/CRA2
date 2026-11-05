@@ -9,7 +9,7 @@ def admin_navigation(question):
     """A whole navigation question, never an appended action on private data."""
     return isinstance(question, str) and bool(re.fullmatch(
         r"\s*(?:how (?:do i |can i |to )?(?:open|find|use|unlock)|where (?:is|can i find)) "
-        r"(?:the )?admin(?: (?:tab|panel))?\s*[?.!]?\s*", question, re.IGNORECASE))
+        r"(?:the )?(?:admin|langsmith|traces?)(?: (?:tab|panel))?\s*[?.!]?\s*", question, re.IGNORECASE))
 
 
 def help_topic(question, decision, services):
@@ -31,7 +31,7 @@ def help_topic(question, decision, services):
         return "security"
     if re.search(r"\blocal evidence\b|\bgroq\b|\breview modes?\b", text) or (app and re.search(r"\b(?:llm|model)\b", text)):
         return "modes"
-    if re.search(r"\bagent trace\b|\btrace history\b|\b(?:earlier|previous|trace) turns?\b|\badmin(?: panel| tab)?\b", text):
+    if re.search(r"\bagent trace\b|\btrace history\b|\blangsmith\b|\b(?:earlier|previous|trace) turns?\b|\badmin(?: panel| tab)?\b", text):
         return "trace"
     if (app or re.match(r"\s*(?:does|do|can|how|what)\b", text)) and re.search(r"\b(?:memory|preferences?|remember)\b|\b(?:save|restore)\b.*\b(?:chat|conversations?)\b|\b(?:chat|conversation) history\b", text):
         if re.search(r"\b(?:how|commands?|syntax)\b", text) and re.search(r"\b(?:save|store|remember|forget|remove)\b", text):

@@ -32,6 +32,8 @@ def forbidden(*_args, **_kwargs):
     ("How does agent trace work?", "trace"),
     ("How do I open the Admin panel?", "trace"),
     ("Where is the Admin tab?", "trace"),
+    ("How do I open LangSmith?", "trace"),
+    ("Where is the LangSmith tab?", "trace"),
     ("What are the limitations of this app?", "limits"),
     ("Can this app approve changes?", "limits"),
     ("How does this app use MCP?", "tools"),
@@ -56,12 +58,13 @@ def test_known_services_come_from_current_catalog(monkeypatch):
     assert "checkout-service" not in answer
 
 
-def test_trace_help_explains_admin_demo_gate_and_history():
+def test_trace_help_explains_langsmith_and_retained_cloud_history():
     answer, trace = workflow.respond("How does agent trace work?", retriever=forbidden,
                                     reviewer=forbidden, tool_runner=forbidden)
     assert trace["topic"] == "trace"
-    assert "Admin" in answer and "four digits" in answer and "not owner authentication" in answer
+    assert "LangSmith" in answer and "PIN panel has been replaced" in answer
     assert "50" in answer and "Retry" in answer and "undo" in answer
+    assert "excluded" in answer and "retention" in answer
 
 
 def test_capability_count_and_current_week2_features():

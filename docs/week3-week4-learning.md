@@ -49,3 +49,11 @@ not general accuracy, freshness or capacity guarantees.
 Use the [demo script](local-demo-script.md) to connect these choices in a live
 walkthrough. Hosting, backup video and prior Week 1 human acceptance remain
 separate from the selected local engineering scope.
+
+## Subsequent tracing integration — 2026-11-05
+
+The current app replaces the Admin/PIN trace layer with private LangSmith turn
+links and preserves the local session dashboard. Follow
+[LangSmith setup and export boundaries](../week2/LANGSMITH.md) and
+[recorded integration evidence](evidence/langsmith-traces.md). The Week 3–4
+records above remain the historical local implementation/learning sequence.

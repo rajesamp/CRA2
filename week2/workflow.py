@@ -8,6 +8,7 @@ import re
 import html
 import unicodedata
 import inspect
+from datetime import datetime, timezone
 from time import perf_counter
 from pathlib import Path
 from string import Formatter
@@ -32,6 +33,8 @@ from week3.guardrails import LocalRails, RailUnavailable
 from week3.support import coverage, approval_request, advisory_question
 from week3.cache import identity, CacheToolError
 from week4.telemetry import TelemetryUnavailable, TRANSPORTS
+from week4.langsmith_tracing import EXPORTER, credentials as tracing_credentials
+from cra2.secrets import reject_credentials
 
 COPY = Path(__file__).with_name("responses.json")
 HOST_TEAM = chat.TEAM_SETTINGS["team"]
@@ -147,13 +150,15 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
     def timed(name,node):
         async def wrapped(state):
             began=perf_counter();outcome="error"
+            started_at = datetime.now(timezone.utc).isoformat()
             try:
                 result=node(state)
                 if inspect.isawaitable(result):result=await result
                 outcome="completed"
                 return result
             finally:
-                spans.append({"stage":name,"outcome":outcome,"duration_ms":round((perf_counter()-began)*1000,3)})
+                spans.append({"stage":name,"outcome":outcome,"duration_ms":round((perf_counter()-began)*1000,3),
+                              "started_at":started_at,"ended_at":datetime.now(timezone.utc).isoformat()})
         return wrapped
 
     def policy_settings():
@@ -177,11 +182,15 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
         return retrieve(query,path,**options)
 
     async def rail_check(stage, payload):
+        started_at = datetime.now(timezone.utc).isoformat()
         try:
             if not await rails.check(stage, payload):
                 return _answer(copy["guardrail_blocked"], "guardrail_blocked")
         except Exception:
             return _answer(copy["guardrail_failure"], "guardrails_unavailable")
+        finally:
+            if rails.events and rails.events[-1].get("stage") == stage:
+                rails.events[-1].update(started_at=started_at, ended_at=datetime.now(timezone.utc).isoformat())
         return None
 
     async def classify(state):
@@ -335,11 +344,13 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                 )
                 responses.guard(payload)
                 began = perf_counter()
+                started_at = datetime.now(timezone.utc).isoformat()
                 try:
                     result = review(payload, weights)
                 finally:
                     spans.append({"stage":"reviewer","outcome":"invoked_provider_adapter" if reviewer is None else "invoked_offline_adapter",
-                        "duration_ms":round((perf_counter()-began)*1000,3)})
+                        "duration_ms":round((perf_counter()-began)*1000,3),
+                        "started_at":started_at,"ended_at":datetime.now(timezone.utc).isoformat()})
                 responses.guard(result)
                 # The unchanged Week 1 adapter owns historical-citation checks.
                 # Validate combined citations here, then project the historical
@@ -469,12 +480,14 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
     return builder.compile()
 
 
-async def arespond(question, history=None, mode="Local evidence only", *, session_id=None, telemetry_store=None, transport="cli", **collaborators):
+async def arespond(question, history=None, mode="Local evidence only", *, session_id=None, telemetry_store=None, transport="cli", trace_exporter=None, **collaborators):
     """Only final guarded answer and trace leave this boundary; no raw state."""
     request_id = uuid4().hex
     began=perf_counter();spans=[]
+    started_at = datetime.now(timezone.utc).isoformat()
     try:
         if transport not in TRANSPORTS:raise ValueError("invalid_transport")
+        reject_credentials([question, history, mode], additional=tracing_credentials())
         responses.guard([question, history, mode])
         if history is not None and (not isinstance(history, list) or len(history) > 100):
             raise ValueError("Invalid history")
@@ -484,9 +497,9 @@ async def arespond(question, history=None, mode="Local evidence only", *, sessio
             and re.search(r"\b(?:from|to)\s+\d|\b(?:add|remove|replace|rotate|enable|disable)\b", routing.active_request(question))
             and approval_request(question))
         effective_question = advisory_question(question) if approval else question
-        graph = build_workflow(**collaborators,spans=spans)
-        # Environment-enabled LangSmith tracing must not upload raw state.
+        # Automatic tracing must never upload raw state, including rail setup.
         with tracing_context(enabled=False):
+            graph = build_workflow(**collaborators,spans=spans)
             result = await graph.ainvoke({"question": effective_question, "history": history or [], "mode": mode},
                                         config={"recursion_limit": 10, "callbacks": []})
         trace = result["trace"]
@@ -500,6 +513,8 @@ async def arespond(question, history=None, mode="Local evidence only", *, sessio
         trace.setdefault("memory", {"status": "not_accessed"})
         trace.update(request_id=request_id, session_id=session_id or uuid4().hex, orchestration="langgraph")
         trace["transport"]=transport
+        trace["turn"] = 1 + sum(1 for item in (history or []) if isinstance(item, dict) and item.get("role") == "user")
+        trace["review_mode"] = mode
         trace["duration_ms"]=round((perf_counter()-began)*1000,3)
         trace["spans"]=spans+[
             {"stage":"rail_"+e["stage"],"duration_ms":e["duration_ms"],"outcome":e["outcome"]} for e in trace.get("rails",[])]+[
@@ -515,6 +530,11 @@ async def arespond(question, history=None, mode="Local evidence only", *, sessio
                 trace.update(status="telemetry_unavailable",telemetry_status="unavailable")
                 trace.pop("assessment",None)
         responses.guard([result["answer"], trace])
+        trace.update(started_at=started_at, ended_at=datetime.now(timezone.utc).isoformat())
+        try:
+            trace["langsmith"] = (trace_exporter or EXPORTER).submit(trace)
+        except Exception:
+            trace["langsmith"] = {"status": "unavailable"}
         return result["answer"], trace
     except Exception:
         # Failure text is deliberately static even if a catalog/graph is corrupt.

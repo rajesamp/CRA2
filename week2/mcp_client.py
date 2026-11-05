@@ -4,6 +4,7 @@ import math
 import os
 import subprocess
 import sys
+from datetime import datetime, timezone
 from time import perf_counter
 from pathlib import Path
 
@@ -90,6 +91,7 @@ async def call_tools(calls, *, timeout=12.0):
                     for name, arguments in calls:
                         await _inventory(session)
                         began = perf_counter()
+                        started_at = datetime.now(timezone.utc).isoformat()
                         attempted += 1
                         reply = await session.call_tool(name, arguments)
                         result = _decode(reply, name, arguments["service_name"])
@@ -98,7 +100,8 @@ async def call_tools(calls, *, timeout=12.0):
                         outputs[name] = result
                         events.append({"event": "tool_result", "transport": "mcp-stdio",
                                        "tool": name, "input": arguments, "output": result,
-                                       "duration_ms": round((perf_counter()-began)*1000,3)})
+                                       "duration_ms": round((perf_counter()-began)*1000,3),
+                                       "started_at": started_at, "ended_at": datetime.now(timezone.utc).isoformat()})
         return {"status": "ok", "outputs": outputs, "events": events,
                 "metrics": {"attempted": attempted, "failed": failed, "status": "measured"}}
     except ContractError as error:

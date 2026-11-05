@@ -55,7 +55,7 @@ def test_benign_out_of_scope_is_collected_without_blocking(tmp_path):
     assert gate.remaining("client-a")[0] == 0
 
 
-@pytest.mark.parametrize("question", ["How do I open the Admin panel?", "Where is the Admin tab?"])
+@pytest.mark.parametrize("question", ["How do I open the Admin panel?", "Where is the Admin tab?", "How do I open LangSmith?", "Where is the LangSmith tab?"])
 def test_public_admin_navigation_is_in_contract_despite_semantic_false_positive(tmp_path, question):
     from week2.owner_audit import OwnerAuditStore
     classifier = Classifier(attack=True)

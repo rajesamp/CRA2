@@ -275,3 +275,13 @@ with 30 trials per condition; it is not a production SLA.
 Public deployment and a backup video are outside the selected local scope and
 remain pending under original upstream task 34. Prior Week 1 team agreement,
 independent teammate fresh-clone acceptance and sharing also remain separate.
+
+## LangSmith trace showcase — 2026-11-05
+
+The current browser app uses a **LangSmith** tab with private per-turn links
+in place of the former Admin/PIN trace panel. Session metrics remain available.
+See [account/key setup and export boundaries](week2/LANGSMITH.md) and
+[verification evidence](docs/evidence/langsmith-traces.md). Local evidence only
+stays the default. Optional exports contain reviewed execution facts; raw
+questions, answers, prompts, passages, saved notes and owner audit are excluded.
+Real keys belong only in private ignored configuration.

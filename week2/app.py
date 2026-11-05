@@ -22,6 +22,7 @@ from week2.presentation import review_summary
 from week3.cache import WorkflowCaches
 from week4.telemetry import TelemetryStore
 from week4.dashboard import dashboard_view
+from week4.langsmith_tracing import EXPORTER, Settings, safe_url
 
 HOST_CACHES = WorkflowCaches()
 
@@ -34,6 +35,7 @@ TRACE_FIELDS = (
     "support", "approval_declined",
     "cache",
     "spans", "duration_ms", "transport", "mcp", "telemetry_status",
+    "langsmith",
 )
 EMPTY_TRACE = "Run a query to inspect its supporting evidence and execution details."
 MAX_TRACES = 50
@@ -163,27 +165,35 @@ def select_trace(turn, traces):
     return trace_summary(trace), trace, trace.get("response_details", ""), gr.update(label=label, open=True)
 
 
-def admin_trace_view(turn, traces, unlocked):
-    """Only project server-held snapshots after the session's demo gate opens."""
-    if unlocked is not True:
-        return ("Admin is locked.", {}, "", gr.update(label="Agent trace", open=False),
-                gr.update(choices=[], value=None, interactive=False))
-    return (*select_trace(turn, traces),
-            gr.update(choices=trace_choices(traces), value=turn, interactive=True))
-
-
-def unlock_admin(pin, traces):
-    """Any four ASCII digits: an explicitly chosen demo gate, not authentication."""
-    unlocked = isinstance(pin, str) and len(pin) == 4 and pin.isascii() and pin.isdecimal()
-    status = gr.update(value="" if unlocked else "Enter exactly four digits to open the demo panel.", visible=not unlocked)
-    turn = traces[-1]["turn"] if unlocked and traces else None
-    return (unlocked, gr.update(value=""), status, gr.update(visible=not unlocked),
-            gr.update(visible=unlocked), *admin_trace_view(turn, traces, unlocked))
-
-
-def lock_admin():
-    return (False, gr.update(value=""), gr.update(value="", visible=False), gr.update(visible=True),
-            gr.update(visible=False), *admin_trace_view(None, [], False))
+def langsmith_view(turn=None, traces=None):
+    """Only links and protected upload status reach the browser, never trace data."""
+    trace = next((t for t in (traces or []) if t.get("turn") == turn), None)
+    status = EXPORTER.status(trace) if trace else {"status": "not_configured"}
+    if trace is None:
+        try:
+            if Settings.read() is not None:
+                status = {"status": "ready"}
+        except ValueError:
+            status = {"status": "unavailable"}
+    messages = {
+        "not_configured": "LangSmith setup is required. Follow the local **week2/LANGSMITH.md** guide, then restart CRA2.",
+        "ready": "Tracing is configured. Ask a question to create a trace.",
+        "queued": "Uploading this turn to LangSmith…",
+        "resolving_link": "Trace submitted to LangSmith. Resolving its private link…",
+        "submitted": "Trace submitted to LangSmith. Sign in to your LangSmith workspace to view it.",
+        "unavailable": "Trace upload is unavailable. Check the local LangSmith configuration. Your assessment is unaffected.",
+        "queue_full": "Trace upload was skipped because the upload queue is full. Your assessment is unaffected.",
+        "expired": "Local upload status has expired. Open LangSmith to find this conversation's traces.",
+    }
+    text = messages.get(status.get("status"), "No LangSmith trace is available for this turn.")
+    if trace:
+        mode = trace.get("review_mode") if trace.get("review_mode") in {"Local evidence only", "Groq assessment"} else "Unavailable"
+        text = f"**Turn #{int(trace['turn'])} · {mode}**\n\n" + text
+    url = safe_url(status.get("url"))
+    if url:
+        text += f"\n\n[Open this trace in LangSmith]({url})"
+    text += "\n\n[Open LangSmith](https://smith.langchain.com) · Execution facts only; question text, prompts and private notes are excluded."
+    return text, gr.update(active=status.get("status") in {"queued", "resolving_link"})
 
 
 def protected_reply(history, mode, session_id, *, transport="browser"):
@@ -233,14 +243,13 @@ def build_app(*, memory_store=None, abuse_gate=None):
     store = MemoryStore() if memory_store is None else memory_store
     gate = AbuseGate() if abuse_gate is None else abuse_gate
 
-    def reply(message, history, mode, session_id, traces, admin_unlocked, request: gr.Request):
+    def reply(message, history, mode, session_id, traces, request: gr.Request):
         client = request_client(request)
         answer, _, trace = guarded_ui_reply(message, history, mode, session_id, gate=gate, client=client, memory_store=store)
         updated = retain_trace(traces, trace)
-        summary, details, supporting, panel, choices = admin_trace_view(trace["turn"], updated, admin_unlocked)
-        # Keep the panel's current open/closed state on a new answer.
-        panel.pop("open", None)
-        return answer, summary, details, supporting, panel, updated, choices, *cooldown_view(gate, client), cache_badge(trace), dashboard_view(updated,admin_unlocked)
+        display, poll = langsmith_view(trace["turn"], updated)
+        choices = gr.update(choices=trace_choices(updated), value=trace["turn"], interactive=True)
+        return answer, display, updated, choices, *cooldown_view(gate, client), cache_badge(trace), dashboard_view(updated,True), poll
 
     def cooldown(request: gr.Request):
         try:
@@ -248,67 +257,56 @@ def build_app(*, memory_store=None, abuse_gate=None):
         except (ValueError, AttributeError):
             return gr.update(value="Security check unavailable.", visible=True), gr.update(visible=False), gr.update(active=False)
 
-    def reset_trace(admin_unlocked):
-        *view, choices = admin_trace_view(None, [], admin_unlocked)
-        return (*view, [], choices, "**Last request cache:** no lookup yet", "")
+    def reset_trace():
+        display, poll = langsmith_view()
+        return display, [], gr.update(choices=[], value=None, interactive=False), "**Last request cache:** no lookup yet", "", poll, uuid4().hex
 
-    def undo_trace(traces, admin_unlocked):
+    def undo_trace(traces):
         updated = traces[:-1]
         turn = updated[-1]["turn"] if updated else None
-        *view, choices = admin_trace_view(turn, updated, admin_unlocked)
-        return (*view, updated, choices, cache_badge(updated[-1]) if updated else "**Last request cache:** no lookup yet",dashboard_view(updated,admin_unlocked))
+        display, poll = langsmith_view(turn, updated)
+        choices = gr.update(choices=trace_choices(updated), value=turn, interactive=bool(updated))
+        return display, updated, choices, cache_badge(updated[-1]) if updated else "**Last request cache:** no lookup yet", dashboard_view(updated,True), poll
 
     with gr.Blocks(title="CRA2 · Change risk advisor", analytics_enabled=False) as demo:
         gr.Markdown("# Change risk advisor\n**Advisory only · Synthetic evidence · A human makes the decision.**")
         session_id = gr.State(value=lambda: uuid4().hex)
         trace_history = gr.State(value=[])
-        admin_unlocked = gr.State(value=False)
         timer = gr.Timer(value=.5, active=False)
+        trace_timer = gr.Timer(value=2, active=False)
         with gr.Tabs() as app_tabs:
             with gr.Tab("Change Risk Advisor"):
                 with gr.Column() as conversation:
                     mode = gr.Radio(["Local evidence only", "Groq assessment"], value="Local evidence only", label="Review mode")
-            with gr.Tab("Admin",id="admin"):
-                gr.Markdown("## Admin\nSession trace history and execution details.")
-                admin_status = gr.Markdown(visible=False, elem_id="admin-status")
-                with gr.Group() as login_controls:
-                    pin = gr.Textbox(label="Demo PIN", type="password", placeholder="Enter any four digits", max_lines=1)
-                    unlock = gr.Button("Unlock Admin", variant="primary")
-                with gr.Group(visible=False, elem_id="admin-trace-controls") as admin_controls:
-                    lock = gr.Button("Lock Admin")
-                    turn_selector = gr.Dropdown(label="Agent trace history", choices=[], value=None,
-                        interactive=False, allow_custom_value=False, elem_id="agent-trace-turns",
-                        info="Select a turn from this chat. The latest 50 are kept until you clear or refresh.")
-                    with gr.Accordion("Agent trace", open=False, elem_id="agent-trace") as trace_panel:
-                        summary = gr.Markdown(EMPTY_TRACE, elem_id="agent-trace-summary")
-                        with gr.Accordion("Evidence and policy details", open=False):
-                            supporting = gr.Markdown(elem_id="agent-supporting-details")
-                        details = gr.JSON(value={}, label="Execution details", elem_id="agent-trace-details", max_height=240)
+            with gr.Tab("LangSmith",id="langsmith"):
+                gr.Markdown("## LangSmith traces")
+                turn_selector = gr.Dropdown(label="Trace turn", choices=[], value=None,
+                    interactive=False, allow_custom_value=False, elem_id="agent-trace-turns",
+                    info="Select a turn to open its LangSmith trace. Uploads require local configuration.")
+                trace_display = gr.Markdown(langsmith_view()[0], elem_id="langsmith-trace")
+                trace_refresh = gr.Button("Refresh trace status")
+                with gr.Accordion("Session metrics", open=False):
                     dashboard_refresh = gr.Button("Refresh run dashboard")
-                    dashboard = gr.Markdown("Run a query, then refresh this session's dashboard.",elem_id="run-dashboard")
+                    dashboard = gr.Markdown("Run a query to view this session's metrics.",elem_id="run-dashboard")
         with conversation:
             cache_status = gr.Markdown("**Last request cache:** no lookup yet", elem_id="cache-status")
             notice = gr.HTML(visible=False, elem_id="security-notice")
             with gr.Group(elem_id="chat-controls") as controls:
                 chatbot = gr.Chatbot(label="CRA2 conversation", height=490, elem_id="agent-chat")
-                gr.ChatInterface(reply, chatbot=chatbot, additional_inputs=[mode, session_id, trace_history, admin_unlocked],
-                    additional_outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector, notice, controls, timer, cache_status, dashboard], save_history=False, cache_examples=False,
+                gr.ChatInterface(reply, chatbot=chatbot, additional_inputs=[mode, session_id, trace_history],
+                    additional_outputs=[trace_display, trace_history, turn_selector, notice, controls, timer, cache_status, dashboard, trace_timer], save_history=False, cache_examples=False,
                     flagging_mode="never", api_visibility="private", api_name="ui_response",
                     description="Name the service and describe the proposed change. Never enter credentials.",
                     analytics_enabled=False)
-            chatbot.clear(reset_trace, inputs=[admin_unlocked], outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector, cache_status, dashboard], queue=False, api_visibility="private")
-            chatbot.undo(undo_trace, inputs=[trace_history, admin_unlocked], outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector, cache_status, dashboard], queue=False, api_visibility="private")
-            gr.Markdown("Ask **What is this app?**, **What services do you support?**, or **How do I get started?** Supporting evidence is available in **Admin → Agent trace**.")
+            chatbot.clear(reset_trace, outputs=[trace_display, trace_history, turn_selector, cache_status, dashboard, trace_timer, session_id], queue=False, api_visibility="private")
+            chatbot.undo(undo_trace, inputs=[trace_history], outputs=[trace_display, trace_history, turn_selector, cache_status, dashboard, trace_timer], queue=False, api_visibility="private")
+            gr.Markdown("Ask **What is this app?**, **What services do you support?**, or **How do I get started?** View execution traces in the **LangSmith** tab.")
             gr.Markdown("Out-of-scope questions and flagged requests are recorded privately for app-owner review.")
-            open_dashboard = gr.Button("Open run dashboard")
-        open_dashboard.click(lambda: gr.Tabs(selected="admin"),outputs=app_tabs,queue=False,api_visibility="private")
-        dashboard_refresh.click(dashboard_view,inputs=[trace_history,admin_unlocked],outputs=dashboard,queue=False,api_visibility="private")
-        trace_outputs = [summary, details, supporting, trace_panel, turn_selector]
-        admin_outputs = [admin_unlocked, pin, admin_status, login_controls, admin_controls, *trace_outputs]
-        unlock.click(unlock_admin, inputs=[pin, trace_history], outputs=admin_outputs, queue=False, api_visibility="private")
-        pin.submit(unlock_admin, inputs=[pin, trace_history], outputs=admin_outputs, queue=False, api_visibility="private")
-        lock.click(lock_admin, outputs=admin_outputs, queue=False, api_visibility="private").then(lambda:"",outputs=dashboard,queue=False,api_visibility="private")
-        turn_selector.input(admin_trace_view, inputs=[turn_selector, trace_history, admin_unlocked], outputs=trace_outputs, queue=False, api_visibility="private")
+            open_dashboard = gr.Button("View traces and metrics")
+        open_dashboard.click(lambda: gr.Tabs(selected="langsmith"),outputs=app_tabs,queue=False,api_visibility="private")
+        dashboard_refresh.click(lambda traces: dashboard_view(traces, True),inputs=[trace_history],outputs=dashboard,queue=False,api_visibility="private")
+        for event in (trace_refresh.click, turn_selector.input, trace_timer.tick):
+            event(langsmith_view, inputs=[turn_selector, trace_history], outputs=[trace_display, trace_timer], queue=False, api_visibility="private")
         timer.tick(cooldown, outputs=[notice, controls, timer], queue=False, api_visibility="private")
         demo.load(cooldown, outputs=[notice, controls, timer], queue=False, api_visibility="private")
     return demo
