@@ -1,6 +1,9 @@
 """Real Bolt dispatch with fake Slack delivery; no live Slack or Groq calls."""
 
 import json
+import hashlib
+from pathlib import Path
+import re
 import time
 from types import SimpleNamespace
 
@@ -267,7 +270,8 @@ def test_real_engine_answers_help_locally_and_isolates_user_sessions(tmp_path, s
         assert trace["topic"] == "overview" and not trace["request_attempted"] and trace["turn"] == 1
 
 
-def test_selected_service_assessment_uses_real_retrieval_mcp_and_offline_groq(tmp_path, settings, monkeypatch):
+def assert_selected_service_assessment_uses_retrieval_mcp_and_offline_groq(tmp_path, settings, monkeypatch):
+    """Shared assertions for deterministic CI and the explicit real-model gate."""
     from cra2 import system2
     monkeypatch.delenv("CRA2_ENV_FILE", raising=False)
     monkeypatch.setattr(system2, "client", lambda: pytest.fail("Live Groq is forbidden"))
@@ -300,6 +304,62 @@ def test_selected_service_assessment_uses_real_retrieval_mcp_and_offline_groq(tm
     assert trace["review_mode"] == "Groq assessment" and trace["model"] == "offline-slack-fixture"
     assert not trace["request_attempted"] and trace["memory"]["record"]["high_risk"] is True
     assert len(trace["retrieved"]) == 3 and len([e for e in trace["events"] if e["event"] == "tool_result"]) == 2
+    return trace, calls[0]
+
+
+class OfflineSlackEncoder:
+    """Deterministic test vectors, never presented as BGE model evidence."""
+
+    fingerprint = "slack-ci-token-hash-v1"
+
+    def __init__(self):
+        self.passage_count = 0
+        self.queries = []
+
+    @staticmethod
+    def vector(text):
+        import numpy as np
+        from week1.retrieval import DIMENSIONS
+        vector = np.zeros(DIMENSIONS, dtype=np.float32)
+        for term in re.findall(r"[a-z0-9]+", text.lower()):
+            slot = int.from_bytes(hashlib.sha256(term.encode()).digest()[:4], "big") % (DIMENSIONS - 1)
+            vector[slot] += 1
+        vector[-1] = .1
+        return vector
+
+    def passage_embed(self, texts):
+        self.passage_count += len(texts)
+        return iter(self.vector(text) for text in texts)
+
+    def query_embed(self, query):
+        self.queries.append(query)
+        return iter([self.vector(query)])
+
+
+def test_selected_service_assessment_uses_real_retrieval_mcp_and_offline_groq(tmp_path, settings, monkeypatch):
+    """Exercise actual corpus/index/search/MCP; only encoder/provider are doubles."""
+    from week1 import retrieval
+    encoder = OfflineSlackEncoder()
+    index = tmp_path / "slack-retrieval.sqlite3"
+    corpus = Path(__file__).resolve().parents[2] / "week1" / "corpus"
+    # __file__.parents[2] is week2's parent repository.
+    counts = retrieval.build_index(corpus, index, encoder=encoder)
+    assert counts["chunks"] == encoder.passage_count >= counts["documents"] > 0
+
+    def no_local_model():
+        pytest.fail("Offline Slack integration must not depend on cached model weights")
+
+    monkeypatch.setattr(retrieval, "_default_encoder", no_local_model)
+    # Change only resource selection; execute the real source/provenance checks,
+    # SQLite loading, service filtering, vector ranking and citation payloads.
+    monkeypatch.setattr(workflow.chat, "search", lambda query, _path, **options:
+                        retrieval.search(query, index, encoder=encoder, **options))
+    trace, payload = assert_selected_service_assessment_uses_retrieval_mcp_and_offline_groq(
+        tmp_path, settings, monkeypatch)
+    assert len(encoder.queries) == 1 and "checkout-service" in encoder.queries[0]
+    assert all(hit["service"] in (None, "checkout-service")
+               for hit in payload["incidents"] + payload["documents"])
+    assert {hit["chunk_id"] for hit in trace["retrieved"]} <= set(payload["evidence_keys"])
 
 
 def test_slack_tokens_are_withheld_before_agent_and_audit(tmp_path, settings, monkeypatch):
