@@ -2,8 +2,8 @@
 
 Date: 2026-11-05. Scope: P2 of [issue #19](https://github.com/rajesamp/CRA2/issues/19).
 Branch: `feat/sac-action-loop`, stacked on P0/P1 draft PR #20.
-Runtime implementation: `3066d62`; CI and explicit integration gates: `35e658a`.
-Documentation/evidence changes after these revisions do not change runtime code.
+Runtime implementation: `3066d62`; failure-metadata validation: `19c997a`;
+CI and explicit integration gates: `35e658a`.
 
 ## Delivered behavior
 
@@ -34,8 +34,8 @@ lockfile changes. No live Groq or Slack call was made.
 | --- | --- |
 | Root offline tests | 502 passed, 4 live cases deselected; 6.69 s |
 | Week 1 tests (locked Week 2 environment) | 494 passed; 8.32 s |
-| Final full Week 2 offline suite | 450 passed; 54.01 s |
-| New default-suite cases | 107 added across context, execution, lifecycle, presentation, dispatch and baseline isolation |
+| Final full Week 2 offline suite | 453 passed; 53.70 s |
+| New default-suite cases | 110 added across context, execution, lifecycle, presentation, dispatch and baseline isolation |
 | Explicit real-encoder Slack integration | 1 passed; 16.76 s |
 | Explicit real-source P2 combinations | 6 passed; 24.29 s |
 | Fast evaluation | 20 cases × 5 repeats = 100 assessments; minimum/mean 10/10 |
@@ -60,7 +60,7 @@ found observer byte totals that omitted the replacement assessment input; tests
 now compare event totals with prepared provider message-content bytes.
 
 Additional regressions cover exact freshly sent policy/evidence allow-lists,
-malformed usage/identity/timing metadata, cross-service/source tampering, budget
+malformed success/failure usage/identity/timing metadata, cross-service/source tampering, budget
 exhaustion, unsupported actions, concurrent reused graphs, frozen policy sources,
 and poisoned tool-event metadata. No raw provider result can become state or
 untyped public telemetry. The first full run found an environment-setting leak in
