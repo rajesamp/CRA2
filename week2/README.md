@@ -210,3 +210,24 @@ offline tests are labeled separately from actual protocol and local-index runs.
 [Task 16 readback](../docs/evidence/week2-task-16.md) ·
 [Task 17 recall](../docs/evidence/week2-task-17.md) ·
 [Task 18 browser proof](../docs/evidence/week2-task-18.md).
+
+## Experimental SAC foundation (issue #19)
+
+P0/P1 add opt-in, in-process action measurements and standalone validated
+semantic state with a deterministic reducer. The default workflow is unchanged;
+SAC/threshold execution modes and fresh per-action model contexts are not yet
+integrated. Policy, original evidence and action ledgers remain host-owned,
+outside compact state. The reducer cannot approve a change or execute a tool.
+
+Read [the SAC ADR](../docs/adr-sac.md) before integrating the state/reducer. To
+reproduce the offline observer-parity baseline, choose a new output filename:
+
+```sh
+uv run --locked --offline --project week2 python scripts/benchmark_sac.py \
+  --repeat 5 --out /tmp/cra2-sac-baseline.json
+```
+
+This uses fixed retrieval and in-process read-only tools, makes no provider
+requests and measures no token/cost savings. [Evidence and remaining
+work](../docs/evidence/sac-benchmark.md) distinguish the P0/P1 foundation from the
+future three-mode experiment.
