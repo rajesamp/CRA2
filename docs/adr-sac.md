@@ -1,6 +1,6 @@
 # ADR: validated semantic state before Single-Action Compaction
 
-Status: experimental P0/P1 foundation; P2 execution integration deferred.
+Status: experimental P0/P1 foundation with opt-in bounded P2 execution.
 Issue: [#19](https://github.com/rajesamp/CRA2/issues/19).
 Date: 2026-11-05.
 
@@ -12,11 +12,12 @@ evidence path does not call a model. Compacting this graph alone cannot establis
 model-context, cost, quality or latency benefits from Single-Action Compaction
 (SAC).
 
-First introduce an independently validated, bounded execution-state contract and
-a pure deterministic reducer. Measure the current graph through optional local
-observation. Keep the new reducer standalone until a later change supplies
-explicit action boundaries and fresh per-action model inputs. Do not add a
-`CRA2_CONTEXT_MODE` selector until those execution modes actually exist.
+P0/P1 introduced an independently validated, bounded execution-state contract,
+a pure deterministic reducer, and optional local observation. P2 connects that
+foundation to explicit action boundaries and fresh per-action inputs. The
+`CRA2_CONTEXT_MODE` selector is opt-in; an absent setting preserves the existing
+workflow. Explicit `full` is the experimental control, while an absent setting
+retains legacy full behavior without adding a new payload or splitting tool calls.
 
 The public CLI, Gradio, Slack and workflow defaults continue to use the existing
 execution path. Team preference storage and its policy precedence are unchanged;
@@ -95,8 +96,9 @@ result or explicitly restart from original validated records.
 ## Safety contracts
 
 Existing citation allow-lists, the configured medium-risk floor and human-only
-change decisions remain owned by the current assessment workflow. P1 does not
-replace those checks. Reference provenance must remain consistent with the
+change decisions remain owned by the current assessment workflow. P2 reuses
+those checks and independently checks citations against the exact freshly sent
+allow-list before composition. Reference provenance must remain consistent with the
 original service and evidence source. A synthetic health snapshot never becomes
 verified production health; unknown freshness and active incidents remain
 unknown, and a reported freeze remains unconfirmed. Compact state cannot promote
@@ -160,12 +162,78 @@ policy into editable state was rejected because it confuses a reference with
 authority. Discarding original evidence/audit records was rejected because
 compaction must preserve independent verification and recovery.
 
-P2 must integrate a feature-flagged per-action host, fresh context construction,
-externally resolved references, cancellation/deadlines, strict step budgets and
-terminal conditions. P3 must compare full, threshold and SAC modes on identical
+P2 now integrates the bounded host described below. P3 must compare full,
+threshold and SAC modes on identical
 genuine multi-step workloads, add integration/adversarial recovery tests, and
 measure provider usage, peak context, compaction overhead, failures and decision
 quality. Paid live-provider runs require separate explicit authorization. P4
 documentation/publication must distinguish measured CRA2 results from research
 claims. No cost savings, quality parity or production reliability are claimed by
 this foundation.
+
+## P2 execution and compatibility
+
+Explicit `full`, `threshold`, and `sac` execute the same host-selected plan after
+existing classification and policy resolution. A local change executes retrieval,
+health and dependency actions; Groq mode adds one assessment. Tool-only queries
+execute only the selected tool. Each MCP action calls the existing validated
+read-only client separately. Help, clarification, preference commands and legacy
+history routes keep their established handling. No model selects actions, no
+extra provider attempt is added, and no retry follows failed compaction.
+
+The per-request coordinator is allocated inside the graph node, never in a shared
+compiled-graph closure. Its original evidence, authority and complete action ledger
+remain outside graph state/model context. Only guarded public results and a small
+numeric execution summary leave the node. Independent concurrent invocations do
+not share state. The graph still has no durable checkpoint store.
+
+`week2/context_builder.py` resolves source content and policy against the host
+registry, validates their digests/shapes/scopes and returns a new copy for each
+action. Full retains all validated action observation records; threshold clears
+that retained history whenever its encoded length crosses the threshold; SAC
+omits it. These observation records contain references rather than duplicate source
+text. All modes resolve the same evidence and policy. The model payload carries
+source passages once and excludes prior chat transcripts, preference notes, raw
+provider responses and owner records. This is a reference-history control for the
+current short workflow, not a claimed reproduction of a long transcript benchmark.
+
+Source labels and chunk references preserve real `#` anchors. Metadata records
+both the request service and original source service; general runbooks stay
+`source_service=null` and never become same-service incident evidence. Source text
+may contain ordinary newlines/tabs, while compact task identity retains P1's strict
+2,000-character/no-control bound. An experimental request outside that bound is
+refused without truncation; the absent-selector legacy path retains its existing
+4,000-character contract.
+
+Default `ExecutionOptions` limits are eight actions, 30 seconds, 32 KiB per
+prepared context, 128 KiB total prepared input, an 8 KiB threshold and 1,024 output
+tokens. Configured provider timeout/output limits can only be reduced by these
+host ceilings. Input limits are UTF-8 byte limits, not claimed tokenizer counts.
+For assessment the byte charge covers the serialized user payload plus system
+prompt using provider serialization. HTTP framing, response-schema envelope and
+SDK overhead are not included. Non-model action contexts are prepared host inputs,
+not provider requests; their aggregate is not provider usage or cost.
+
+Step, byte, deadline, malformed-source and cancellation failures prevent later
+actions and return a protected unavailable response without a risk indication.
+Synchronous retrieval/assessment run in workers; only the coordinator can commit
+state. A stopped worker cannot start a model request after local cancellation:
+checks occur before reviewer entry and immediately before SDK dispatch, after
+client setup, where remaining timeout is recalculated. An already-dispatched
+read-only request may still finish; its late result is discarded. Cancellation
+does not claim remote revocation. Unknown request usage remains unknown.
+
+`execution` trace projection contains closed mode/status labels and bounded
+numeric metrics, with tokenizer counts explicitly null. Raw state, evidence
+registry, action history and callbacks are not exported through this projection.
+Gradio's existing admin trace shows mode, action count, state bytes and compactions;
+the regular chat stays unchanged. Slack inherits host mode selection through the
+same guarded workflow and still cannot change preferences.
+
+Week 2 CI now runs the full offline suite on Python 3.10 and 3.13. The standard
+Slack integration builds the actual SQLite corpus index with an injected encoder;
+the original real-encoder assertions are retained as a separate explicit local
+gate that fails when model artifacts are absent. See
+[the coverage boundary](../week2/integration/README.md) and
+[P2 evidence](evidence/sac-p2.md). Genuine multi-model workloads, effectiveness,
+tokenizer/cost accounting and authorized live comparisons remain P3 work.

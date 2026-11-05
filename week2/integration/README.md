@@ -20,7 +20,7 @@ gate using the same assessment assertions:
 
 ```sh
 TMPDIR=/tmp uv run --locked --offline --project week2 python -m pytest \
-  week2/integration/test_slack_model.py -q
+  week2/integration -q
 ```
 
 This gate verifies checksums of the provisioned model, loads actual FastEmbed/BGE
@@ -29,6 +29,13 @@ path. It never downloads a model, never calls Groq or Slack, and **fails** if
 weights are missing or invalid. There is no automatic skip. The `/tmp` setting
 keeps local test stores inside CRA2's existing permitted temporary-storage root
 on macOS as well as Linux.
+
+`test_execution_model.py` additionally covers all three explicit context modes
+with both local and injected-reviewer assessments (six cases). It uses the actual
+encoder, a fresh corpus index and default MCP subprocess client. Assertions retain
+original chunk IDs, global source scope, synthetic/unknown tool provenance, policy
+floors, exact action counts and context/trace separation. The injected reviewer
+does not provide evidence of real model quality, token usage or cost.
 
 Model provisioning remains a separate explicit setup step described in
 `week2/README.md`; model weights and indexes remain ignored local artifacts.
