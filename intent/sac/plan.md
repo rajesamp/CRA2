@@ -10,7 +10,8 @@ Scope: P0/P1 of issue #19, authorized in the implementation request.
 - `week2/contracts.py`: host context, provenance and transition validation.
 - `week2/tests/test_semantic_state.py`, `test_compaction.py`, instrumentation and
   benchmark tests: meaningful positive, failure, replay and compatibility cases.
-- `docs/adr-sac.md`, `docs/evidence/sac-baseline.*`: design and measured evidence.
+- `docs/adr-sac.md`, `docs/evidence/sac-baseline.json`,
+  `docs/evidence/sac-benchmark.md`: design and measured evidence.
 - `week2/README.md`: contributor entry point and scope limits.
 
 ## Order of work
@@ -33,3 +34,10 @@ Reducer tests check stable replay, immutability, service/policy/provenance bindi
 malformed/oversized state, unsupported references and credential rejection.
 Run root offline tests, Week 2 tests, and five-repeat fast evaluation; preserve
 existing expectations. Live calls and P2/P3 comparisons remain outstanding.
+
+## Review refinements
+Independent review added policy-namespace exclusion from historical evidence,
+matching digests within each tool result, recognized same-service policy refs,
+and actual loaded-input digests in benchmark metadata. Reduction requires exactly
+one new host ledger entry to prevent stale-state replay. These tighten the planned
+authority/provenance and reproducibility checks without extending P0/P1 scope.
