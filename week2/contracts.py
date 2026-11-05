@@ -156,19 +156,22 @@ def validate_semantic_context(context):
     Raw evidence, policies and full audit records remain outside compact state.
     """
     from week2.semantic_state import (
-        ACTIONS, DIGEST, IDENTIFIER, MAX_ACTIONS, canonical_json, references,
+        ACTIONS, DIGEST, IDENTIFIER, EVIDENCE_IDENTIFIER, MAX_ACTIONS, canonical_json, references,
     )
     record = obj({
-        "id": IDENTIFIER, "service": NAME,
+        "id": EVIDENCE_IDENTIFIER, "service": NAME,
         "origin": {"enum": list(ACTIONS[:-1])},
         "kind": {"enum": ["historical", "synthetic_snapshot"]},
-        "source_id": IDENTIFIER, "content_digest": DIGEST,
+        "source_id": {"type": "string", "minLength": 1, "maxLength": 500}, "content_digest": DIGEST,
     })
+    # Optional for P1 compatibility; P2 records the original global/source scope
+    # separately from the request service to avoid relabeling general documents.
+    record["properties"]["source_service"] = {"anyOf": [NAME, {"type": "null"}]}
     plan_item = obj({"id": IDENTIFIER, "action": {"enum": list(ACTIONS)}})
     result = obj({
         "id": IDENTIFIER, "action": {"enum": list(ACTIONS)}, "service": NAME,
         "status": {"enum": ["ok", "error"]},
-        "evidence_ids": references(), "unresolved_question_ids": references(),
+        "evidence_ids": references(evidence=True), "unresolved_question_ids": references(),
     })
     schema = obj({
         "change_id": IDENTIFIER,
@@ -208,6 +211,8 @@ def validate_semantic_context(context):
         questions = {item["id"] for item in context["questions"]}
         for item in evidence.values():
             if item["service"] != context["service"]:
+                raise ValueError
+            if item.get("source_service", context["service"]) not in (None, context["service"]):
                 raise ValueError
             if item["origin"] == "retrieve":
                 if item["kind"] != "historical":

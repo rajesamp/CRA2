@@ -1,6 +1,7 @@
 """Bounded public change facts and review checks, separate from diagnostics."""
 
 import re
+import math
 from decimal import Decimal
 
 from cra2.advisor import _inline
@@ -12,6 +13,25 @@ TIME_PAIR = re.compile(r"\bfrom\s+(" + NUMBER + r")\s*(" + UNIT
                        + r")\s+to\s+(" + NUMBER + r")\s*(" + UNIT + r")\b")
 RETRY_PAIR = re.compile(r"\bfrom\s+(\d{1,6})\s+to\s+(\d{1,6})(?![\d.])\b")
 DIAGNOSTIC = re.compile(r"(?:catalog|graph|memory):|:chunk-|\b(?:week[12]|cra2)/|/Users/|/tmp/", re.I)
+
+
+def project_execution(value):
+    """Allow only fixed labels and numeric metrics into the visible trace."""
+    if (not isinstance(value, dict) or value.get("mode") not in ("full", "threshold", "sac")
+            or value.get("status") not in ("running", "completed", "stopped")):
+        return {}
+    projected = {key: value[key] for key in ("mode", "status")}
+    for key in ("action_count", "completed_actions", "model_action_count", "state_bytes",
+                "input_context_bytes", "peak_context_bytes", "compaction_count", "max_output_tokens"):
+        number = value.get(key)
+        if type(number) is int and 0 <= number <= 1048576:
+            projected[key] = number
+    number = value.get("reduction_ms")
+    if type(number) in (int, float) and math.isfinite(number) and number >= 0:
+        projected["reduction_ms"] = number
+    # P2 measures bytes, not tokenizer counts. Never guess from byte length.
+    projected["context_tokens"] = None
+    return projected
 
 
 def _seconds(number, unit):

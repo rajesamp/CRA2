@@ -4,6 +4,15 @@ from copy import deepcopy
 import json
 
 from scripts import benchmark_sac
+import pytest
+
+
+def test_baseline_refuses_experiment_environment_before_any_work(monkeypatch):
+    monkeypatch.setenv("CRA2_CONTEXT_MODE", "sac")
+    monkeypatch.setattr(benchmark_sac.workflow, "respond",
+                        lambda *_a, **_k: pytest.fail("Mode mismatch must fail before work"))
+    with pytest.raises(ValueError, match="Unset CRA2_CONTEXT_MODE"):
+        benchmark_sac.run_benchmark(repeat=1)
 
 
 def test_offline_baseline_pairs_are_repeatable_and_usage_is_not_invented(monkeypatch):

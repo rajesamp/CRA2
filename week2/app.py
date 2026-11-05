@@ -18,7 +18,7 @@ from week2.memory import MemoryStore
 from week2.workflow import load_copy, respond
 from week2.abuse import AbuseGate
 from week2.owner_audit import OwnerAuditStore
-from week2.presentation import review_summary
+from week2.presentation import review_summary, project_execution
 
 TRACE_FIELDS = (
     "status", "request_id", "session_id", "orchestration", "memory", "events",
@@ -32,6 +32,8 @@ MAX_TRACES = 50
 
 def project_trace(trace):
     result = {key: trace[key] for key in TRACE_FIELDS if key in trace}
+    if "execution" in trace:
+        result["execution"] = project_execution(trace["execution"])
     guard(result)
     return result
 
@@ -44,6 +46,13 @@ def trace_summary(trace):
         lines.append(f"Review mode: **{trace['review_mode']}**")
     if "question" in trace:
         lines.append("Question: " + _inline(trace["question"]))
+    execution = project_execution(trace.get("execution"))
+    if execution:
+        lines.append(f"Context mode: **{execution['mode']}** · {execution['status']}")
+        lines.append(f"Actions: {execution.get('action_count', 0)} · "
+                     f"Model actions: {execution.get('model_action_count', 0)} · "
+                     f"State bytes: {execution.get('state_bytes', 0)} · "
+                     f"Compactions: {execution.get('compaction_count', 0)}")
     memory = trace.get("memory", {})
     lines.append("\n### Team preferences")
     lines.append(f"Memory: **{memory.get('status', 'not_accessed')}**")
@@ -277,7 +286,11 @@ def main():
     parser.add_argument("--port", type=int, default=7862)
     parser.add_argument("--memory-file", type=Path, help="Trusted host configuration; must be inside CRA2 or /tmp")
     parser.add_argument("--audit-file", type=Path, help="Trusted owner-only audit path inside CRA2 or /tmp")
+    parser.add_argument("--context-mode", choices=("full", "threshold", "sac"),
+                        help="Opt into bounded context execution; omitted preserves existing behavior")
     args = parser.parse_args()
+    if args.context_mode is not None:
+        os.environ["CRA2_CONTEXT_MODE"] = args.context_mode
     # Direct loopback app: forwarded headers must not spoof cooldown identity.
     os.environ["FORWARDED_ALLOW_IPS"] = ""
     store = MemoryStore() if args.memory_file is None else MemoryStore(args.memory_file)

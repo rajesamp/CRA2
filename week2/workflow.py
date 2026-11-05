@@ -7,6 +7,9 @@ durable conversation checkpoints, autonomous loop, or raw-state streaming.
 import re
 import html
 import unicodedata
+from copy import deepcopy
+from functools import partial
+from time import monotonic
 from pathlib import Path
 from string import Formatter
 from typing import TypedDict
@@ -25,6 +28,8 @@ from week2.memory import MemoryStore, MemoryUnavailable
 from week2.preferences import parse_command, effective_policy
 from week2.help import capability_lines, help_answer, help_topic
 from week2.instrumentation import observe_node, observe_reviewer
+from week2.execution import ActionExecution, ExecutionOptions, selected_mode, projected_review
+from week2.context_builder import content_digest
 
 COPY = Path(__file__).with_name("responses.json")
 PARAMETERS = {
@@ -120,7 +125,8 @@ def _context_service(question, history):
     return None
 
 
-def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_path=chat.INDEX, memory_store=None, observer=None):
+def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_path=chat.INDEX, memory_store=None, observer=None,
+                   context_mode=None, execution_options=None, cancel_event=None):
     """Dependencies are runtime collaborators, never serialized graph state."""
     retrieve = retriever or chat.search
     review = observe_reviewer(reviewer or provider.assess, observer,
@@ -129,6 +135,11 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
     copy = load_copy()
     catalog = responses.load()
     store = MemoryStore() if memory_store is None else memory_store
+    experiment_mode = selected_mode(context_mode)
+    if execution_options is not None:
+        if not isinstance(execution_options, ExecutionOptions):
+            raise ContractError("invalid_execution_options")
+        execution_options.validate()
 
     def classify(state):
         question, mode, history = state["question"], state["mode"], state["history"]
@@ -188,7 +199,10 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
             record = store.read(state["service"])
             policy = effective_policy(state["service"], record, team_settings=chat.TEAM_SETTINGS)
             responses.guard([record, policy])
-            return {"memory_record": record, "policy": policy, "route": state["next_route"]}
+            route = state["next_route"]
+            if experiment_mode is not None and route in {"retrieve", "tools"}:
+                route = "experiment"
+            return {"memory_record": record, "policy": policy, "route": route}
         except MemoryUnavailable:
             result = _answer(copy["memory_unavailable"], "memory_unavailable")
             result["trace"]["memory"] = {"status": "unavailable"}
@@ -230,7 +244,7 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                 validate_result(name, arguments["service_name"], bundle["outputs"][name])
         return {"tools": bundle}
 
-    def compose(state):
+    def compose(state, *, assessment_review=None):
         bundle = state["tools"]
         outputs = bundle["outputs"]
         if bundle["status"] != "ok" or any(r["status"] != "ok" for r in outputs.values()):
@@ -255,7 +269,7 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                     "freeze applicability is unconfirmed. Configured team policy wins."
                 )
                 responses.guard(payload)
-                result = review(payload, weights)
+                result = (assessment_review or review)(payload, weights)
                 responses.guard(result)
                 # The unchanged Week 1 adapter owns historical-citation checks.
                 # Validate combined citations here, then project the historical
@@ -311,6 +325,72 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
         trace.update(events=bundle["events"], source_scope="Historical evidence and MCP synthetic snapshots; current state unverified")
         return {"answer": answer.strip(), "trace": trace}
 
+    async def experiment(state):
+        # Allocated inside the node: reusing/concurrently invoking a compiled
+        # graph cannot share evidence, execution state or cancellation outcomes.
+        execution = None
+        try:
+            actions = (["retrieve"] if state["next_route"] == "retrieve" else [])
+            actions += [name for name, _arguments in state["calls"]]
+            if state["next_route"] == "retrieve" and state["mode"] == "Groq assessment":
+                actions.append("assess")
+            execution = ActionExecution(state["question"], state["service"], state["policy"], actions,
+                mode=experiment_mode, options=execution_options, cancel_event=cancel_event, observer=observer)
+            prepared = await execution.collect(state, retrieve, run_tools, index_path)
+            # History only resolves the request service in classification. The
+            # experimental model input is reconstructed from the bound request.
+            prepared["history"] = [{"role": "user", "content": state["service"]}]
+            if execution.state["next_action"] == "assess" and prepared.get("hits"):
+                async def assess_action(context, charged):
+                    fresh = execution.review_payload({"source_scope": (
+                        "Historical corpus and actual MCP calls to synthetic snapshots. "
+                        "Observation time, freshness and active incidents are unknown; "
+                        "freeze applicability is unconfirmed. Configured team policy wins.")}, context)
+                    # Charge serialized user payload + configured system prompt,
+                    # not only the compact envelope. HTTP/schema overhead is not
+                    # counted; bytes are never represented as tokenizer counts.
+                    execution.charge(fresh, replace_bytes=charged, provider_prompt=provider.PROMPT)
+                    bounded_provider = review if reviewer is not None else observe_reviewer(
+                        partial(provider.assess, timeout=max(.001, execution.deadline - monotonic()),
+                                max_tokens=execution.options.max_output_tokens,
+                                before_request=execution.before_request), observer, source="groq")
+                    def bounded_review(_payload, weights):
+                        execution.check()
+                        execution.review_started.set()
+                        return projected_review(bounded_provider(deepcopy(fresh), weights), fresh)
+                    return await anyio.to_thread.run_sync(partial(compose, deepcopy(prepared),
+                        assessment_review=bounded_review), abandon_on_cancel=True)
+                result = await execution.invoke("assess", assess_action)
+                if result["trace"]["status"] == "assessed":
+                    comments = result["trace"]["assessment"]["review_questions"]
+                    refs = sorted({ref for comment in comments for ref in comment["evidence"]}
+                                  & set(execution.state["evidence_ids"]))
+                    questions = {content_digest(comment): comment for comment in comments}
+                    execution.commit("assess", evidence_ids=refs, questions=[
+                        {"id": "question-" + key[:24], "content_digest": key} for key in sorted(questions)])
+                    execution.status = "completed"
+                else:
+                    execution.status = "stopped"
+            else:
+                # No provider is allowed for local/tool-only/no-evidence paths.
+                def forbidden_review(*_args):
+                    raise ContractError("unexpected_model_action")
+                result = await execution._bounded(lambda: anyio.to_thread.run_sync(
+                    partial(compose, deepcopy(prepared), assessment_review=forbidden_review),
+                    abandon_on_cancel=True))
+                execution.status = "completed" if execution.state["next_action"] is None else "stopped"
+            execution.check()
+            result["trace"]["execution"] = execution.summary()
+            return result
+        except Exception:
+            result = _answer("The experimental request could not be completed. No risk indication is assigned.", "unavailable")
+            if execution is not None:
+                result["trace"]["execution"] = execution.summary("stopped")
+                # A dispatched SDK operation may outlive local cancellation;
+                # unknown attempt/usage data is never reported as a proven zero.
+                result["trace"]["request_attempted"] = None if execution.review_started.is_set() else False
+            return result
+
     def output_guard(state):
         if "memory_record" in state:
             record, policy = state["memory_record"], state["policy"]
@@ -339,17 +419,19 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
         builder.add_node(name, observe_node(name, node, observer))
     builder.add_node("memory_read", observe_node("memory_read", memory_read, observer))
     builder.add_node("memory_write", observe_node("memory_write", memory_write, observer))
+    builder.add_node("experiment", observe_node("experiment", experiment, observer))
     builder.add_edge(START, "classify")
     builder.add_conditional_edges("classify", lambda s: s["route"],
                                   {"done": "output_guard", "legacy": "legacy", "memory_read": "memory_read", "memory_write": "memory_write"})
     builder.add_conditional_edges("memory_read", lambda s: s["route"],
-                                 {"done": "output_guard", "legacy": "legacy", "retrieve": "retrieve", "tools": "tools"})
+                                 {"done": "output_guard", "legacy": "legacy", "retrieve": "retrieve", "tools": "tools", "experiment": "experiment"})
     builder.add_edge("memory_write", "output_guard")
     builder.add_conditional_edges("retrieve", lambda s: s["route"],
                                   {"done": "output_guard", "tools": "tools"})
     builder.add_edge("legacy", "output_guard")
     builder.add_edge("tools", "compose")
     builder.add_edge("compose", "output_guard")
+    builder.add_edge("experiment", "output_guard")
     builder.add_edge("output_guard", END)
     return builder.compile()
 

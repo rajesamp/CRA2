@@ -194,15 +194,24 @@ def _comment_allowed(comment: dict, evidence: set[str]) -> bool:
     )
 
 
-def _request(payload: str, settings: dict, sdk, credentials) -> dict:
+def _request(payload: str, settings: dict, sdk, credentials, *, before_request=None) -> dict:
     failure = None
+    create = sdk.chat.completions.create
+    timeout = settings["timeout"]
+    if before_request is not None:
+        # Trusted host callback, never serialized into provider input. Keep this
+        # immediately at dispatch, after potentially slow client initialization.
+        remaining = before_request()
+        if type(remaining) not in (int, float) or not math.isfinite(remaining) or remaining <= 0:
+            raise ValueError("Invalid remaining request deadline")
+        timeout = min(timeout, remaining)
     try:
-        response = sdk.chat.completions.create(
+        response = create(
             model=settings["model"],
             temperature=settings["temperature"],
             seed=settings["seed"],
             max_completion_tokens=settings["max_tokens"],
-            timeout=settings["timeout"],
+            timeout=timeout,
             **settings["reasoning"],
             messages=[
                 {"role": "system", "content": settings["prompt"]},

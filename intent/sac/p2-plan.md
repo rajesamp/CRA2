@@ -29,6 +29,10 @@ contexts. Existing compose/citation/policy gates remain the final authority.
   service metadata, preserving global-document provenance.
 - `week2/app.py`: trusted CLI context selector and sanitized trace summary; the
   normal chat layout and default review mode remain unchanged.
+- `week1/provider.py`: optional trusted timeout/output-token ceilings that can
+  only tighten configured limits; the default provider call remains unchanged.
+- `cra2/system2.py`: optional host dispatch check immediately before the SDK
+  call, preventing late requests after cancellation or slow client setup.
 - `week2/tests/`: context/replay, boundaries, privacy, budgets, cancellation,
   failures, default parity and app/Slack integration.
 - `.github/workflows/week2.yml`: locked offline tests on Python 3.10 and 3.13.
@@ -37,6 +41,8 @@ contexts. Existing compose/citation/policy gates remain the final authority.
   encoder gate retaining the original end-to-end assertions.
 - `docs/adr-sac.md`, `week2/README.md`, `docs/evidence/sac-p2.md`: usage, trust,
   operational limits, actual verification and outstanding P3/P4 work.
+- `scripts/benchmark_sac.py`: fail before work if an experimental environment
+  setting would invalidate the legacy P0 baseline label.
 
 ## Budgets and failure behavior
 Use bounded step count, per-context UTF-8 bytes, total dispatched input-byte
