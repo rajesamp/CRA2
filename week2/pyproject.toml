@@ -15,6 +15,7 @@ dependencies = [
     "numpy>=2,<3",
     "gradio>=6,<7",
     "slack-bolt>=1,<2",
+    "nemoguardrails==0.24.1",
 ]
 
 [dependency-groups]

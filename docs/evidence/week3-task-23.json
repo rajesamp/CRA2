@@ -1,0 +1,1937 @@
+{
+  "query": "What services depend on payment-gateway?",
+  "mode": "Local evidence only",
+  "environment": {
+    "python": "3.13.15",
+    "system": "Darwin",
+    "machine": "x86_64"
+  },
+  "versions": {
+    "week2/workflow.py": "21f51797b41d1dc91a507cd3f725e27fb5bb4d335c28e3da654b229aa476f750",
+    "week3/cache.py": "8b26363504dc5a9c734d7e3bb67343de622c04d5fcf1b9902150a3ac260de486",
+    "week3/guardrails.py": "dacc9e7fcffe19d09273d66730b9c735434e604f1771038c9c3ce914ab151c7a",
+    "week2/uv.lock": "13d18a912f249a94741872121b3a32579ff3c0274a8bcec3cfea9afb35715999"
+  },
+  "method": "Interleaved disabled/empty/warm/expired trials; imports and initial request separate; no outliers removed.",
+  "module_import_ms": 1755.982,
+  "first_request": {
+    "elapsed_ms": 1004.274,
+    "request_id": "01ffb7fd836e4d469650f3e8c808fce8",
+    "actual_tool_results": 1,
+    "cache": [],
+    "provider_attempted": false
+  },
+  "excluded_warmups": {
+    "warm": {
+      "elapsed_ms": 1028.156,
+      "request_id": "9d6c1f8ed9a54bb997708a0e7df4f812",
+      "actual_tool_results": 1,
+      "cache": [
+        {
+          "outcome": "miss",
+          "stored": true,
+          "age_ms": 0,
+          "ttl_seconds": 300,
+          "layer": "tool",
+          "tool": "get_dependency_graph",
+          "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+        }
+      ],
+      "provider_attempted": false
+    },
+    "expired": {
+      "elapsed_ms": 936.218,
+      "request_id": "11d84d2849644e00b01f8274c63e651f",
+      "actual_tool_results": 1,
+      "cache": [
+        {
+          "outcome": "miss",
+          "stored": true,
+          "age_ms": 0,
+          "ttl_seconds": 5,
+          "layer": "tool",
+          "tool": "get_dependency_graph",
+          "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+        }
+      ],
+      "provider_attempted": false
+    }
+  },
+  "summary": {
+    "disabled": {
+      "n": 30,
+      "p50_ms": 906.635,
+      "p95_ms": 960.739,
+      "actual_tool_results": 30,
+      "hits": 0,
+      "eligible_lookups": 0
+    },
+    "enabled_empty": {
+      "n": 30,
+      "p50_ms": 905.448,
+      "p95_ms": 992.404,
+      "actual_tool_results": 30,
+      "hits": 0,
+      "eligible_lookups": 30
+    },
+    "warm": {
+      "n": 30,
+      "p50_ms": 167.889,
+      "p95_ms": 274.54,
+      "actual_tool_results": 0,
+      "hits": 30,
+      "eligible_lookups": 30
+    },
+    "expired": {
+      "n": 30,
+      "p50_ms": 906.688,
+      "p95_ms": 1040.65,
+      "actual_tool_results": 30,
+      "hits": 0,
+      "eligible_lookups": 30
+    }
+  },
+  "warm_p50_reduction_pct": 81.48,
+  "samples": {
+    "disabled": [
+      {
+        "elapsed_ms": 910.358,
+        "request_id": "0f66e0fc9dad451f885382adac6ae9f6",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 1
+      },
+      {
+        "elapsed_ms": 870.814,
+        "request_id": "db31a8a614294933ae40ba086ad3aa4c",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 2
+      },
+      {
+        "elapsed_ms": 896.429,
+        "request_id": "9efcfcd934944ff58e2447c9964b8bff",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 3
+      },
+      {
+        "elapsed_ms": 855.177,
+        "request_id": "880b1601dc004531bc14f1e4ad4c231d",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 4
+      },
+      {
+        "elapsed_ms": 948.596,
+        "request_id": "06821817dafb46d98eba26906d27d006",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 5
+      },
+      {
+        "elapsed_ms": 917.943,
+        "request_id": "49c4b3d384fd406c98d9417e6172815b",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 6
+      },
+      {
+        "elapsed_ms": 906.635,
+        "request_id": "ab5be49dec89491398665671a292fabf",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 7
+      },
+      {
+        "elapsed_ms": 910.299,
+        "request_id": "f82c010db8834fc38dc8294afa6909e4",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 8
+      },
+      {
+        "elapsed_ms": 952.515,
+        "request_id": "d77d6b0b6ced426282e654e6d69063f7",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 9
+      },
+      {
+        "elapsed_ms": 899.1,
+        "request_id": "30d308ab3f834c888e0bd0c1ae43c11e",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 10
+      },
+      {
+        "elapsed_ms": 952.559,
+        "request_id": "654bfa89e09c4ec096a7d9a44bcc1229",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 11
+      },
+      {
+        "elapsed_ms": 910.28,
+        "request_id": "27c554ecf8634b6ba14ff9b354a86eb3",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 12
+      },
+      {
+        "elapsed_ms": 960.739,
+        "request_id": "19fdee65f1a440a5a6266135c9e85e7e",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 13
+      },
+      {
+        "elapsed_ms": 893.803,
+        "request_id": "5361605e64f54be28141dbad4f1264ea",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 14
+      },
+      {
+        "elapsed_ms": 914.356,
+        "request_id": "d7722807b2d84e689deb4d6be9a6042a",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 15
+      },
+      {
+        "elapsed_ms": 910.341,
+        "request_id": "3f8f2c384d7543b7a23eb6a7edf04d20",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 16
+      },
+      {
+        "elapsed_ms": 960.632,
+        "request_id": "10df07f918674a94b4334aae86382f42",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 17
+      },
+      {
+        "elapsed_ms": 938.761,
+        "request_id": "f4e76d9d490f4ced822dd362d75f3406",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 18
+      },
+      {
+        "elapsed_ms": 876.114,
+        "request_id": "e0716cabbee24c37b1fea73ff3071b70",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 19
+      },
+      {
+        "elapsed_ms": 885.137,
+        "request_id": "ddc0bac3caed413fa6087c70f04ef71f",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 20
+      },
+      {
+        "elapsed_ms": 906.496,
+        "request_id": "df328506966d44b49194c90daea87e09",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 21
+      },
+      {
+        "elapsed_ms": 968.859,
+        "request_id": "f2e4deb17d27404fb8a8df7f70bc2563",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 22
+      },
+      {
+        "elapsed_ms": 856.097,
+        "request_id": "92e7d18d51af4f62a225f6b465a2ce4f",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 23
+      },
+      {
+        "elapsed_ms": 947.386,
+        "request_id": "19dd5d43980949e0856c760bbea8930a",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 24
+      },
+      {
+        "elapsed_ms": 863.286,
+        "request_id": "dcec877f4bd047f7a182c0ec89f1fdc8",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 25
+      },
+      {
+        "elapsed_ms": 851.447,
+        "request_id": "c76c97e8b1034dd5b835f70e1167d13a",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 26
+      },
+      {
+        "elapsed_ms": 889.002,
+        "request_id": "ea2eec8605b84d84b3c41f214c162bca",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 27
+      },
+      {
+        "elapsed_ms": 901.596,
+        "request_id": "ef6fb5a475ea493190e2cbbc4730b8df",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 28
+      },
+      {
+        "elapsed_ms": 864.993,
+        "request_id": "abc57f46c1b448df869c128e27a2a3fa",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 29
+      },
+      {
+        "elapsed_ms": 933.989,
+        "request_id": "433a951cd09848e38bc2140d378299a7",
+        "actual_tool_results": 1,
+        "cache": [],
+        "provider_attempted": false,
+        "trial": 30
+      }
+    ],
+    "enabled_empty": [
+      {
+        "elapsed_ms": 885.958,
+        "request_id": "d328085e19804c92a28a21214959c899",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 1
+      },
+      {
+        "elapsed_ms": 935.85,
+        "request_id": "fa63aaf72d894cc79eccb0b8f7f7125e",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 2
+      },
+      {
+        "elapsed_ms": 975.466,
+        "request_id": "b1af7d6ef02e4458a194b9f40a594d91",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 3
+      },
+      {
+        "elapsed_ms": 860.977,
+        "request_id": "483e8424068e40d986f3967fbbee283e",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 4
+      },
+      {
+        "elapsed_ms": 894.857,
+        "request_id": "04306d124d7d4d608c38a52998df40ee",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 5
+      },
+      {
+        "elapsed_ms": 954.993,
+        "request_id": "2d6485a562354b80b24e5db2ece43203",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 6
+      },
+      {
+        "elapsed_ms": 892.366,
+        "request_id": "1475c1ae9461436aa4923c3afa427c44",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 7
+      },
+      {
+        "elapsed_ms": 912.594,
+        "request_id": "2058c7a81eec4318af8e08be2809175a",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 8
+      },
+      {
+        "elapsed_ms": 965.862,
+        "request_id": "eb4e025ede5d4ae381bdd71154503805",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 9
+      },
+      {
+        "elapsed_ms": 1164.519,
+        "request_id": "85dd1b00def040699da9ad30a7cc0ef5",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 10
+      },
+      {
+        "elapsed_ms": 952.746,
+        "request_id": "2d3db7a0580d491ab6e756baf8d4c816",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 11
+      },
+      {
+        "elapsed_ms": 910.619,
+        "request_id": "7abf0dd375a94a3cb52a0d62434f6306",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 12
+      },
+      {
+        "elapsed_ms": 901.604,
+        "request_id": "fddbed825b484ca291c98a8cd8b177cd",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 13
+      },
+      {
+        "elapsed_ms": 982.83,
+        "request_id": "c2e2bd0c2a914aa89fea54dd70759c8c",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 14
+      },
+      {
+        "elapsed_ms": 901.19,
+        "request_id": "40b087933b384f28aa0f05b076a1852a",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 15
+      },
+      {
+        "elapsed_ms": 904.469,
+        "request_id": "c394f3b251fd44b9abfd29e83db40761",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 16
+      },
+      {
+        "elapsed_ms": 919.049,
+        "request_id": "86a9d31567264dfda46287618171e213",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 17
+      },
+      {
+        "elapsed_ms": 961.864,
+        "request_id": "4d535c7729664eceb4257dadc5031967",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 18
+      },
+      {
+        "elapsed_ms": 887.565,
+        "request_id": "312d54a62c7f493980dd06439b0160f5",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 19
+      },
+      {
+        "elapsed_ms": 879.317,
+        "request_id": "f2bf1612f639463191190a0b4874d775",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 20
+      },
+      {
+        "elapsed_ms": 950.387,
+        "request_id": "c4ec8e4852bb4afda516f77a6e39adb3",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 21
+      },
+      {
+        "elapsed_ms": 905.448,
+        "request_id": "90cf1d98c7304af7a20dd25ed19156c8",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 22
+      },
+      {
+        "elapsed_ms": 871.892,
+        "request_id": "6279ca9cf4eb4cad9025e0aedde7f7bd",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 23
+      },
+      {
+        "elapsed_ms": 861.44,
+        "request_id": "7d04b71f798b40cda76d2b5cb34cc9a6",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 24
+      },
+      {
+        "elapsed_ms": 947.369,
+        "request_id": "376f07722af24bb6b183f707401dc782",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 25
+      },
+      {
+        "elapsed_ms": 865.246,
+        "request_id": "930c75bade20423f9f51a703243355c5",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 26
+      },
+      {
+        "elapsed_ms": 848.997,
+        "request_id": "54e25eeef49843b9b8d9db5f1b45fb62",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 27
+      },
+      {
+        "elapsed_ms": 919.901,
+        "request_id": "d4ebfd6717044a28b444de4935042593",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 28
+      },
+      {
+        "elapsed_ms": 876.649,
+        "request_id": "2e48cc3879fe4527a3bfe333fe27210d",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 29
+      },
+      {
+        "elapsed_ms": 992.404,
+        "request_id": "680981b966534befb832844375fd40a3",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 30
+      }
+    ],
+    "warm": [
+      {
+        "elapsed_ms": 161.052,
+        "request_id": "09bf39664a114ad0bc107794388ae35b",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 2900.21,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 1
+      },
+      {
+        "elapsed_ms": 157.435,
+        "request_id": "695225fda35647bbb5ae002089ad3beb",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 5811.49,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 2
+      },
+      {
+        "elapsed_ms": 188.778,
+        "request_id": "7c8cb792660d4300887525a8997fba6e",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 8704.179,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 3
+      },
+      {
+        "elapsed_ms": 151.833,
+        "request_id": "a50821cd52184473923555bb165b1191",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 11616.12,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 4
+      },
+      {
+        "elapsed_ms": 164.411,
+        "request_id": "02bda672e13049c2ac34028d7bee73d3",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 14478.089,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 5
+      },
+      {
+        "elapsed_ms": 274.54,
+        "request_id": "ef435e275b714ee6b86348397294fabe",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 17498.267,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 6
+      },
+      {
+        "elapsed_ms": 168.699,
+        "request_id": "58e17238ec1a4a4885325bab76144f9e",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 20370.58,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 7
+      },
+      {
+        "elapsed_ms": 163.775,
+        "request_id": "f8a69ad3bdf540e69a93c35a539ba471",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 23329.295,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 8
+      },
+      {
+        "elapsed_ms": 181.148,
+        "request_id": "be5961a3f98d4bce9b53e3bf56106d6e",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 26349.306,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 9
+      },
+      {
+        "elapsed_ms": 189.73,
+        "request_id": "0cd945b4a9d9419fbd30e758d96cec02",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 29587.616,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 10
+      },
+      {
+        "elapsed_ms": 180.372,
+        "request_id": "c5fc8bdbfcf8425b9e46f5ad658aad95",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 32720.152,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 11
+      },
+      {
+        "elapsed_ms": 160.64,
+        "request_id": "5c0418b639e447c1889db090d3bd06f5",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 35720.77,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 12
+      },
+      {
+        "elapsed_ms": 167.115,
+        "request_id": "14bb06faf48041ebae21e5fe0fa1be72",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 38644.461,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 13
+      },
+      {
+        "elapsed_ms": 172.044,
+        "request_id": "101f522b27014676bc9f658f9cd239f5",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 41591.143,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 14
+      },
+      {
+        "elapsed_ms": 167.575,
+        "request_id": "a3e0487c43bf41f484e681ea8791c9a2",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 44495.564,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 15
+      },
+      {
+        "elapsed_ms": 167.613,
+        "request_id": "6e09ed8d3ee942a4bf91ad698987c422",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 47437.336,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 16
+      },
+      {
+        "elapsed_ms": 168.078,
+        "request_id": "820667d4b4ba473ea76c0d46f1fa6596",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 50395.911,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 17
+      },
+      {
+        "elapsed_ms": 180.016,
+        "request_id": "ac27a6061b8843cdbb9bc3c544c60dc5",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 53473.392,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 18
+      },
+      {
+        "elapsed_ms": 167.889,
+        "request_id": "ef911b7a6d0d4d3d978c95595103347a",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 56295.979,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 19
+      },
+      {
+        "elapsed_ms": 160.345,
+        "request_id": "b964cfbb9f54423aa6b2bda5e6b2a8d3",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 59258.139,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 20
+      },
+      {
+        "elapsed_ms": 170.943,
+        "request_id": "c5f9ce4d62b94adc8a87017a6f9c1da0",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 62138.812,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 21
+      },
+      {
+        "elapsed_ms": 186.941,
+        "request_id": "0eed281ec3084077830ae57800f3786b",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 65106.689,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 22
+      },
+      {
+        "elapsed_ms": 161.047,
+        "request_id": "e0f456c1734c4ffe8f74a1df85b030d3",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 67894.114,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 23
+      },
+      {
+        "elapsed_ms": 162.002,
+        "request_id": "d4273c287f8e4500b07a125e1b1bb590",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 70745.475,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 24
+      },
+      {
+        "elapsed_ms": 169.14,
+        "request_id": "8abbf000a6074975b734012670ee7603",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 73567.565,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 25
+      },
+      {
+        "elapsed_ms": 169.225,
+        "request_id": "b534a2a990cf47e99ea7e292a34f344f",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 76314.599,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 26
+      },
+      {
+        "elapsed_ms": 158.784,
+        "request_id": "e85bb613e0a14d2191d0ed1ad2f73f75",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 79153.948,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 27
+      },
+      {
+        "elapsed_ms": 166.938,
+        "request_id": "bddc49ec41574a4f8a2bfa818841c3f3",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 82013.525,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 28
+      },
+      {
+        "elapsed_ms": 181.596,
+        "request_id": "a280e93e0c684844bb9f07f660be95a0",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 84790.569,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 29
+      },
+      {
+        "elapsed_ms": 280.71,
+        "request_id": "bf733cf58f7348bf97a05e7fe42e3c04",
+        "actual_tool_results": 0,
+        "cache": [
+          {
+            "age_ms": 87957.668,
+            "ttl_seconds": 300,
+            "outcome": "hit",
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 30
+      }
+    ],
+    "expired": [
+      {
+        "elapsed_ms": 948.021,
+        "request_id": "87281bbfad8a40689f8a0b84c4194123",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 1
+      },
+      {
+        "elapsed_ms": 832.964,
+        "request_id": "b210b9156145482aa12d99002a4f6dab",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 2
+      },
+      {
+        "elapsed_ms": 1040.65,
+        "request_id": "e5bfbf51515a48b790ee88c0af383377",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 3
+      },
+      {
+        "elapsed_ms": 854.567,
+        "request_id": "fd9b20f4d82940dd93ee397a7af0ce5c",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 4
+      },
+      {
+        "elapsed_ms": 874.919,
+        "request_id": "e55169b75ac3411cb01789d96e59d551",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 5
+      },
+      {
+        "elapsed_ms": 906.627,
+        "request_id": "15b6b91c68bf4babae3cd980a1cae51e",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 6
+      },
+      {
+        "elapsed_ms": 967.623,
+        "request_id": "c43102b52ed2466480a1b3e60c856421",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 7
+      },
+      {
+        "elapsed_ms": 921.927,
+        "request_id": "5ba97425452d4fa9b7917176213c5659",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 8
+      },
+      {
+        "elapsed_ms": 985.765,
+        "request_id": "beab5dc73f8d4b9aa0fb4f5545d45d84",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 9
+      },
+      {
+        "elapsed_ms": 1045.694,
+        "request_id": "a8d0b61236b945668b26d9dc81df1585",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 10
+      },
+      {
+        "elapsed_ms": 1018.081,
+        "request_id": "16bb90bef7a4446ab88c039c6b37e6b6",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 11
+      },
+      {
+        "elapsed_ms": 893.228,
+        "request_id": "d934289fa69f4bdab9cb97cb3a00e2fa",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 12
+      },
+      {
+        "elapsed_ms": 899.257,
+        "request_id": "14e6e653e91b4b96a0660788e1620a72",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 13
+      },
+      {
+        "elapsed_ms": 920.374,
+        "request_id": "82fb954c708d4ca0be618ded52f374c2",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 14
+      },
+      {
+        "elapsed_ms": 959.035,
+        "request_id": "e2deb14e0ce64485aa2a1517d57e124a",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 15
+      },
+      {
+        "elapsed_ms": 910.405,
+        "request_id": "0c73820770bf49e1b5575aa8463a0b44",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 16
+      },
+      {
+        "elapsed_ms": 998.963,
+        "request_id": "65372b8e54034a168c3edce8a99f17ea",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 17
+      },
+      {
+        "elapsed_ms": 891.511,
+        "request_id": "3a9173790c9a4d129d0432364442605d",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 18
+      },
+      {
+        "elapsed_ms": 1034.413,
+        "request_id": "d2010520fc424a90a29c3ad31cf899a9",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 19
+      },
+      {
+        "elapsed_ms": 854.668,
+        "request_id": "ab998ecd13d641b48b4102e670ae5cd8",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 20
+      },
+      {
+        "elapsed_ms": 906.688,
+        "request_id": "74b831c737cb4974ac746a55c23b84ad",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 21
+      },
+      {
+        "elapsed_ms": 896.471,
+        "request_id": "f18e88bfd91e4ab1ac91eadebe76621f",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 22
+      },
+      {
+        "elapsed_ms": 879.511,
+        "request_id": "1f3b0a50adef4978b65d2ab919863448",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 23
+      },
+      {
+        "elapsed_ms": 843.13,
+        "request_id": "678878b269c64d29ada41b8c3172c984",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 24
+      },
+      {
+        "elapsed_ms": 863.241,
+        "request_id": "4eb3a879a52f4488abfb82a902d7ffb3",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 25
+      },
+      {
+        "elapsed_ms": 940.681,
+        "request_id": "03a2ede1727f47159113eeef43ebd676",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 26
+      },
+      {
+        "elapsed_ms": 871.611,
+        "request_id": "0284337880014be0a7f2f6583e2d6e9c",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 27
+      },
+      {
+        "elapsed_ms": 856.064,
+        "request_id": "25fe2da49b7f4e6998e2a261a1faa0f0",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 28
+      },
+      {
+        "elapsed_ms": 957.914,
+        "request_id": "7c763d42ff7748e7815c61e41c64cf0b",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 29
+      },
+      {
+        "elapsed_ms": 960.66,
+        "request_id": "26914a4dd0f74a57b5d3a27ead6421ab",
+        "actual_tool_results": 1,
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 5,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "febc83c829c208af2d03789846dc57f61d79a7b8b7441254fd25c9315baafc2b"
+          }
+        ],
+        "provider_attempted": false,
+        "trial": 30
+      }
+    ]
+  },
+  "provider_attempts": 0,
+  "completed_at_utc": "2026-10-31T20:35:06.020552+00:00"
+}

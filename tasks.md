@@ -205,3 +205,87 @@ recorded. Synthetic data limits and advisory boundaries remain explicit.
 
 Private learner notes for tasks 16–18 are updated and ignored. Week 1 human
 acceptance and Weeks 3–4 are not inferred from this engineering completion.
+
+## Weeks 3–4 mentor planning — 2026-10-27
+
+The owner requested a plan and estimates before implementation for NeMo
+Guardrails, evaluations, caching TTL/invalidation, and log/MCP sizing. The
+prepared [intent](intent/week3-week4/intent.md),
+[design and measured sizing](intent/week3-week4/spec.md), and
+[task 19–34 implementation plan](intent/week3-week4/plan.md) are review drafts.
+All sixteen current tool/service combinations and one real local RAG/MCP
+workflow supplied the bounded payload-size measurements. No new provider
+request, dependency installation or runtime change was performed.
+
+**This planning addition establishes no completion of tasks 19–34.**
+The proposed next implementation slice is task 19's requirement-mapped
+guardrail checklist; later tasks require their named acceptance evidence.
+
+## Weeks 3–4 sequential local plan — 2026-10-31
+
+The owner requested an end-to-end plan with one task completed at a time and
+selected **Local demo and complete evidence** as the final delivery scope.
+The [revised execution plan](intent/week3-week4/plan.md#sequential-local-execution-plan--2026-10-31)
+sets a Week 3 acceptance gate before Week 4, per-task verification/evidence and
+learner notes, and a final fresh-process local rehearsal. The associated
+[intent](intent/week3-week4/intent.md) and [specification](intent/week3-week4/spec.md)
+record scope and measurement criteria. The artifact chain remains under review;
+task 19 is the first implementation task after acceptance.
+
+Tasks 19–34 are not completed by this planning work. Local task-34 acceptance
+will be separate from the original upstream deployment and backup-video
+requirements, pending outside selected scope. No new runtime test, package
+installation, provider request, commit or deployment is claimed by this update.
+Week 1 human acceptance remains separate.
+
+## Week 3 local engineering complete — 2026-10-31
+
+The owner accepted the sequential plan and authorized progress with learning
+notes while in meetings. Tasks 19–25 now have local implementation/evidence:
+actual NeMo 0.24.1 custom actions; approval refusal with detailed-review
+continuation; bounded mechanism coverage; exact versioned caches; measured
+graph reuse; all six local intents; and real browser miss/hit/refusal proof.
+
+[Week 3 close-out](docs/evidence/week3-task-25.md) records 257 Week 2/3 tests,
+502 core tests (four live excluded), 494 unchanged Week 1 tests and 100/100
+fast calibration. Warm graph-query p50 was 906.635→167.889 ms (30 trials per
+condition, 81.48% lower); no provider request was made. These results do not
+establish general model quality or current production truth. Task 26 is next.
+Week 1 human acceptance and upstream task-34 deployment/video remain separate.
+
+## Weeks 3–4 selected local engineering verified — 2026-10-31
+
+The owner accepted sequential execution with learning updates. Week 3 tasks
+19–25 and Week 4 tasks 26–33 are locally implemented and verified. Task 34's
+selected local launch/rehearsal is verified; original upstream deployment/video
+items remain pending outside selected scope.
+
+[Final local close-out](docs/evidence/week4-task-34.md),
+[learning guide](docs/week3-week4-learning.md), and
+[demo script](docs/local-demo-script.md) provide the handoff. Final gates:
+277 integration tests; 502 core (four live excluded); 494 unchanged Week 1;
+100/100 fast calibration; 18/18 original local evaluation; separately corrected
+4/4 label validation; 9/9 faults. Timed browser walkthroughs were 137 and 122
+seconds; these do not include spoken narration. Zero provider requests.
+
+Original 16/18 baseline, 2/4 reserved report and label corrections are retained.
+Local/synthetic checks do not establish independent human-labeled or live-model
+quality, current production state or production authentication. Week 1 human
+acceptance remains separate. Private learner notes for all tasks 19–34 exist
+and remain ignored; no owner audit records were deleted or published.
+
+## LangSmith trace showcase verified — 2026-11-05
+
+The owner requested LangSmith in place of the browser Admin/PIN trace layer,
+approved the explicit execution-fact export to their configured workspace,
+and requested safe GitHub publication. Original per-turn/mode links and local
+session metrics now live in the LangSmith tab. Browser exports exclude raw
+question/answer text, prompts, passages, saved notes, identity, credentials and
+owner audit; Slack/CLI/evaluation stay local.
+
+[Integration evidence](docs/evidence/langsmith-traces.md) records **289** passing
+Week 2–4 tests, including 20 LangSmith cases, and real cloud readback with memory
+recalled, three source IDs, two MCP calls and three NeMo checks. The real browser
+private link is verified. No Groq call or public trace share was made. See
+[setup and export boundaries](week2/LANGSMITH.md). Private learning notes remain
+ignored; unrelated local documentation changes are outside this publication.

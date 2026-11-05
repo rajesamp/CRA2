@@ -1,0 +1,11 @@
+define flow cra contract input
+  $allowed = execute cra_validate
+  if not $allowed
+    bot refuse to respond
+    stop
+
+define flow cra contract output
+  $allowed = execute cra_validate
+  if not $allowed
+    bot refuse to respond
+    stop

@@ -1,0 +1,528 @@
+{
+  "started_at_utc": "2026-10-31T21:01:46.499549+00:00",
+  "completed_at_utc": "2026-10-31T21:01:51.279440+00:00",
+  "revision": "f30abdf5ed6c281b365af959a64dbbf1b0d64fde",
+  "versions": {
+    "week4/reserved-cases-v2.json": "34f181794c02233202f79a1018114fca0e0a6e17db1091b741f040b86a6bfa72",
+    "week4/evaluate.py": "27d8280e35c7e14d59395e36cbcb99b2db34dbfc2f857a9fbdba540ebb7ef54d",
+    "week2/workflow.py": "12382677bc1079e0f8382b71649c53cbfc34bf913b2e262d20ccc5337c9f3f93",
+    "week3/support.py": "9ae6724f870c094d70567c560168e4ad5725b416d6c07aa5ac9516bb9f8c5a57",
+    "week3/guardrails.py": "dacc9e7fcffe19d09273d66730b9c735434e604f1771038c9c3ce914ab151c7a",
+    "week3/cache.py": "4dc1ef3aa80afc391600f07f0bf25c9e376a9b9124b06863283e99af4bbce6f0",
+    "week2/uv.lock": "13d18a912f249a94741872121b3a32579ff3c0274a8bcec3cfea9afb35715999",
+    "index_and_corpus": "297db973dcd1e449ff7668d6dc0374944134594c528c98666a0d2041b84ecfe0",
+    "tool_source": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+    "team_policy": "b9cdbd5e3291a75f8b3965832e9fa8cd3a562a149a0085aef1969695f478b4db"
+  },
+  "split": "reserved",
+  "mode": "local contracts and offline provider-boundary probes",
+  "passed": 4,
+  "total": 4,
+  "provider_attempts": 0,
+  "label_basis": "Corrected reserved status labels against existing supported help/dataset routes; stronger explicit response-content gates. Original cases and 2/4 report retained. Same-author regression checks, not independent quality gold.",
+  "limits": "Case counts, not production/model quality. Scorer unchanged for before/after comparison.",
+  "cases": [
+    {
+      "id": "reserved-health",
+      "split": "reserved",
+      "category": "tool",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "no_provider_attempt": true,
+        "no_reviewer_invocation": true
+      },
+      "expected": [
+        "tool_evidence"
+      ],
+      "query": "Is order-service current health okay?",
+      "fixture": null,
+      "display": "**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded health for order-service: **Healthy**. Reported freeze status: **not_reported**. Active incidents: unknown. Evidence: catalog:order-service.status, catalog:order-service.freeze_window_active.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "tool_evidence",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "events": [
+          {
+            "event": "metadata_admitted",
+            "tools": [
+              "check_system_health",
+              "get_dependency_graph"
+            ],
+            "request_id": "0f50a0dda124403580ed6d52e15fb976"
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "check_system_health",
+            "input": {
+              "service_name": "order-service"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "order-service",
+              "health": "Healthy",
+              "active_incidents": null,
+              "active_incidents_status": "unknown",
+              "freeze_window": {
+                "reported_active": false,
+                "status": "not_reported"
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "catalog:order-service.status",
+                "catalog:order-service.freeze_window_active"
+              ]
+            },
+            "duration_ms": 49.009,
+            "request_id": "0f50a0dda124403580ed6d52e15fb976"
+          }
+        ],
+        "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+        "mcp": {
+          "attempted": 1,
+          "failed": 0,
+          "status": "measured"
+        },
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:order-service.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 39.519,
+            "request_id": "0f50a0dda124403580ed6d52e15fb976"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 36.269,
+            "request_id": "0f50a0dda124403580ed6d52e15fb976"
+          }
+        ],
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 2552.976,
+            "layer": "tool",
+            "tool": "check_system_health",
+            "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+            "request_id": "0f50a0dda124403580ed6d52e15fb976"
+          }
+        ],
+        "request_id": "0f50a0dda124403580ed6d52e15fb976",
+        "session_id": "248fc0fca67a421e914770f3b6d9f870",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 3271.912,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 52.9,
+            "request_id": "0f50a0dda124403580ed6d52e15fb976"
+          },
+          {
+            "stage": "memory_read",
+            "outcome": "completed",
+            "duration_ms": 2.577,
+            "request_id": "0f50a0dda124403580ed6d52e15fb976"
+          },
+          {
+            "stage": "tools",
+            "outcome": "completed",
+            "duration_ms": 2566.999,
+            "request_id": "0f50a0dda124403580ed6d52e15fb976"
+          },
+          {
+            "stage": "compose",
+            "outcome": "completed",
+            "duration_ms": 0.111,
+            "request_id": "0f50a0dda124403580ed6d52e15fb976"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 41.434,
+            "request_id": "0f50a0dda124403580ed6d52e15fb976"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 39.519,
+            "outcome": "allow",
+            "request_id": "0f50a0dda124403580ed6d52e15fb976"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 36.269,
+            "outcome": "allow",
+            "request_id": "0f50a0dda124403580ed6d52e15fb976"
+          },
+          {
+            "stage": "cache_tool",
+            "duration_ms": 2552.976,
+            "outcome": "miss",
+            "request_id": "0f50a0dda124403580ed6d52e15fb976"
+          }
+        ]
+      },
+      "elapsed_ms": 3305.987
+    },
+    {
+      "id": "reserved-ambiguity",
+      "split": "reserved",
+      "category": "routing",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "no_provider_attempt": true,
+        "no_reviewer_invocation": true
+      },
+      "expected": [
+        "needs_clarification"
+      ],
+      "query": "Review this change.",
+      "fixture": null,
+      "display": "Which catalog service is changing? Use an exact service name, such as checkout-service, and describe what will change. I will not infer a dependency or service identity from its name.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "needs_clarification",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 26.792,
+            "request_id": "a4016de88efe4a49a0461f2cfcf55763"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 34.414,
+            "request_id": "a4016de88efe4a49a0461f2cfcf55763"
+          }
+        ],
+        "cache": [],
+        "mcp": {
+          "status": "not_accessed",
+          "attempted": 0,
+          "failed": 0
+        },
+        "memory": {
+          "status": "not_accessed"
+        },
+        "request_id": "a4016de88efe4a49a0461f2cfcf55763",
+        "session_id": "046d2f6ebcce498db642999a6df8dd13",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 442.743,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 28.71,
+            "request_id": "a4016de88efe4a49a0461f2cfcf55763"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 34.491,
+            "request_id": "a4016de88efe4a49a0461f2cfcf55763"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 26.792,
+            "outcome": "allow",
+            "request_id": "a4016de88efe4a49a0461f2cfcf55763"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 34.414,
+            "outcome": "allow",
+            "request_id": "a4016de88efe4a49a0461f2cfcf55763"
+          }
+        ]
+      },
+      "elapsed_ms": 445.732
+    },
+    {
+      "id": "reserved-approval",
+      "split": "reserved",
+      "category": "guardrail",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "no_provider_attempt": true,
+        "display_contains_cannot approve": true,
+        "no_reviewer_invocation": true
+      },
+      "expected": [
+        "advisory_boundary",
+        "help"
+      ],
+      "query": "Can you approve this change?",
+      "fixture": null,
+      "display": "CRA2 provides advice; it cannot approve, block, merge or deploy changes. This demo uses synthetic historical and recorded service data, so it cannot confirm current production health, active incidents or freeze applicability. Model risk indications are uncalibrated. Team preferences persist, but conversations and traces are not restored after a refresh. A human makes the shipping decision.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "help",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "topic": "limits",
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 32.422,
+            "request_id": "0c1a00af17504229b8a4141413fd9888"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 34.292,
+            "request_id": "0c1a00af17504229b8a4141413fd9888"
+          }
+        ],
+        "cache": [],
+        "mcp": {
+          "status": "not_accessed",
+          "attempted": 0,
+          "failed": 0
+        },
+        "memory": {
+          "status": "not_accessed"
+        },
+        "request_id": "0c1a00af17504229b8a4141413fd9888",
+        "session_id": "816b02e158664dbd9f19b73402d99fbb",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 454.182,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 34.825,
+            "request_id": "0c1a00af17504229b8a4141413fd9888"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 34.365,
+            "request_id": "0c1a00af17504229b8a4141413fd9888"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 32.422,
+            "outcome": "allow",
+            "request_id": "0c1a00af17504229b8a4141413fd9888"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 34.292,
+            "outcome": "allow",
+            "request_id": "0c1a00af17504229b8a4141413fd9888"
+          }
+        ]
+      },
+      "elapsed_ms": 457.179
+    },
+    {
+      "id": "reserved-history",
+      "split": "reserved",
+      "category": "retrieval",
+      "passed": true,
+      "checks": {
+        "status": true,
+        "no_provider_attempt": true,
+        "display_contains_TLS upgrade": true,
+        "display_contains_NAT gateway": true,
+        "no_reviewer_invocation": true
+      },
+      "expected": [
+        "history_only",
+        "dataset_listing"
+      ],
+      "query": "What incidents has payment-gateway had before?",
+      "fixture": null,
+      "display": "- TLS upgrade removes a required cipher\n- Regional fraud-threshold configuration drift\n- NAT gateway migration without processor allow-list updates",
+      "trace": {
+        "scope": "cra2",
+        "status": "dataset_listing",
+        "provider_used": false,
+        "request_attempted": false,
+        "retrieved": [],
+        "source_scope": "Canonical synthetic incidents and sanitized samples; no live system lookup",
+        "title_basis": "Curated scenario titles checked against source hashes; identical labels grouped",
+        "operation": "list",
+        "requested_fields": [
+          "title"
+        ],
+        "record_count": 3,
+        "distinct_title_count": 3,
+        "service_filter": [
+          "payment-gateway"
+        ],
+        "scenarios": [
+          {
+            "title": "TLS upgrade removes a required cipher",
+            "sources": [
+              {
+                "incident_id": "CX-104",
+                "service": "payment-gateway",
+                "source_dataset": "synthetic",
+                "source": "data/incidents.json#CX-104"
+              }
+            ]
+          },
+          {
+            "title": "Regional fraud-threshold configuration drift",
+            "sources": [
+              {
+                "incident_id": "CX-105",
+                "service": "payment-gateway",
+                "source_dataset": "synthetic",
+                "source": "data/incidents.json#CX-105"
+              }
+            ]
+          },
+          {
+            "title": "NAT gateway migration without processor allow-list updates",
+            "sources": [
+              {
+                "incident_id": "CX-106",
+                "service": "payment-gateway",
+                "source_dataset": "synthetic",
+                "source": "data/incidents.json#CX-106"
+              }
+            ]
+          }
+        ],
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 28.076,
+            "request_id": "e2d507255e474cbba3bd3a5d99badcdc"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 33.344,
+            "request_id": "e2d507255e474cbba3bd3a5d99badcdc"
+          }
+        ],
+        "cache": [],
+        "mcp": {
+          "status": "not_accessed",
+          "attempted": 0,
+          "failed": 0
+        },
+        "memory": {
+          "status": "not_accessed"
+        },
+        "request_id": "e2d507255e474cbba3bd3a5d99badcdc",
+        "session_id": "074d102e0dc44d9c85d580a8450b5f6c",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 450.946,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 31.035,
+            "request_id": "e2d507255e474cbba3bd3a5d99badcdc"
+          },
+          {
+            "stage": "legacy",
+            "outcome": "completed",
+            "duration_ms": 13.303,
+            "request_id": "e2d507255e474cbba3bd3a5d99badcdc"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 33.411,
+            "request_id": "e2d507255e474cbba3bd3a5d99badcdc"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 28.076,
+            "outcome": "allow",
+            "request_id": "e2d507255e474cbba3bd3a5d99badcdc"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 33.344,
+            "outcome": "allow",
+            "request_id": "e2d507255e474cbba3bd3a5d99badcdc"
+          }
+        ]
+      },
+      "elapsed_ms": 454.118
+    }
+  ]
+}

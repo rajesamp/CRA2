@@ -1,0 +1,61 @@
+{
+  "measurement_scope": "Planning baseline: serialized bytes, not packet capture, memory profiling or throughput testing",
+  "code_revision": "49487b1",
+  "collection_date_utc": "2026-10-28",
+  "report_prepared_at_utc": "2026-10-28T03:37:49Z",
+  "encoding": "UTF-8 JSON, compact separators, ensure_ascii=false; MCP text block retains server json.dumps formatting",
+  "catalog_services_measured": 8,
+  "tool_results_measured": 16,
+  "argument_bytes_range": [31, 39],
+  "health_structured_result_bytes_range": [390, 416],
+  "graph_structured_result_bytes_range": [443, 529],
+  "health_sdk_result_bytes_range": [930, 982],
+  "graph_sdk_result_bytes_range": [1045, 1230],
+  "inventory_sdk_result_bytes": 4202,
+  "discovery_replies_per_two_tool_batch": 3,
+  "discovery_bytes_per_two_tool_batch": 12606,
+  "summed_sdk_tool_result_bytes_conservative_range": [1975, 2212],
+  "local_workflow_measurement": {
+    "question": "Can I change payment-gateway timeout from 400ms to 4ms?",
+    "mode": "Local evidence only",
+    "status": "evidence_only",
+    "actual_mcp_tool_calls": 2,
+    "retrieved_passages": 3,
+    "provider_request_attempted": false,
+    "browser_shaped_trace_json_bytes": 4920,
+    "trace_shape": "workflow trace plus response_details, turn, review_mode and question; no Admin summary duplication"
+  },
+  "sizing_assumptions_not_observed_traffic": {
+    "daily_users": 10000,
+    "questions_per_user_per_day": 20,
+    "requests_per_day": 200000,
+    "peak_to_average_ratio": 10,
+    "tools_per_request": 2,
+    "groq_request_fraction": 0.5,
+    "metadata_bytes_per_request": 2000,
+    "metadata_retention_days": 30,
+    "detailed_trace_budget_bytes": 8000,
+    "detail_sampling_fraction": 0.1,
+    "detail_retention_days": 7
+  },
+  "derived_estimates": {
+    "average_requests_per_second": 2.314814814814815,
+    "peak_requests_per_second": 23.14814814814815,
+    "logical_tool_lookups_per_day": 400000,
+    "groq_assessments_per_day_without_assessment_cache": 100000,
+    "metadata_bytes_per_day": 400000000,
+    "sampled_detail_bytes_per_day": 160000000,
+    "retained_content_bytes_metadata30d_detail7d": 13120000000,
+    "discovery_body_bytes_per_day_without_tool_cache": 2521200000,
+    "browser_trace_content_bytes_1000sessions_50turns_each": 246000000,
+    "current_passage_vector_bytes_68x384_float32": 104448
+  },
+  "exclusions": [
+    "No new Groq or Slack request was made for these measurements",
+    "Byte measurements exclude JSON-RPC request/initialization framing and transport overhead",
+    "One trace is not a p95 or worst-case size bound",
+    "Storage estimates exclude indexes, replication, compression and extra error/security detail",
+    "Tool body sizes do not measure executable code or model weights",
+    "No raw memory record, owner security record or credential is included"
+  ]
+}

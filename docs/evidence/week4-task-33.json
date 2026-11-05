@@ -1,0 +1,18 @@
+{
+  "started_at_utc": "2026-10-31 21:03:09 UTC",
+  "completed_at_utc": "2026-10-31 21:05:26 UTC",
+  "elapsed_seconds": 137,
+  "scope": "Actual browser workflow across two sessions, including readiness/page load and automation handoffs. No spoken narration was timed.",
+  "messages_submitted": 5,
+  "actual_tool_invocations": 3,
+  "provider_attempts": 0,
+  "checks": {
+    "preference_saved_in_A": true,
+    "preference_recalled_without_restatement_in_B": true,
+    "graph_miss_then_hit": true,
+    "greenlight_explicitly_refused_with_review": true,
+    "dashboard_reached_from_chat": true,
+    "scorecard_visible": true
+  },
+  "remaining_scope": "Final fresh-process rehearsal is task 34. Public hosting and backup video are outside selected local scope."
+}

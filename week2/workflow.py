@@ -7,6 +7,9 @@ durable conversation checkpoints, autonomous loop, or raw-state streaming.
 import re
 import html
 import unicodedata
+import inspect
+from datetime import datetime, timezone
+from time import perf_counter
 from pathlib import Path
 from string import Formatter
 from typing import TypedDict
@@ -17,6 +20,8 @@ from langgraph.graph import END, START, StateGraph
 from langsmith import tracing_context
 
 from cra2 import system2
+from cra2 import config
+from cra2.team_settings import load_settings
 from cra2.advisor import ADVISORY, CATALOG
 from week1 import chat, provider, responses, routing
 from week2.contracts import ContractError, NAMES, checked, decode_json, validate_result
@@ -24,8 +29,15 @@ from week2.mcp_client import call_tools
 from week2.memory import MemoryStore, MemoryUnavailable
 from week2.preferences import parse_command, effective_policy
 from week2.help import capability_lines, help_answer, help_topic
+from week3.guardrails import LocalRails, RailUnavailable
+from week3.support import coverage, approval_request, advisory_question
+from week3.cache import identity, CacheToolError
+from week4.telemetry import TelemetryUnavailable, TRANSPORTS
+from week4.langsmith_tracing import EXPORTER, credentials as tracing_credentials
+from cra2.secrets import reject_credentials
 
 COPY = Path(__file__).with_name("responses.json")
+HOST_TEAM = chat.TEAM_SETTINGS["team"]
 PARAMETERS = {
     "snapshot": set(), "tool_failure": set(), "retrieval_failure": set(),
     "unavailable": set(),
@@ -49,6 +61,10 @@ PARAMETERS = {
     "help_trace": set(), "help_limits": set(), "help_tools": set(),
     "help_preference_commands": {"service"},
     "help_security": set(),
+    "guardrail_failure": set(), "guardrail_blocked": set(),
+    "approval_continuation": set(), "unsupported_mechanism": set(),
+    "stale_context": set(),
+    "telemetry_failure": set(),
 }
 
 
@@ -119,7 +135,7 @@ def _context_service(question, history):
     return None
 
 
-def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_path=chat.INDEX, memory_store=None):
+def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_path=chat.INDEX, memory_store=None, guardrails=None, caches=None, spans=None):
     """Dependencies are runtime collaborators, never serialized graph state."""
     retrieve = retriever or chat.search
     review = reviewer or provider.assess
@@ -127,8 +143,57 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
     copy = load_copy()
     catalog = responses.load()
     store = MemoryStore() if memory_store is None else memory_store
+    rails = LocalRails() if guardrails is None else guardrails
+    cache_events = []
+    spans = [] if spans is None else spans
 
-    def classify(state):
+    def timed(name,node):
+        async def wrapped(state):
+            began=perf_counter();outcome="error"
+            started_at = datetime.now(timezone.utc).isoformat()
+            try:
+                result=node(state)
+                if inspect.isawaitable(result):result=await result
+                outcome="completed"
+                return result
+            finally:
+                spans.append({"stage":name,"outcome":outcome,"duration_ms":round((perf_counter()-began)*1000,3),
+                              "started_at":started_at,"ended_at":datetime.now(timezone.utc).isoformat()})
+        return wrapped
+
+    def policy_settings():
+        settings=load_settings(config.DATA_DIR,CATALOG)
+        if settings["team"]!=HOST_TEAM:
+            raise MemoryUnavailable("host_identity_changed")
+        return settings
+
+    def current_policy(service, record):
+        return effective_policy(service, record, team_settings=policy_settings())
+
+    def cache_scope(state):
+        host_store = getattr(store, "store", store)
+        return identity([getattr(host_store,"team",None),str(getattr(host_store,"path",id(host_store))),
+            state.get("memory_record"), state.get("policy")])
+
+    def get_hits(state, query, path, **options):
+        from week1.retrieval import search
+        if caches is not None and retrieve is search:
+            return caches.retrieve(query,path,scope=cache_scope(state),events=cache_events,**options)
+        return retrieve(query,path,**options)
+
+    async def rail_check(stage, payload):
+        started_at = datetime.now(timezone.utc).isoformat()
+        try:
+            if not await rails.check(stage, payload):
+                return _answer(copy["guardrail_blocked"], "guardrail_blocked")
+        except Exception:
+            return _answer(copy["guardrail_failure"], "guardrails_unavailable")
+        finally:
+            if rails.events and rails.events[-1].get("stage") == stage:
+                rails.events[-1].update(started_at=started_at, ended_at=datetime.now(timezone.utc).isoformat())
+        return None
+
+    async def classify(state):
         question, mode, history = state["question"], state["mode"], state["history"]
         if not isinstance(question, str) or not question.strip() or len(question) > chat.MAX_QUESTION:
             return _answer(responses.message(catalog, "input_length"), "needs_clarification")
@@ -136,6 +201,9 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
             return _answer(responses.message(catalog, "control_characters"), "needs_clarification")
         if mode not in {"Local evidence only", "Groq assessment"}:
             return _answer(responses.message(catalog, "invalid_mode"), "needs_clarification")
+        refused = await rail_check("input", question)
+        if refused:
+            return refused
         decision = routing.task(question, dict(catalog, capabilities=capability_lines(copy)))
         active = routing.active_request(question)
         if decision and decision["kind"] == "clarify":
@@ -156,7 +224,7 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
         command = parse_command(question)
         if command:
             return {"route": "memory_write", "service": command["service"], "memory_updates": command["updates"]}
-        if re.search(r"\b(?:approve|authorize|merge|deploy|block)\b", active):
+        if approval_request(question):
             return _answer(responses.message(catalog, "advisory_boundary"), "advisory_boundary")
         if re.search(r"\bremember\b|\b(?:save|store)\b.*\bpreference", active):
             return _answer(copy["memory_help"], "needs_clarification")
@@ -183,42 +251,61 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
 
     def memory_read(state):
         try:
+            settings=policy_settings()
             record = store.read(state["service"])
-            policy = effective_policy(state["service"], record, team_settings=chat.TEAM_SETTINGS)
+            policy = effective_policy(state["service"], record,team_settings=settings)
             responses.guard([record, policy])
             return {"memory_record": record, "policy": policy, "route": state["next_route"]}
-        except MemoryUnavailable:
+        except (MemoryUnavailable, ValueError, OSError):
             result = _answer(copy["memory_unavailable"], "memory_unavailable")
             result["trace"]["memory"] = {"status": "unavailable"}
             return result
 
     def memory_write(state):
         try:
+            policy_settings()
             record = store.write(state["service"], **state["memory_updates"])
             result = _answer(copy["memory_saved"].format(service=state["service"]), "memory_saved")
-            result.update(memory_record=record, policy=effective_policy(state["service"], record, team_settings=chat.TEAM_SETTINGS))
+            result.update(memory_record=record, policy=current_policy(state["service"], record))
             result["trace"]["events"] = [{"event": "memory_written", "service": state["service"]}]
             return result
-        except MemoryUnavailable:
+        except (MemoryUnavailable, ValueError, OSError):
             result = _answer(copy["memory_unavailable"], "memory_unavailable")
             result["trace"]["memory"] = {"status": "unavailable"}
             return result
 
-    def legacy(state):
+    async def legacy(state):
         answer, trace = chat.respond(state["question"], state["history"], state["mode"],
-                                     index_path=index_path, retriever=retrieve, reviewer=review)
+                                     index_path=index_path, retriever=lambda q,p,**k:get_hits(state,q,p,**k), reviewer=review)
+        if trace.get("retrieved"):
+            refused = await rail_check("context", trace["retrieved"])
+            if refused:
+                return refused
         return {"answer": answer, "trace": trace}
 
-    def retrieval(state):
+    async def retrieval(state):
         try:
-            hits = retrieve(state["question"], index_path, limit=3, service=state["service"])
+            hits = get_hits(state, state["question"], index_path, limit=3, service=state["service"])
             checked(hits, "invalid_evidence")
+            refused = await rail_check("context", hits)
+            if refused:
+                return refused
             return {"hits": hits, "route": "tools"}
         except Exception:
             return _answer(copy["retrieval_failure"], "retrieval_unavailable")
 
     async def tools_node(state):
-        bundle = await run_tools(state["calls"])
+        try:
+            if caches is not None and tool_runner is None:
+                bundle = await caches.call_tools(state["calls"],scope=cache_scope(state),runner=run_tools)
+                cache_events.extend(bundle.pop("cache_events"))
+            else:
+                bundle = await run_tools(state["calls"])
+        except CacheToolError as error:
+            bundle = error.bundle
+        except Exception:
+            bundle = {"status":"error","outputs":{},"events":[{"event":"mcp_failed","code":"cache_or_source_unavailable"}],
+                "metrics":{"status":"unavailable","attempted":None,"failed":None}}
         checked(bundle, "invalid_result")
         if bundle["status"] == "ok":
             expected = {name for name, _ in state["calls"]}
@@ -234,8 +321,11 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
         if bundle["status"] != "ok" or any(r["status"] != "ok" for r in outputs.values()):
             result = _answer(copy["tool_failure"], "tools_unavailable")
             result["trace"]["events"] = bundle["events"]
+            result["trace"]["mcp"] = bundle.get("metrics", {"status":"unavailable","attempted":None,"failed":None})
             return result
         if "hits" in state:
+            support = coverage(state["question"], state["hits"])
+            unsupported = support["status"] == "unsupported"
             tool_citations = set()
             accepted_reviews = []
             def enriched_review(payload, weights):
@@ -253,7 +343,14 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                     "freeze applicability is unconfirmed. Configured team policy wins."
                 )
                 responses.guard(payload)
-                result = review(payload, weights)
+                began = perf_counter()
+                started_at = datetime.now(timezone.utc).isoformat()
+                try:
+                    result = review(payload, weights)
+                finally:
+                    spans.append({"stage":"reviewer","outcome":"invoked_provider_adapter" if reviewer is None else "invoked_offline_adapter",
+                        "duration_ms":round((perf_counter()-began)*1000,3),
+                        "started_at":started_at,"ended_at":datetime.now(timezone.utc).isoformat()})
                 responses.guard(result)
                 # The unchanged Week 1 adapter owns historical-citation checks.
                 # Validate combined citations here, then project the historical
@@ -276,8 +373,14 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
 
             answer, trace = chat.respond(
                 state["question"], state["history"], state["mode"], index_path=index_path,
-                retriever=lambda *_a, **_k: state["hits"], reviewer=enriched_review,
+                retriever=lambda *_a, **_k: [] if unsupported and state["mode"] == "Groq assessment" else state["hits"], reviewer=enriched_review,
             )
+            trace["support"] = support
+            if unsupported and state["mode"] == "Groq assessment":
+                answer = copy["unsupported_mechanism"] + "\n\n" + ADVISORY
+                trace["status"] = "insufficient_evidence"
+            elif unsupported:
+                answer = copy["unsupported_mechanism"] + "\n\n" + answer
             trace["assessment_tool_citations"] = sorted(tool_citations)
             if trace["status"] == "assessed":
                 trace["risk_floor"] = "medium" if state["policy"]["effective"]["high_risk"] else "low"
@@ -307,9 +410,27 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                 evidence=", ".join(graph["evidence"])))
         answer = answer.removesuffix(ADVISORY).rstrip() + "\n\n" + "\n\n".join(sections) + "\n\n" + ADVISORY
         trace.update(events=bundle["events"], source_scope="Historical evidence and MCP synthetic snapshots; current state unverified")
+        trace["mcp"] = bundle.get("metrics", {"status":"unavailable","attempted":None,"failed":None})
         return {"answer": answer.strip(), "trace": trace}
 
-    def output_guard(state):
+    async def output_guard(state):
+        def discard(result):
+            # Withhold stale/unsafe content while retaining actual work/cost
+            # accounting. An output fallback does not undo a completed call.
+            prior=state["trace"]
+            result["trace"].update({k:prior[k] for k in ("mcp","provider_used","request_attempted") if k in prior})
+            state.update(result)
+        if "memory_record" in state:
+            try:
+                settings=policy_settings()
+                latest = store.read(state["service"])
+                if (latest != state["memory_record"] or effective_policy(state["service"], latest,team_settings=settings) != state["policy"]
+                        or (caches is not None and not caches.sources_current(cache_events,index_path))):
+                    discard(_answer(copy["stale_context"], "context_changed"))
+                    state.pop("memory_record",None)
+            except (MemoryUnavailable, ValueError, OSError):
+                discard(_answer(copy["memory_unavailable"], "memory_unavailable"))
+                state.pop("memory_record",None)
         if "memory_record" in state:
             record, policy = state["memory_record"], state["policy"]
             state["trace"]["memory"] = {"status": "recalled" if record else "empty", "record": record,
@@ -329,14 +450,21 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                     sections.append(copy["memory_conflict"])
                 state["answer"] = state["answer"].removesuffix(ADVISORY).rstrip() + "\n\n" + "\n\n".join(sections) + "\n\n" + ADVISORY
         responses.guard([state["answer"], state["trace"]])
+        if state["trace"].get("status") != "guardrails_unavailable":
+            refused = await rail_check("output", {"answer": state["answer"], "trace": state["trace"]})
+            if refused:
+                discard(refused)
+        state["trace"]["rails"] = list(rails.events)
+        if caches is not None:
+            state["trace"]["cache"] = list(cache_events)
         return {"answer": state["answer"], "trace": state["trace"]}
 
     builder = StateGraph(State)
     for name, node in (("classify", classify), ("legacy", legacy), ("retrieve", retrieval),
                        ("tools", tools_node), ("compose", compose), ("output_guard", output_guard)):
-        builder.add_node(name, node)
-    builder.add_node("memory_read", memory_read)
-    builder.add_node("memory_write", memory_write)
+        builder.add_node(name, timed(name,node))
+    builder.add_node("memory_read", timed("memory_read",memory_read))
+    builder.add_node("memory_write", timed("memory_write",memory_write))
     builder.add_edge(START, "classify")
     builder.add_conditional_edges("classify", lambda s: s["route"],
                                   {"done": "output_guard", "legacy": "legacy", "memory_read": "memory_read", "memory_write": "memory_write"})
@@ -352,31 +480,69 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
     return builder.compile()
 
 
-async def arespond(question, history=None, mode="Local evidence only", *, session_id=None, **collaborators):
+async def arespond(question, history=None, mode="Local evidence only", *, session_id=None, telemetry_store=None, transport="cli", trace_exporter=None, **collaborators):
     """Only final guarded answer and trace leave this boundary; no raw state."""
     request_id = uuid4().hex
+    began=perf_counter();spans=[]
+    started_at = datetime.now(timezone.utc).isoformat()
     try:
+        if transport not in TRANSPORTS:raise ValueError("invalid_transport")
+        reject_credentials([question, history, mode], additional=tracing_credentials())
         responses.guard([question, history, mode])
         if history is not None and (not isinstance(history, list) or len(history) > 100):
             raise ValueError("Invalid history")
-        graph = build_workflow(**collaborators)
-        # Environment-enabled LangSmith tracing must not upload raw state.
+        names = chat._services(question) if isinstance(question, str) else []
+        approval = bool(len(names) == 1 and chat._specific_change(question, names[0])
+            and not parse_command(question)
+            and re.search(r"\b(?:from|to)\s+\d|\b(?:add|remove|replace|rotate|enable|disable)\b", routing.active_request(question))
+            and approval_request(question))
+        effective_question = advisory_question(question) if approval else question
+        # Automatic tracing must never upload raw state, including rail setup.
         with tracing_context(enabled=False):
-            result = await graph.ainvoke({"question": question, "history": history or [], "mode": mode},
+            graph = build_workflow(**collaborators,spans=spans)
+            result = await graph.ainvoke({"question": effective_question, "history": history or [], "mode": mode},
                                         config={"recursion_limit": 10, "callbacks": []})
         trace = result["trace"]
+        trace.setdefault("mcp", {"status":"unavailable","attempted":None,"failed":None}
+            if any(s["stage"]=="tools" for s in spans) else {"status":"not_accessed","attempted":0,"failed":0})
+        if approval:
+            result["answer"] = load_copy()["approval_continuation"] + "\n\n" + result["answer"]
+            trace["approval_declined"] = True
         trace.setdefault("provider_used", False)
         trace.setdefault("request_attempted", False)
         trace.setdefault("memory", {"status": "not_accessed"})
         trace.update(request_id=request_id, session_id=session_id or uuid4().hex, orchestration="langgraph")
+        trace["transport"]=transport
+        trace["turn"] = 1 + sum(1 for item in (history or []) if isinstance(item, dict) and item.get("role") == "user")
+        trace["review_mode"] = mode
+        trace["duration_ms"]=round((perf_counter()-began)*1000,3)
+        trace["spans"]=spans+[
+            {"stage":"rail_"+e["stage"],"duration_ms":e["duration_ms"],"outcome":e["outcome"]} for e in trace.get("rails",[])]+[
+            {"stage":"cache_"+e["layer"],"duration_ms":e.get("duration_ms",0),"outcome":e["outcome"]} for e in trace.get("cache",[])]
+        for item in [*trace["spans"],*trace.get("events",[]),*trace.get("rails",[]),*trace.get("cache",[])]:
+            item["request_id"]=request_id
+        if telemetry_store is not None:
+            try:
+                telemetry_store.write(trace)
+                trace["telemetry_status"]="recorded"
+            except TelemetryUnavailable:
+                result["answer"]=load_copy()["telemetry_failure"]+"\n\n"+ADVISORY
+                trace.update(status="telemetry_unavailable",telemetry_status="unavailable")
+                trace.pop("assessment",None)
         responses.guard([result["answer"], trace])
+        trace.update(started_at=started_at, ended_at=datetime.now(timezone.utc).isoformat())
+        try:
+            trace["langsmith"] = (trace_exporter or EXPORTER).submit(trace)
+        except Exception:
+            trace["langsmith"] = {"status": "unavailable"}
         return result["answer"], trace
     except Exception:
         # Failure text is deliberately static even if a catalog/graph is corrupt.
         return ("The request could not be processed. No risk indication is assigned. "
                 "This is advisory only; a human decision is required.",
                 {"status": "unavailable", "request_id": request_id, "retrieved": [],
-                 "provider_used": False, "request_attempted": False})
+                 "provider_used": False, "request_attempted": False,"transport":transport,
+                 "mcp":{"status":"unavailable","attempted":None,"failed":None}})
 
 
 def respond(question, history=None, mode="Local evidence only", **collaborators):

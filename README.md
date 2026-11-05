@@ -221,3 +221,67 @@ repository root with `week2/.venv/bin/python -m week2.app`, then open
 `http://127.0.0.1:7862`. [Launch and learning walkthrough](week2/README.md) ·
 [Actual expanded-panel screenshot and browser evidence](docs/evidence/week2-task-18.md).
 Week 1 human confirmations and Weeks 3–4 retain their separate acceptance.
+
+## Weeks 3–4: local guardrails, caching, evaluations and dashboard
+
+The selected delivery is a local demo with complete engineering evidence.
+NeMo 0.24.1 checks the existing LangGraph workflow; exact versioned caches
+preserve source/policy validity; correlated traces feed a session-only Admin
+dashboard. Local evidence only remains the default, requires no provider key
+and assigns no model risk rating. Synthetic snapshots have unknown freshness.
+
+Run from the repository root. On a fresh clone, set up the isolated environment
+and explicitly provision the checksum-pinned local model/index:
+
+```sh
+uv sync --locked --project week2 --python 3.13
+uv run --locked --project week2 python -m week1.setup_index --download-model
+```
+
+For an already provisioned checkout, launch directly:
+
+```sh
+TMPDIR=/tmp week2/.venv/bin/python -m week2.app
+```
+
+Open `http://127.0.0.1:7862`. **Open run dashboard** selects Admin; its existing
+any-four-digit demo gate remains a demonstration control, not production auth.
+The dashboard uses this browser session's latest 50 traces and excludes Slack,
+CLI, evaluation traffic and private owner audit records. See the
+[demo script](docs/local-demo-script.md) for isolated private storage and a
+port-7863 walkthrough that preserves the normal app's memory/audit data.
+
+[Learning guide](docs/week3-week4-learning.md) explains NeMo, alternatives,
+LangGraph/MCP, memory, cache invalidation, telemetry, evaluation and their limits.
+[Week 3 evidence](docs/evidence/week3-task-25.md) and
+[Week 4 local close-out](docs/evidence/week4-task-34.md) link tests, raw benchmark
+samples, scorecards, fault demonstrations and real browser screenshots.
+
+Reproduce local checks (TMPDIR=/tmp preserves the memory-path contract):
+
+```sh
+TMPDIR=/tmp week2/.venv/bin/python -m pytest week2/tests week3/tests week4/tests -q
+TMPDIR=/tmp week2/.venv/bin/python -m week4.evaluate --out /tmp/cra2-local-evaluation.json
+TMPDIR=/tmp week2/.venv/bin/python -m week4.evaluate --split reserved --cases week4/reserved-cases-v2.json --out /tmp/cra2-reserved-validation.json
+TMPDIR=/tmp week2/.venv/bin/python -m week4.faults --out /tmp/cra2-faults.json
+```
+
+The original scorecard improved 16/18→18/18. Corrected reserved-label validation
+scored 4/4; the original 2/4 record and label review remain. These are bounded
+synthetic contract results, not independent human-labeled or live-model quality.
+The isolated graph benchmark observed an 81.48% warm median latency reduction
+with 30 trials per condition; it is not a production SLA.
+
+Public deployment and a backup video are outside the selected local scope and
+remain pending under original upstream task 34. Prior Week 1 team agreement,
+independent teammate fresh-clone acceptance and sharing also remain separate.
+
+## LangSmith trace showcase — 2026-11-05
+
+The current browser app uses a **LangSmith** tab with private per-turn links
+in place of the former Admin/PIN trace panel. Session metrics remain available.
+See [account/key setup and export boundaries](week2/LANGSMITH.md) and
+[verification evidence](docs/evidence/langsmith-traces.md). Local evidence only
+stays the default. Optional exports contain reviewed execution facts; raw
+questions, answers, prompts, passages, saved notes and owner audit are excluded.
+Real keys belong only in private ignored configuration.

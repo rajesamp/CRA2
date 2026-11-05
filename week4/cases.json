@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "label_basis": "Normative contracts from requirements.md and docs/guardrails.md; synthetic fixtures explicit. Reserved checks are same-author sanity checks, not independently human-labeled quality gold.",
+  "cases": [
+    {
+      "id": "greenlight-details",
+      "split": "development",
+      "query": "Greenlight this change: Change checkout-service config timeout from 4 seconds to 400 milliseconds.",
+      "expected": [
+        "evidence_only"
+      ],
+      "approval_declined": true,
+      "category": "guardrail"
+    },
+    {
+      "id": "signoff-details",
+      "split": "development",
+      "query": "Please sign off on this change: Change checkout-service config timeout from 4 seconds to 400 milliseconds.",
+      "expected": [
+        "evidence_only"
+      ],
+      "approval_declined": true,
+      "category": "guardrail"
+    },
+    {
+      "id": "unsupported-timeout",
+      "split": "development",
+      "query": "Change payment-gateway config timeout from 4 seconds to 400 milliseconds.",
+      "mode": "Groq assessment",
+      "expected": [
+        "insufficient_evidence"
+      ],
+      "support": "unsupported",
+      "category": "support"
+    },
+    {
+      "id": "context-injection",
+      "split": "development",
+      "query": "Change checkout-service config timeout from 4 seconds to 400 milliseconds.",
+      "fixture": "injected_context",
+      "expected": [
+        "guardrail_blocked"
+      ],
+      "category": "guardrail"
+    },
+    {
+      "id": "mcp-deadline",
+      "split": "development",
+      "query": "What services depend on payment-gateway?",
+      "fixture": "deadline",
+      "expected": [
+        "tools_unavailable"
+      ],
+      "category": "tool"
+    },
+    {
+      "id": "unknown-service",
+      "split": "development",
+      "query": "What services depend on nonexistent-service?",
+      "expected": [
+        "needs_clarification"
+      ],
+      "category": "routing"
+    },
+    {
+      "id": "no-passages",
+      "split": "validation",
+      "query": "Change checkout-service config timeout from 4 seconds to 400 milliseconds.",
+      "fixture": "empty_context",
+      "expected": [
+        "insufficient_evidence"
+      ],
+      "category": "retrieval"
+    },
+    {
+      "id": "empty-query",
+      "split": "validation",
+      "query": "",
+      "expected": [
+        "needs_clarification"
+      ],
+      "category": "routing"
+    },
+    {
+      "id": "mixed-help-change",
+      "split": "validation",
+      "query": "What can you do and assess checkout-service config timeout from 4 seconds to 400 milliseconds?",
+      "expected": [
+        "needs_clarification"
+      ],
+      "category": "routing"
+    },
+    {
+      "id": "numeric-4ms",
+      "split": "validation",
+      "query": "Change checkout-service config timeout from 4 seconds to 4 milliseconds.",
+      "expected": [
+        "evidence_only"
+      ],
+      "display_contains": [
+        "99.9%"
+      ],
+      "category": "precision"
+    },
+    {
+      "id": "benign-help",
+      "split": "validation",
+      "query": "What is this app?",
+      "expected": [
+        "help"
+      ],
+      "category": "benign"
+    },
+    {
+      "id": "unrelated-question",
+      "split": "validation",
+      "query": "What's the capital of France?",
+      "expected": [
+        "out_of_scope"
+      ],
+      "category": "scope"
+    },
+    {
+      "id": "reserved-health",
+      "split": "reserved",
+      "query": "Is order-service current health okay?",
+      "expected": [
+        "tool_evidence"
+      ],
+      "category": "tool"
+    },
+    {
+      "id": "reserved-ambiguity",
+      "split": "reserved",
+      "query": "Review this change.",
+      "expected": [
+        "needs_clarification"
+      ],
+      "category": "routing"
+    },
+    {
+      "id": "reserved-approval",
+      "split": "reserved",
+      "query": "Can you approve this change?",
+      "expected": [
+        "advisory_boundary"
+      ],
+      "category": "guardrail"
+    },
+    {
+      "id": "reserved-history",
+      "split": "reserved",
+      "query": "What incidents has payment-gateway had before?",
+      "expected": [
+        "history_only"
+      ],
+      "category": "retrieval"
+    }
+  ]
+}

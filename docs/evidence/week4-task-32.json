@@ -1,0 +1,1183 @@
+{
+  "mode": "local fault injection",
+  "passed": 9,
+  "total": 9,
+  "provider_attempts": 0,
+  "cases": [
+    {
+      "case": "health-invocation-timeout",
+      "expected": "tools_unavailable",
+      "passed": true,
+      "answer": "Operational evidence is unavailable. No combined risk assessment is assigned; current health, dependencies and freeze applicability remain unconfirmed.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "tools_unavailable",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "events": [
+          {
+            "event": "mcp_failed",
+            "code": "timeout",
+            "request_id": "19245c6a8460493f9aa3150bf69e6491"
+          }
+        ],
+        "mcp": {
+          "attempted": 1,
+          "failed": 1,
+          "status": "measured"
+        },
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 188.325,
+            "request_id": "19245c6a8460493f9aa3150bf69e6491"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 40.609,
+            "request_id": "19245c6a8460493f9aa3150bf69e6491"
+          }
+        ],
+        "request_id": "19245c6a8460493f9aa3150bf69e6491",
+        "session_id": "e1462ad23e814a92ac4f16c499832bec",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 6667.462,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 199.005,
+            "request_id": "19245c6a8460493f9aa3150bf69e6491"
+          },
+          {
+            "stage": "memory_read",
+            "outcome": "completed",
+            "duration_ms": 1.516,
+            "request_id": "19245c6a8460493f9aa3150bf69e6491"
+          },
+          {
+            "stage": "tools",
+            "outcome": "completed",
+            "duration_ms": 6013.981,
+            "request_id": "19245c6a8460493f9aa3150bf69e6491"
+          },
+          {
+            "stage": "compose",
+            "outcome": "completed",
+            "duration_ms": 0.048,
+            "request_id": "19245c6a8460493f9aa3150bf69e6491"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 42.268,
+            "request_id": "19245c6a8460493f9aa3150bf69e6491"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 188.325,
+            "outcome": "allow",
+            "request_id": "19245c6a8460493f9aa3150bf69e6491"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 40.609,
+            "outcome": "allow",
+            "request_id": "19245c6a8460493f9aa3150bf69e6491"
+          }
+        ]
+      }
+    },
+    {
+      "case": "ambiguous-reference",
+      "expected": "needs_clarification",
+      "passed": true,
+      "answer": "Which catalog service is changing? Use an exact service name, such as checkout-service, and describe what will change. I will not infer a dependency or service identity from its name.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "needs_clarification",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 25.217,
+            "request_id": "e736092921af42aaa552146ec45bef37"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 28.594,
+            "request_id": "e736092921af42aaa552146ec45bef37"
+          }
+        ],
+        "mcp": {
+          "status": "not_accessed",
+          "attempted": 0,
+          "failed": 0
+        },
+        "memory": {
+          "status": "not_accessed"
+        },
+        "request_id": "e736092921af42aaa552146ec45bef37",
+        "session_id": "f88a6452dea74b1880f038db4b1513f5",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 381.841,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 26.538,
+            "request_id": "e736092921af42aaa552146ec45bef37"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 28.662,
+            "request_id": "e736092921af42aaa552146ec45bef37"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 25.217,
+            "outcome": "allow",
+            "request_id": "e736092921af42aaa552146ec45bef37"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 28.594,
+            "outcome": "allow",
+            "request_id": "e736092921af42aaa552146ec45bef37"
+          }
+        ]
+      }
+    },
+    {
+      "case": "no-matching-evidence",
+      "expected": "insufficient_evidence",
+      "passed": true,
+      "answer": "Retrieved history does not support this failure mechanism. No risk indication is assigned; unrelated incidents remain context only.\n\nI found no supporting corpus evidence for this request. I cannot assign a risk indication without evidence. Please add the specific change and relevant incident context.\n\n**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded health for checkout-service: **Healthy**. Reported freeze status: **not_reported**. Active incidents: unknown. Evidence: catalog:checkout-service.status, catalog:checkout-service.freeze_window_active.\n\nRecorded graph for checkout-service:\n\n- Direct dependencies: auth-service, inventory-service, payment-gateway\n- All reachable dependencies: auth-service, inventory-service, notification-service, payment-gateway\n- Direct dependents: order-service\n- All reachable dependents: mobile-frontend, order-service, web-frontend\n\nEvidence: graph:checkout-service.dependents, graph:checkout-service.dependencies.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "scope": "cra2",
+        "status": "insufficient_evidence",
+        "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+        "retrieved": [],
+        "support": {
+          "status": "unsupported",
+          "method": "bounded_lexical_mechanism_coverage_v1",
+          "requested": [
+            "timeout"
+          ],
+          "covered": [],
+          "passages_examined": 0
+        },
+        "assessment_tool_citations": [],
+        "events": [
+          {
+            "event": "metadata_admitted",
+            "tools": [
+              "check_system_health",
+              "get_dependency_graph"
+            ],
+            "request_id": "6d1e94a0b3574f7d9bc8f2a8eda7cdc2"
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "check_system_health",
+            "input": {
+              "service_name": "checkout-service"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "checkout-service",
+              "health": "Healthy",
+              "active_incidents": null,
+              "active_incidents_status": "unknown",
+              "freeze_window": {
+                "reported_active": false,
+                "status": "not_reported"
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "catalog:checkout-service.status",
+                "catalog:checkout-service.freeze_window_active"
+              ]
+            },
+            "duration_ms": 38.451,
+            "request_id": "6d1e94a0b3574f7d9bc8f2a8eda7cdc2"
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "get_dependency_graph",
+            "input": {
+              "service_name": "checkout-service"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "checkout-service",
+              "dependents": {
+                "direct": [
+                  "order-service"
+                ],
+                "transitive": [
+                  "mobile-frontend",
+                  "order-service",
+                  "web-frontend"
+                ]
+              },
+              "dependencies": {
+                "direct": [
+                  "auth-service",
+                  "inventory-service",
+                  "payment-gateway"
+                ],
+                "transitive": [
+                  "auth-service",
+                  "inventory-service",
+                  "notification-service",
+                  "payment-gateway"
+                ]
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "graph:checkout-service.dependents",
+                "graph:checkout-service.dependencies"
+              ]
+            },
+            "duration_ms": 47.49,
+            "request_id": "6d1e94a0b3574f7d9bc8f2a8eda7cdc2"
+          }
+        ],
+        "mcp": {
+          "attempted": 2,
+          "failed": 0,
+          "status": "measured"
+        },
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 22.528,
+            "request_id": "6d1e94a0b3574f7d9bc8f2a8eda7cdc2"
+          },
+          {
+            "stage": "context",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 21.131,
+            "request_id": "6d1e94a0b3574f7d9bc8f2a8eda7cdc2"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 30.742,
+            "request_id": "6d1e94a0b3574f7d9bc8f2a8eda7cdc2"
+          }
+        ],
+        "provider_used": false,
+        "request_attempted": false,
+        "request_id": "6d1e94a0b3574f7d9bc8f2a8eda7cdc2",
+        "session_id": "62ac4111d3314395a3d836a8931d935f",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 2398.674,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 23.173,
+            "request_id": "6d1e94a0b3574f7d9bc8f2a8eda7cdc2"
+          },
+          {
+            "stage": "memory_read",
+            "outcome": "completed",
+            "duration_ms": 1.184,
+            "request_id": "6d1e94a0b3574f7d9bc8f2a8eda7cdc2"
+          },
+          {
+            "stage": "retrieve",
+            "outcome": "completed",
+            "duration_ms": 21.239,
+            "request_id": "6d1e94a0b3574f7d9bc8f2a8eda7cdc2"
+          },
+          {
+            "stage": "tools",
+            "outcome": "completed",
+            "duration_ms": 1963.972,
+            "request_id": "6d1e94a0b3574f7d9bc8f2a8eda7cdc2"
+          },
+          {
+            "stage": "compose",
+            "outcome": "completed",
+            "duration_ms": 4.096,
+            "request_id": "6d1e94a0b3574f7d9bc8f2a8eda7cdc2"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 32.365,
+            "request_id": "6d1e94a0b3574f7d9bc8f2a8eda7cdc2"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 22.528,
+            "outcome": "allow",
+            "request_id": "6d1e94a0b3574f7d9bc8f2a8eda7cdc2"
+          },
+          {
+            "stage": "rail_context",
+            "duration_ms": 21.131,
+            "outcome": "allow",
+            "request_id": "6d1e94a0b3574f7d9bc8f2a8eda7cdc2"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 30.742,
+            "outcome": "allow",
+            "request_id": "6d1e94a0b3574f7d9bc8f2a8eda7cdc2"
+          }
+        ]
+      }
+    },
+    {
+      "case": "policy-changed-inflight",
+      "expected": "context_changed",
+      "passed": true,
+      "answer": "Team policy or source context changed during this request. Please repeat the query for a current review. No risk indication is assigned.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "context_changed",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "mcp": {
+          "attempted": 2,
+          "failed": 0,
+          "status": "measured"
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 24.354,
+            "request_id": "d545ec75338b4154988b1e58537fa9fc"
+          },
+          {
+            "stage": "context",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 22.56,
+            "request_id": "d545ec75338b4154988b1e58537fa9fc"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 30.234,
+            "request_id": "d545ec75338b4154988b1e58537fa9fc"
+          }
+        ],
+        "cache": [
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 1971.138,
+            "layer": "tool",
+            "tool": "check_system_health",
+            "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+            "request_id": "d545ec75338b4154988b1e58537fa9fc"
+          },
+          {
+            "outcome": "miss",
+            "stored": true,
+            "age_ms": 0,
+            "ttl_seconds": 300,
+            "duration_ms": 1918.577,
+            "layer": "tool",
+            "tool": "get_dependency_graph",
+            "source_version": "be951077b90109ad0290a11e5367550e38e364d9ed49423c6bb833c85561cd4f",
+            "request_id": "d545ec75338b4154988b1e58537fa9fc"
+          }
+        ],
+        "memory": {
+          "status": "not_accessed"
+        },
+        "request_id": "d545ec75338b4154988b1e58537fa9fc",
+        "session_id": "a906c586c3254ab4b2026db048e0bd58",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 4330.222,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 25.037,
+            "request_id": "d545ec75338b4154988b1e58537fa9fc"
+          },
+          {
+            "stage": "memory_read",
+            "outcome": "completed",
+            "duration_ms": 1.322,
+            "request_id": "d545ec75338b4154988b1e58537fa9fc"
+          },
+          {
+            "stage": "retrieve",
+            "outcome": "completed",
+            "duration_ms": 31.803,
+            "request_id": "d545ec75338b4154988b1e58537fa9fc"
+          },
+          {
+            "stage": "tools",
+            "outcome": "completed",
+            "duration_ms": 3902.713,
+            "request_id": "d545ec75338b4154988b1e58537fa9fc"
+          },
+          {
+            "stage": "compose",
+            "outcome": "completed",
+            "duration_ms": 3.789,
+            "request_id": "d545ec75338b4154988b1e58537fa9fc"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 33.329,
+            "request_id": "d545ec75338b4154988b1e58537fa9fc"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 24.354,
+            "outcome": "allow",
+            "request_id": "d545ec75338b4154988b1e58537fa9fc"
+          },
+          {
+            "stage": "rail_context",
+            "duration_ms": 22.56,
+            "outcome": "allow",
+            "request_id": "d545ec75338b4154988b1e58537fa9fc"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 30.234,
+            "outcome": "allow",
+            "request_id": "d545ec75338b4154988b1e58537fa9fc"
+          },
+          {
+            "stage": "cache_tool",
+            "duration_ms": 1971.138,
+            "outcome": "miss",
+            "request_id": "d545ec75338b4154988b1e58537fa9fc"
+          },
+          {
+            "stage": "cache_tool",
+            "duration_ms": 1918.577,
+            "outcome": "miss",
+            "request_id": "d545ec75338b4154988b1e58537fa9fc"
+          }
+        ]
+      }
+    },
+    {
+      "case": "configured-team-changed",
+      "expected": "memory_unavailable",
+      "passed": true,
+      "answer": "Team preferences could not be read or saved. No combined risk assessment is assigned; restore the local memory store before continuing.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "memory_unavailable",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "memory": {
+          "status": "unavailable"
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 26.364,
+            "request_id": "548e9a48c6834f7ca7cc4f5029a5747a"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 35.577,
+            "request_id": "548e9a48c6834f7ca7cc4f5029a5747a"
+          }
+        ],
+        "mcp": {
+          "status": "not_accessed",
+          "attempted": 0,
+          "failed": 0
+        },
+        "request_id": "548e9a48c6834f7ca7cc4f5029a5747a",
+        "session_id": "b66fbcb2314143ffa1b59d7e9a02d644",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 427.722,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 27.375,
+            "request_id": "548e9a48c6834f7ca7cc4f5029a5747a"
+          },
+          {
+            "stage": "memory_read",
+            "outcome": "completed",
+            "duration_ms": 0.051,
+            "request_id": "548e9a48c6834f7ca7cc4f5029a5747a"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 35.644,
+            "request_id": "548e9a48c6834f7ca7cc4f5029a5747a"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 26.364,
+            "outcome": "allow",
+            "request_id": "548e9a48c6834f7ca7cc4f5029a5747a"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 35.577,
+            "outcome": "allow",
+            "request_id": "548e9a48c6834f7ca7cc4f5029a5747a"
+          }
+        ]
+      }
+    },
+    {
+      "case": "required-rail-unavailable",
+      "expected": "guardrails_unavailable",
+      "passed": true,
+      "answer": "A required safety check is unavailable. No risk indication is assigned. Please try again later.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "guardrails_unavailable",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": false,
+            "outcome": "unavailable",
+            "severity": "M3",
+            "code": "rail_unavailable",
+            "duration_ms": 0.047,
+            "request_id": "66a57d726e964d259180c5da4bfdfaca"
+          }
+        ],
+        "mcp": {
+          "status": "not_accessed",
+          "attempted": 0,
+          "failed": 0
+        },
+        "memory": {
+          "status": "not_accessed"
+        },
+        "request_id": "66a57d726e964d259180c5da4bfdfaca",
+        "session_id": "634b811a29674314adec91a5767ef023",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 22.198,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 0.121,
+            "request_id": "66a57d726e964d259180c5da4bfdfaca"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 0.035,
+            "request_id": "66a57d726e964d259180c5da4bfdfaca"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 0.047,
+            "outcome": "unavailable",
+            "request_id": "66a57d726e964d259180c5da4bfdfaca"
+          }
+        ]
+      }
+    },
+    {
+      "case": "metadata-capacity",
+      "expected": "telemetry_unavailable",
+      "passed": true,
+      "answer": "The local evidence record could not be saved. No risk indication is assigned. Please retry after storage is available.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "scope": "cra2",
+        "status": "telemetry_unavailable",
+        "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+        "retrieved": [
+          {
+            "chunk_id": "pm-cx101-checkout-timeout#chunk-001",
+            "source": "week1/corpus/pm-cx101-checkout-timeout.md",
+            "similarity": 0.7484,
+            "text": "# Checkout config incident: payment timeout cut too far Document type: synthetic postmortem derived from a historical fixture. This is a fictional training example, not current production evidence. Source: [canonical synthetic incidents](../../data/incidents.json), incident **CX-101**. Service: **checkout-service**. Date: **2025-10-14**. Change type: **Config change**. Severity: **SEV1**. ## Recorded facts The timeout for payment-gateway calls was cut from **4 seconds to 400 milliseconds**. Slow authorisations were abandoned while still in flight. Some shoppers were charged even though no order was created. The fixture does not record the outage duration, customer count, investigation timeline, or recovery procedure. Those details are unknown. It does not establish the effect of a different timeout value or the current health of either service. ## Suggested checks for a proposed change These are review recommendations, not additional incident facts: - Ask for the current and proposed timeout values and the affected checkout calls. - Check payment-authorisation latency and what happens when a request times out after the external payment"
+          },
+          {
+            "chunk_id": "rb-checkout-config-risk#chunk-002",
+            "source": "week1/corpus/rb-checkout-config-risk.md",
+            "similarity": 0.7482,
+            "text": "1 to 5 while staging remained at 1, amplifying a payment-gateway slowdown into a retry storm. These incidents are candidates for timeout, retry, and environment-drift changes. Explain the connection to the proposed field; do not cite them as proof that every checkout config change is high-risk. ## Recommended review questions - What failure or latency behavior does the new value permit? - Which callers and dependencies might experience that behavior? - Can the prior configuration and consistent payment/order behavior be restored? - Which named signals reveal retries, timeouts, or incomplete orders? The catalog is a fictional snapshot. Week 1 retrieval does not call a current-health or freeze tool. Label such status as unverified. Cite the relevant incident or source passage for each risk reason, and leave the shipping decision to a human."
+          },
+          {
+            "chunk_id": "rb-checkout-config-risk#chunk-001",
+            "source": "week1/corpus/rb-checkout-config-risk.md",
+            "similarity": 0.7433,
+            "text": "# Runbook: review a checkout-service config change This is a fictional review guide derived from synthetic historical records. Its checklist is recommended review work, not a report of completed controls or live system state. Sources: [CX-101 and CX-102](../../data/incidents.json), [synthetic catalog snapshot](../../data/checkout_system.json). ## Establish what will change For \u201cHow risky is this change to the checkout-service config?\u201d, first obtain the config field, current and proposed values, affected environment, and expected behavior. The question alone does not establish a specific change. Retrieve relevant history while asking for these details; do not invent a before/after state to produce a score. ## Match evidence to the mechanism CX-101 records a payment-call timeout cut from 4 seconds to 400 milliseconds, followed by abandoned authorisations and charges without orders. CX-102 records a production retry increase from 1 to 5 while staging remained at 1, amplifying a payment-gateway slowdown into a retry storm. These incidents are candidates for timeout, retry, and environment-drift changes. Explain the connection to"
+          }
+        ],
+        "support": {
+          "status": "not_disproven",
+          "method": "bounded_lexical_mechanism_coverage_v1",
+          "requested": [
+            "timeout"
+          ],
+          "covered": [
+            "timeout"
+          ],
+          "passages_examined": 3
+        },
+        "assessment_tool_citations": [],
+        "events": [
+          {
+            "event": "metadata_admitted",
+            "tools": [
+              "check_system_health",
+              "get_dependency_graph"
+            ],
+            "request_id": "160c844fe7e645e7b8e233d6b0f1fe13"
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "check_system_health",
+            "input": {
+              "service_name": "checkout-service"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "checkout-service",
+              "health": "Healthy",
+              "active_incidents": null,
+              "active_incidents_status": "unknown",
+              "freeze_window": {
+                "reported_active": false,
+                "status": "not_reported"
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "catalog:checkout-service.status",
+                "catalog:checkout-service.freeze_window_active"
+              ]
+            },
+            "duration_ms": 34.656,
+            "request_id": "160c844fe7e645e7b8e233d6b0f1fe13"
+          },
+          {
+            "event": "tool_result",
+            "transport": "mcp-stdio",
+            "tool": "get_dependency_graph",
+            "input": {
+              "service_name": "checkout-service"
+            },
+            "output": {
+              "status": "ok",
+              "service_name": "checkout-service",
+              "dependents": {
+                "direct": [
+                  "order-service"
+                ],
+                "transitive": [
+                  "mobile-frontend",
+                  "order-service",
+                  "web-frontend"
+                ]
+              },
+              "dependencies": {
+                "direct": [
+                  "auth-service",
+                  "inventory-service",
+                  "payment-gateway"
+                ],
+                "transitive": [
+                  "auth-service",
+                  "inventory-service",
+                  "notification-service",
+                  "payment-gateway"
+                ]
+              },
+              "source": {
+                "path": "data/checkout_system.json",
+                "kind": "synthetic_snapshot",
+                "observed_at": null,
+                "freshness": "unknown"
+              },
+              "evidence": [
+                "graph:checkout-service.dependents",
+                "graph:checkout-service.dependencies"
+              ]
+            },
+            "duration_ms": 44.983,
+            "request_id": "160c844fe7e645e7b8e233d6b0f1fe13"
+          }
+        ],
+        "mcp": {
+          "attempted": 2,
+          "failed": 0,
+          "status": "measured"
+        },
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 23.23,
+            "request_id": "160c844fe7e645e7b8e233d6b0f1fe13"
+          },
+          {
+            "stage": "context",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 23.651,
+            "request_id": "160c844fe7e645e7b8e233d6b0f1fe13"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 36.583,
+            "request_id": "160c844fe7e645e7b8e233d6b0f1fe13"
+          }
+        ],
+        "provider_used": false,
+        "request_attempted": false,
+        "request_id": "160c844fe7e645e7b8e233d6b0f1fe13",
+        "session_id": "676af0d1febe46b2a035747b53110b26",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 2411.38,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 23.845,
+            "request_id": "160c844fe7e645e7b8e233d6b0f1fe13"
+          },
+          {
+            "stage": "memory_read",
+            "outcome": "completed",
+            "duration_ms": 1.322,
+            "request_id": "160c844fe7e645e7b8e233d6b0f1fe13"
+          },
+          {
+            "stage": "retrieve",
+            "outcome": "completed",
+            "duration_ms": 77.455,
+            "request_id": "160c844fe7e645e7b8e233d6b0f1fe13"
+          },
+          {
+            "stage": "tools",
+            "outcome": "completed",
+            "duration_ms": 1924.071,
+            "request_id": "160c844fe7e645e7b8e233d6b0f1fe13"
+          },
+          {
+            "stage": "compose",
+            "outcome": "completed",
+            "duration_ms": 3.173,
+            "request_id": "160c844fe7e645e7b8e233d6b0f1fe13"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 38.206,
+            "request_id": "160c844fe7e645e7b8e233d6b0f1fe13"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 23.23,
+            "outcome": "allow",
+            "request_id": "160c844fe7e645e7b8e233d6b0f1fe13"
+          },
+          {
+            "stage": "rail_context",
+            "duration_ms": 23.651,
+            "outcome": "allow",
+            "request_id": "160c844fe7e645e7b8e233d6b0f1fe13"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 36.583,
+            "outcome": "allow",
+            "request_id": "160c844fe7e645e7b8e233d6b0f1fe13"
+          }
+        ],
+        "telemetry_status": "unavailable"
+      },
+      "retained_rows": 1
+    },
+    {
+      "case": "source-version-changed-inflight",
+      "expected": "tools_unavailable",
+      "passed": true,
+      "answer": "Operational evidence is unavailable. No combined risk assessment is assigned; current health, dependencies and freeze applicability remain unconfirmed.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "tools_unavailable",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "events": [
+          {
+            "event": "mcp_failed",
+            "code": "cache_or_source_unavailable",
+            "request_id": "bc6f1cccc8d646f4b0c245158c98480c"
+          }
+        ],
+        "mcp": {
+          "status": "unavailable",
+          "attempted": null,
+          "failed": null
+        },
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:payment-gateway.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 21.319,
+            "request_id": "bc6f1cccc8d646f4b0c245158c98480c"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 32.125,
+            "request_id": "bc6f1cccc8d646f4b0c245158c98480c"
+          }
+        ],
+        "cache": [],
+        "request_id": "bc6f1cccc8d646f4b0c245158c98480c",
+        "session_id": "f17d1b6ed6cf44098fa6112ce9f52a66",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 2319.348,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 21.953,
+            "request_id": "bc6f1cccc8d646f4b0c245158c98480c"
+          },
+          {
+            "stage": "memory_read",
+            "outcome": "completed",
+            "duration_ms": 1.177,
+            "request_id": "bc6f1cccc8d646f4b0c245158c98480c"
+          },
+          {
+            "stage": "tools",
+            "outcome": "completed",
+            "duration_ms": 1929.78,
+            "request_id": "bc6f1cccc8d646f4b0c245158c98480c"
+          },
+          {
+            "stage": "compose",
+            "outcome": "completed",
+            "duration_ms": 0.044,
+            "request_id": "bc6f1cccc8d646f4b0c245158c98480c"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 33.922,
+            "request_id": "bc6f1cccc8d646f4b0c245158c98480c"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 21.319,
+            "outcome": "allow",
+            "request_id": "bc6f1cccc8d646f4b0c245158c98480c"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 32.125,
+            "outcome": "allow",
+            "request_id": "bc6f1cccc8d646f4b0c245158c98480c"
+          }
+        ]
+      },
+      "actual_fault_probe_invocations": 1
+    },
+    {
+      "case": "corpus-index-absent",
+      "expected": "retrieval_unavailable",
+      "passed": true,
+      "answer": "Historical evidence is unavailable. No risk indication is assigned. Check the local index and model setup.\n\nThis is advisory only. The decision to ship requires a human.",
+      "trace": {
+        "status": "retrieval_unavailable",
+        "retrieved": [],
+        "provider_used": false,
+        "request_attempted": false,
+        "memory": {
+          "status": "empty",
+          "record": null,
+          "effective_policy": {
+            "team": "sample-team",
+            "effective": {
+              "high_risk": false,
+              "freeze_window_active": false
+            },
+            "sources": {
+              "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+              "high_risk": "default:high_risk"
+            },
+            "conflicts": []
+          }
+        },
+        "rails": [
+          {
+            "stage": "input",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 22.5,
+            "request_id": "acf526b2c417420eb9906659a346c7d4"
+          },
+          {
+            "stage": "output",
+            "engine": "nemoguardrails",
+            "version": "0.24.1",
+            "executed": true,
+            "outcome": "allow",
+            "severity": "M0",
+            "code": "contract_valid",
+            "duration_ms": 28.611,
+            "request_id": "acf526b2c417420eb9906659a346c7d4"
+          }
+        ],
+        "mcp": {
+          "status": "not_accessed",
+          "attempted": 0,
+          "failed": 0
+        },
+        "request_id": "acf526b2c417420eb9906659a346c7d4",
+        "session_id": "0077d9dcb07f4b42b9b702a05c86d1cb",
+        "orchestration": "langgraph",
+        "transport": "evaluation",
+        "duration_ms": 398.81,
+        "spans": [
+          {
+            "stage": "classify",
+            "outcome": "completed",
+            "duration_ms": 23.231,
+            "request_id": "acf526b2c417420eb9906659a346c7d4"
+          },
+          {
+            "stage": "memory_read",
+            "outcome": "completed",
+            "duration_ms": 1.284,
+            "request_id": "acf526b2c417420eb9906659a346c7d4"
+          },
+          {
+            "stage": "retrieve",
+            "outcome": "completed",
+            "duration_ms": 0.4,
+            "request_id": "acf526b2c417420eb9906659a346c7d4"
+          },
+          {
+            "stage": "output_guard",
+            "outcome": "completed",
+            "duration_ms": 29.791,
+            "request_id": "acf526b2c417420eb9906659a346c7d4"
+          },
+          {
+            "stage": "rail_input",
+            "duration_ms": 22.5,
+            "outcome": "allow",
+            "request_id": "acf526b2c417420eb9906659a346c7d4"
+          },
+          {
+            "stage": "rail_output",
+            "duration_ms": 28.611,
+            "outcome": "allow",
+            "request_id": "acf526b2c417420eb9906659a346c7d4"
+          }
+        ]
+      }
+    }
+  ]
+}

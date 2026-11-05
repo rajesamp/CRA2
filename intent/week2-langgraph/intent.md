@@ -123,7 +123,7 @@ the unavailable Sentinel skill was restored. Tasks 16–18 remain subsequent wor
 The prerequisite history below is retained; the task 15 gate is resolved by
 this follow-up authorization.
 
-- `/Users/rajeshsam/Downloads/AGENTS.md` requires the
+- The owner's local operating directives require the
   `sentinel-mcp-tool-poisoning` skill for MCP metadata registration. It is absent
   from the supplied skill catalog and was not located in the local agent skill,
   Codex skill, or plugin-cache skill inventories. Restore the skill or explicitly

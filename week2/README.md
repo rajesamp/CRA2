@@ -15,35 +15,35 @@ uses the guarded graph, actual MCP calls and persistent team preferences.
 week2/.venv/bin/python -m week2.app
 ```
 
-Open `http://127.0.0.1:7862`. The default is Local evidence only: no provider
+Open `http://127.0.0.1:7862`. The default is Local evidence only: no Groq
 request or model risk rating. Assessment replies show a concise outcome,
-change-specific facts and review checks; source
-IDs, passages, tool results and memory/policy provenance stay in **Admin →
-Agent trace**. Open **Admin** beside **Change Risk Advisor**, enter any four
-digits, then select **Unlock Admin**. This is the explicitly chosen demo gate,
-not owner authentication: there is no fixed password, enrollment or saved PIN.
-The masked input clears after submission and never enters chat, traces, owner
-records or a provider request. Session traces remain in server-side Gradio
-State while locked; trace callbacks return empty details and choices until
-the session is unlocked. **Lock Admin** clears rendered details while retaining
-the session snapshots. Private owner security records remain local-CLI-only.
+change-specific facts and review checks. The **LangSmith** tab beside
+**Change Risk Advisor** replaces the Admin PIN/trace layer and provides
+per-turn private trace links, upload status and collapsed session metrics.
 
-The Admin **Agent trace history** selector keeps the latest 50 turns
-in this browser session. Each entry shows its original Local evidence only or
-Groq assessment mode. Select an earlier turn to inspect its question and results
-without rerunning the agent. Turn numbers appear only in the trace, not chat.
-Retry replaces the same turn; undo removes it; clear removes session traces.
-A refresh starts a fresh, locked session. Expand **Agent trace** in Admin to inspect actual calls,
-recalled settings, provenance and protected failures. Team identity is trusted
-host configuration; it is not a user-editable field. The app binds to loopback,
-uses no public tunnel, disables analytics and does not restore conversations.
+Follow [LangSmith setup](LANGSMITH.md) to opt in using a key in the private
+configuration file. Exports contain execution facts: memory recall and effective
+flags, retrieved source IDs/scores, validated synthetic tool outputs, cache use,
+guardrail outcomes and timings. Questions, answers, passages, prompts, private
+notes, owner audit records and raw graph state are excluded. A local assessment
+still makes no Groq request; enabled tracing sends the reviewed projection to
+LangSmith. Slack/CLI/evaluation traces are not uploaded by this browser feature.
+
+The turn selector keeps the latest 50 local links. Selecting one does not rerun
+the agent. Turn numbers appear only in the trace view, not chat. Retry uploads
+another run for the same turn; undo removes only its local link. Clear starts a
+new conversation/thread. Clearing or refreshing CRA2 does not delete uploaded
+LangSmith traces. LangSmith sign-in controls access to those private traces.
+Private owner security records remain local-CLI-only. Team identity remains
+trusted host configuration. The app binds to loopback, uses no public tunnel,
+disables analytics and does not restore conversations.
 
 App help is local in either mode. Ask **What is this app?**, **What services do
 you support?**, **What can you do?**, **How do I get started?**, **How do I save a
 preference?**, or ask about modes, tools, memory, trace history and limitations.
 Known services come from the current catalog. Help does not call retrieval,
 MCP or Groq; unrelated requests remain outside scope.
-Whole Admin navigation questions such as **Where is the Admin tab?** have a
+Whole trace navigation questions such as **Where is the LangSmith tab?** have a
 bounded benign contract because the existing semantic classifier otherwise
 flags them. This does not admit appended actions or change classifier training.
 
@@ -93,14 +93,13 @@ Try these in order:
 
 1. `Remember that checkout-service is always high-risk for our team.`
 2. Open a new browser session, then ask: `Change checkout-service config timeout from 4 seconds to 400 milliseconds.`
-3. Open Admin, enter any four digits, then expand Agent trace: the recalled flag and both MCP calls should be present.
+3. Open LangSmith and select the assessment turn: its recalled flag and actual MCP calls should be present after trace setup.
 4. `Remember freeze policy for checkout-service: Verify the team calendar.`
 
-Inside the trace, **Evidence and policy details** contains the guarded supporting
-response, and **Execution details** contains the selected structured facts,
-validated assessment questions and outcome. These are evidence and execution
-details, not hidden model reasoning or a raw graph-state dump. The primary UI
-does not display implementation instructions or example preference commands.
+The LangSmith tree includes evidence IDs, memory recall, actual operations and
+protected outcome metadata. It excludes hidden reasoning and raw graph state.
+The primary chat does not expose diagnostic dumps. The optional local CLI
+`--trace` remains available for inspecting the existing local diagnostic output.
 
 Preferences persist in ignored `week2/.local/team-memory.sqlite3`. Use
 `Forget the high-risk preference for checkout-service.` to explicitly clear a
@@ -188,11 +187,10 @@ continues checking historical citations and policy floors. The UI-facing
 answer renders validated tool facts separately with their evidence identifiers.
 Model prose is not exposed as independent operational truth.
 
-LangSmith tracing is explicitly disabled for this workflow, including when the
-environment enables it. Raw graph state is not the exported trace. No persistent
-graph checkpointer, conversation store or external telemetry is introduced.
-Task 16 adds a bounded preference database; task 17 loads it before assessment;
-task 18 projects actual events into the Gradio panel.
+Automatic LangSmith/framework tracing is explicitly disabled, including when
+the environment enables it. The opt-in [LangSmith exporter](LANGSMITH.md) sends
+only a reviewed projection through manual SDK ingestion. Raw graph state stays
+local. No persistent graph checkpointer or conversation store is introduced.
 
 ## Verify
 
@@ -210,3 +208,26 @@ offline tests are labeled separately from actual protocol and local-index runs.
 [Task 16 readback](../docs/evidence/week2-task-16.md) ·
 [Task 17 recall](../docs/evidence/week2-task-17.md) ·
 [Task 18 browser proof](../docs/evidence/week2-task-18.md).
+
+## Weeks 3–4 local continuation — 2026-10-31
+
+The same launch now includes actual NeMo custom-action checks, versioned
+query/retrieval/tool caches, correlated spans and bounded private metadata.
+**Last request cache** shows actual reuse. **View traces and metrics** selects
+the LangSmith tab, where the session dashboard remains collapsed by default.
+Replies/undo/clear update or reset its browser-session metrics.
+External model-request counts exclude local embedding/classifier work.
+
+[Learning guide](../docs/week3-week4-learning.md) ·
+[Local demo script](../docs/local-demo-script.md) ·
+[Final local evidence](../docs/evidence/week4-task-34.md). No new provider
+batch, public deployment, external telemetry or Slack delivery was performed
+for this selected local completion. The original deployment/video requirement
+and prior human acceptance remain separately pending.
+
+## LangSmith trace showcase — 2026-11-04
+
+The Admin/PIN trace panel is replaced by opt-in LangSmith browser traces and
+private per-turn links. See [configuration and export boundaries](LANGSMITH.md).
+The prior local trace/dashboard screenshots remain historical evidence, not
+proof of this new integration.

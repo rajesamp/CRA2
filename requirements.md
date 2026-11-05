@@ -110,3 +110,17 @@ evidence-grounded assessments, credential protection before tools/models and
 on outputs, supported question scope, and configurable answers in
 `week1/responses.json`. No Jev, production connector, deployment authority,
 Week 3–4 implementation, or inferred human acceptance is included.
+
+## Weeks 3–4 local guardrail requirements — 2026-10-31
+
+The owner accepted the sequential local delivery plan and asked to proceed
+with learning notes along the way. Existing requirements remain authoritative.
+
+| ID | Requirement | Acceptance evidence |
+|---|---|---|
+| W3-R01 | Actual NeMo input/context/output checks; required safety-check failures stop protected assessment paths | Task 20 execution events and allow/refuse/error tests; task 21 transcripts |
+| W3-R02 | Bounded exact caches preserve source validity, policy precedence, team isolation and truthful freshness | Task 22 miss/hit, expiry, mutation and isolation tests; task 23 timings |
+| W3-R03 | Show advisory status, actual cache reuse and protected execution facts | Task 25 browser proof; Week 4 correlated trace/dashboard evidence |
+
+[Guardrail checklist](docs/guardrails.md) maps twelve rules to these and the
+existing W1/W2 requirements. It does not claim runtime integration before task 20.

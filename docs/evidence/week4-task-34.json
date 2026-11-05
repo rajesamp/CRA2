@@ -1,0 +1,43 @@
+{
+  "started_at_utc": "2026-10-31 21:08:30 UTC",
+  "completed_at_utc": "2026-10-31 21:10:32 UTC",
+  "elapsed_seconds": 122,
+  "scope": "Final fresh-process browser workflow, five submissions across two new sessions; browser loads and automation handoffs included, no spoken narration timed.",
+  "local_url": "http://127.0.0.1:7863",
+  "browser_requests": 5,
+  "actual_tool_invocations": 3,
+  "provider_attempts": 0,
+  "memory_recall_without_restatement": true,
+  "graph_cache_miss_then_hit": true,
+  "approval_refused_with_local_review": true,
+  "dashboard_reachable_from_chat": true,
+  "private_storage_modes_verified": true,
+  "checks": {
+    "integration_tests_passed": 277,
+    "core_tests_passed": 502,
+    "live_core_tests_excluded": 4,
+    "week1_tests_passed": 494,
+    "fast_calibration_passed": 100,
+    "main_scorecard": [
+      18,
+      18
+    ],
+    "corrected_reserved_validation": [
+      4,
+      4
+    ],
+    "fault_demonstrations": [
+      9,
+      9
+    ]
+  },
+  "external_upstream_task34": {
+    "deployment": "pending outside selected scope",
+    "backup_video": "pending outside selected scope"
+  },
+  "limits": [
+    "Synthetic local evidence; current production freshness unknown.",
+    "Independent human-labeled quality and live-provider quality unmeasured.",
+    "Existing Admin gate is a local demo control, not production authentication."
+  ]
+}
