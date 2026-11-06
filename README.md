@@ -30,6 +30,10 @@ analogues. Browse the **Evidence sources** tab; rebuild the local index after
 adding or correcting records. The collection includes a staging change plan
 whose outcome is unverified, and does not establish failure probabilities.
 
+To discover more candidates, use the [Google Cloud feed importer](docs/google-incident-import.md).
+It stages source records for human review; importing does not add unreviewed
+content to retrieval or change risk scores.
+
 ## Run it
 
 CRA2 is a local chat app. You need Python 3.13 and

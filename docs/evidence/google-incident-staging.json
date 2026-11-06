@@ -1,0 +1,108 @@
+{
+  "checked_at_utc": "2026-11-06T01:13:24.186692+00:00",
+  "scope": "Two explicit read-only public Google feed requests; no live Groq or Slack. Candidates stay in ignored local staging.",
+  "repeat_result": {
+    "status": "unchanged",
+    "source_url": "https://status.cloud.google.com/incidents.json",
+    "records": 8,
+    "pending_review": 8,
+    "canonical_source_matches": 0,
+    "promoted_records": 0,
+    "network_requests": 1
+  },
+  "stage_sha256": "1907d7b830c32273ae8e558ee62390af3a497f91af4e791d2be0598a11c69fad",
+  "mode": "0o600",
+  "repeat_bytes_inode_mtime_unchanged": true,
+  "canonical_files_checked": 5,
+  "canonical_sha256_unchanged": {
+    "checkout_system.json": "1f92c7525820328fd58b55e3e1226c60aecb0a848a1dc29fb463808e73c0b5ef",
+    "incidents.json": "1e62a6aa696a9de88c85b3f1f0b4a55262b43ad2ec3838ec0e8ea33302971b2e",
+    "public_evidence.json": "01c370a5115c8d77444ca5f8bb6d719d411a179ac8340a02cbfd51ee2ce94925",
+    "sample_incidents.json": "c3e0f1999e68768bf163d63bbfbde6968e75c2d16ae9bfb2c30116f6129e7b82",
+    "team_settings.json": "eb97cb52825db555510073ea9bf1f5a4961c36ee6ff9f0ea9aa3b2ba2f768e8b"
+  },
+  "corpus_digest_unchanged": "0dcf35441ca089aea38add09e56a3741fa16389a406abcbf6d1e57477b437a65",
+  "index_sha256_unchanged": "8b802c24d02a3e08682c5a23d0653be5aee115dd85f140e63597cd13ff2e062c",
+  "records": [
+    {
+      "id": "3BvH3LVGcupoYqV6F4Nw",
+      "source_url": "https://status.cloud.google.com/incidents/3BvH3LVGcupoYqV6F4Nw",
+      "review_status": "pending_review",
+      "source_revision": "eca96b2cdf0c9e01d06e77ca722c00394e3a114626ad0d7c92b9fa595a7c1549",
+      "update_count": 12,
+      "source_severity": "medium",
+      "revision_at": "2026-07-25T13:16:55Z",
+      "canonical_record_id": null
+    },
+    {
+      "id": "41E5S3mkTGDfkZuJZH5k",
+      "source_url": "https://status.cloud.google.com/incidents/41E5S3mkTGDfkZuJZH5k",
+      "review_status": "pending_review",
+      "source_revision": "63743ca4cb2427c87851431c2c39a4862066f88c0d5e6c7bc413f496e6737c50",
+      "update_count": 3,
+      "source_severity": "low",
+      "revision_at": "2026-03-09T05:25:43Z",
+      "canonical_record_id": null
+    },
+    {
+      "id": "5fGQt4VbkDnr3Yp8PXPr",
+      "source_url": "https://status.cloud.google.com/incidents/5fGQt4VbkDnr3Yp8PXPr",
+      "review_status": "pending_review",
+      "source_revision": "ad876be80b1c8e894c5753f50048a1eaf3e87e42278c1c9891b842e05a5f0f22",
+      "update_count": 9,
+      "source_severity": "medium",
+      "revision_at": "2026-06-29T23:06:10Z",
+      "canonical_record_id": null
+    },
+    {
+      "id": "J5ia5t9p3g9Q5Wi7r8Ev",
+      "source_url": "https://status.cloud.google.com/incidents/J5ia5t9p3g9Q5Wi7r8Ev",
+      "review_status": "pending_review",
+      "source_revision": "bb1e34f62af2aa5eee34833f6421d868aedcddd80d250b96606b027d6e36da13",
+      "update_count": 9,
+      "source_severity": "medium",
+      "revision_at": "2026-10-17T21:49:14Z",
+      "canonical_record_id": null
+    },
+    {
+      "id": "T8gmtofFSTGT5tbhyciF",
+      "source_url": "https://status.cloud.google.com/incidents/T8gmtofFSTGT5tbhyciF",
+      "review_status": "pending_review",
+      "source_revision": "810bd4838c7a740be72658b3e17d8ddd0f303f87e9f269ae63f2e51f79fc3491",
+      "update_count": 11,
+      "source_severity": "medium",
+      "revision_at": "2026-07-24T07:14:47Z",
+      "canonical_record_id": null
+    },
+    {
+      "id": "Xs2XTHzAVC9YnafnPyzj",
+      "source_url": "https://status.cloud.google.com/incidents/Xs2XTHzAVC9YnafnPyzj",
+      "review_status": "pending_review",
+      "source_revision": "ff140c19be2f6f1e3734490a7a5a0a9f96daadf9258bd220a2432fe4b4b0919e",
+      "update_count": 10,
+      "source_severity": "medium",
+      "revision_at": "2026-11-05T06:17:42Z",
+      "canonical_record_id": null
+    },
+    {
+      "id": "mSFVt6PiP557bjRyYsut",
+      "source_url": "https://status.cloud.google.com/incidents/mSFVt6PiP557bjRyYsut",
+      "review_status": "pending_review",
+      "source_revision": "c1e0ea194659ff6b70f99ce54a3f05ef3a095fadeea1d1e754608b10b8874ddb",
+      "update_count": 7,
+      "source_severity": "medium",
+      "revision_at": "2026-10-14T07:24:12Z",
+      "canonical_record_id": null
+    },
+    {
+      "id": "utF3FMFdQfwBzJcGG6vf",
+      "source_url": "https://status.cloud.google.com/incidents/utF3FMFdQfwBzJcGG6vf",
+      "review_status": "pending_review",
+      "source_revision": "11a7a66c21f2ae9759628f9a8c100ef47f7109e9c6c3b97806230a2ca3da0fff",
+      "update_count": 9,
+      "source_severity": "high",
+      "revision_at": "2026-08-27T21:45:02Z",
+      "canonical_record_id": null
+    }
+  ]
+}
