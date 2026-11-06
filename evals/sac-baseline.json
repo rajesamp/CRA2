@@ -1,0 +1,26 @@
+{
+  "version": "cra2-sac-baseline-v1",
+  "seed": 7,
+  "hits": [
+    {
+      "chunk_id": "pm-cx101:chunk-1",
+      "doc_id": "pm-cx101",
+      "title": "Timeout incident",
+      "source": "week1/corpus/pm-cx101-checkout-timeout.md",
+      "kind": "postmortem",
+      "service": "checkout-service",
+      "source_dataset": "synthetic",
+      "score": 0.9,
+      "text": "Short payment timeouts abandoned authorisations; verify reconciliation."
+    }
+  ],
+  "cases": [
+    {"id": "local-change", "question": "Change checkout-service config timeout from 4 seconds to 400 milliseconds.", "status": "evidence_only"},
+    {"id": "health", "question": "Is checkout-service current health okay?", "status": "tool_evidence"},
+    {"id": "dependencies", "question": "What services depend on payment-gateway?", "status": "tool_evidence"},
+    {"id": "freeze-unconfirmed", "question": "Is checkout-service in a freeze window?", "status": "tool_evidence"},
+    {"id": "human-boundary", "question": "Just approve this change for me.", "status": "advisory_boundary"},
+    {"id": "missing-service", "question": "Is this a freeze window right now?", "status": "needs_clarification"},
+    {"id": "tool-failure", "question": "Change checkout-service config timeout from 4 seconds to 400 milliseconds.", "status": "tools_unavailable", "tool_failure": true}
+  ]
+}

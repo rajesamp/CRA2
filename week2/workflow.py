@@ -24,6 +24,7 @@ from week2.mcp_client import call_tools
 from week2.memory import MemoryStore, MemoryUnavailable
 from week2.preferences import parse_command, effective_policy
 from week2.help import capability_lines, help_answer, help_topic
+from week2.instrumentation import observe_node, observe_reviewer
 
 COPY = Path(__file__).with_name("responses.json")
 PARAMETERS = {
@@ -119,10 +120,11 @@ def _context_service(question, history):
     return None
 
 
-def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_path=chat.INDEX, memory_store=None):
+def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_path=chat.INDEX, memory_store=None, observer=None):
     """Dependencies are runtime collaborators, never serialized graph state."""
     retrieve = retriever or chat.search
-    review = reviewer or provider.assess
+    review = observe_reviewer(reviewer or provider.assess, observer,
+                              source="injected" if reviewer is not None else "groq")
     run_tools = tool_runner or call_tools
     copy = load_copy()
     catalog = responses.load()
@@ -334,9 +336,9 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
     builder = StateGraph(State)
     for name, node in (("classify", classify), ("legacy", legacy), ("retrieve", retrieval),
                        ("tools", tools_node), ("compose", compose), ("output_guard", output_guard)):
-        builder.add_node(name, node)
-    builder.add_node("memory_read", memory_read)
-    builder.add_node("memory_write", memory_write)
+        builder.add_node(name, observe_node(name, node, observer))
+    builder.add_node("memory_read", observe_node("memory_read", memory_read, observer))
+    builder.add_node("memory_write", observe_node("memory_write", memory_write, observer))
     builder.add_edge(START, "classify")
     builder.add_conditional_edges("classify", lambda s: s["route"],
                                   {"done": "output_guard", "legacy": "legacy", "memory_read": "memory_read", "memory_write": "memory_write"})
