@@ -91,11 +91,13 @@ measured recall guarantee.
 4. Rebuild the index and run focused public-evidence tests plus repository gates.
    Review a relevant query and a nonmatching query for attribution and scope.
 
-Future work: add a reviewed Google Cloud JSON feed adapter with bounded fetches,
-source-specific extraction, deduplication and outcome verification. GitLab change
-outcomes could reduce the outage selection bias after individual review. Build
+The [Google Cloud JSON importer](google-incident-import.md) now provides bounded
+fetching, source-specific extraction and deduplicated staging for human review.
+Staged records do not enter retrieval until manually curated and validated.
+Future work: verified Google/GitLab change outcomes could reduce the outage
+selection bias after individual review. Build
 an incident-level held-out retrieval benchmark before claiming quality gains;
 split by source incident before chunking so retrospective answers do not leak
-into their own evaluation inputs. No automatic fetch/import, upload UI,
-successful-change corpus, persistent action recovery or AgentCore integration is
-included in this increment.
+into their own evaluation inputs. Automatic promotion, an upload UI,
+successful-change corpus, persistent action recovery and AgentCore integration
+remain outside this increment.

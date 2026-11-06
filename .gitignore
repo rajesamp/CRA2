@@ -19,3 +19,6 @@ build/
 /private-learning/
 /week2/.local/
 /week2/.venv/
+
+# Unreviewed external feed candidates stay local and outside retrieval/resources.
+/data/.staging/
