@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import platform
 import subprocess
@@ -68,6 +69,8 @@ def _normalized(answer, trace):
 
 
 def run_benchmark(*, repeat=5, dataset=DATASET):
+    if os.environ.get("CRA2_CONTEXT_MODE") is not None:
+        raise ValueError("Unset CRA2_CONTEXT_MODE before running the legacy P0 baseline")
     if type(repeat) is not int or not 1 <= repeat <= 100:
         raise ValueError("repeat must be between 1 and 100")
     raw = Path(dataset).read_bytes()

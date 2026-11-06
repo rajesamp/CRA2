@@ -21,11 +21,13 @@ MAX_REFERENCES = 64
 ACTIONS = ("retrieve", "check_system_health", "get_dependency_graph", "assess")
 IDENTIFIER = {"type": "string", "minLength": 1, "maxLength": 200,
               "pattern": r"^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"}
+EVIDENCE_IDENTIFIER = dict(IDENTIFIER, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:/#-]*$")
 DIGEST = {"type": "string", "pattern": r"^[a-f0-9]{64}$", "maxLength": 64}
 
 
-def references(limit=MAX_REFERENCES):
-    return {"type": "array", "items": IDENTIFIER, "uniqueItems": True, "maxItems": limit}
+def references(limit=MAX_REFERENCES, *, evidence=False):
+    return {"type": "array", "items": EVIDENCE_IDENTIFIER if evidence else IDENTIFIER,
+            "uniqueItems": True, "maxItems": limit}
 
 
 STATE_SCHEMA = obj({
@@ -35,7 +37,7 @@ STATE_SCHEMA = obj({
     "objective": {"type": "string", "minLength": 1, "maxLength": 2000},
     "service": IDENTIFIER,
     "completed_action_ids": references(MAX_ACTIONS),
-    "evidence_ids": references(),
+    "evidence_ids": references(evidence=True),
     "policy_refs": references(),
     "unresolved_question_ids": references(),
     "next_action": {"enum": [*ACTIONS, None]},

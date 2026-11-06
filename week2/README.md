@@ -211,13 +211,43 @@ offline tests are labeled separately from actual protocol and local-index runs.
 [Task 17 recall](../docs/evidence/week2-task-17.md) ·
 [Task 18 browser proof](../docs/evidence/week2-task-18.md).
 
-## Experimental SAC foundation (issue #19)
+## Experimental bounded action execution (issue #19)
 
-P0/P1 add opt-in, in-process action measurements and standalone validated
-semantic state with a deterministic reducer. The default workflow is unchanged;
-SAC/threshold execution modes and fresh per-action model contexts are not yet
-integrated. Policy, original evidence and action ledgers remain host-owned,
-outside compact state. The reducer cannot approve a change or execute a tool.
+P2 connects the P0/P1 semantic-state contract to a bounded action plan. Policy,
+original evidence and action ledgers remain host-owned outside compact state.
+The reducer cannot approve a change or execute a tool. Without a context setting,
+the existing workflow and local-evidence UI default are unchanged.
+
+Opt in using trusted host configuration:
+
+```sh
+uv run --locked --project week2 python -m week2.app --context-mode sac
+# Or, for the app / Slack / programmatic workflow:
+CRA2_CONTEXT_MODE=threshold uv run --locked --project week2 python -m week2.app
+```
+
+Explicit `full`, `threshold`, and `sac` use the same selected actions. Full retains
+validated action records, threshold clears that history at 8 KiB by default, and
+SAC omits it. Every action gets a freshly validated context with the same required
+evidence and policy. The current change-review plan has three read-only actions
+and at most one model assessment, so it does not establish long-running SAC gains.
+Explicit `full` enables the experimental control; leaving the selector unset
+keeps the legacy path. Unset `CRA2_CONTEXT_MODE` for the historical P0 harness.
+
+Programmatic callers can pass `context_mode`, an `ExecutionOptions` instance
+from `week2.execution`, and a `threading.Event` as `cancel_event` to
+`respond`/`arespond`. Defaults cap execution at eight actions, 30 seconds,
+32 KiB per prepared context, 128 KiB total input and 1,024 output tokens. Input
+metrics are bytes; provider token counts are never estimated from them. SDK
+ceilings can only tighten configured limits. Cancellation stops later dispatch
+and discards late results, but cannot revoke an already-sent provider request.
+Malformed state/evidence and exhausted budgets return no risk indication.
+
+The experiment retains P1's strict objective bound (2,000 characters, no control
+characters); it refuses incompatible input without truncation. General source
+documents remain general, synthetic snapshots remain unverified, and stored
+preference notes never enter experimental model input. Mode, counts and byte
+metrics appear only in the existing admin trace.
 
 Read [the SAC ADR](../docs/adr-sac.md) before integrating the state/reducer. To
 reproduce the offline observer-parity baseline, choose a new output filename:
@@ -231,3 +261,6 @@ This uses fixed retrieval and in-process read-only tools, makes no provider
 requests and measures no token/cost savings. [Evidence and remaining
 work](../docs/evidence/sac-benchmark.md) distinguish the P0/P1 foundation from the
 future three-mode experiment.
+
+[P2 validation and remaining work](../docs/evidence/sac-p2.md) ·
+[Week 2 CI and explicit real-model gate](integration/README.md).
