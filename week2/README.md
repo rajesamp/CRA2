@@ -264,3 +264,10 @@ future three-mode experiment.
 
 [P2 validation and remaining work](../docs/evidence/sac-p2.md) ·
 [Week 2 CI and explicit real-model gate](integration/README.md).
+
+### Independent evidence review
+
+Run `PYTHONPATH=. week2/.venv/bin/python -m week2.reviewer_app` from the repository
+root for the separate local reviewer workspace at port 7863. It collects individual
+judgments without showing other reviewers' labels or calling a model. Copy the
+submission before closing the session. See the [review and import workflow](../docs/retrieval-review.md).
