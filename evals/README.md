@@ -120,3 +120,12 @@ costs, Caveman inferred daily headroom, and verified ledger savings. A
 synthetic run cannot establish savings. Caveman review needs a selected
 project, exact report windows, and attributable trace IDs. No such telemetry
 was available during the code overhaul.
+
+## Retrieval quality
+
+`retrieval-cases.json` contains source-separated development/evaluation scenarios
+for the Week 1/2 retriever. Run `scripts/evaluate_retrieval.py` in the locked
+Week 2 environment against a current local index. See the
+[baseline and limitations](../docs/evidence/retrieval-baseline.md).
+This is separate from deterministic policy calibration and does not change
+risk thresholds or provide deployment authorization.
