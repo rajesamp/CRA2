@@ -65,7 +65,7 @@ def test_tabs_start_locked_with_trace_controls_inside_admin(tmp_path):
     try:
         components = demo.config["components"]
         tabs = [c for c in components if c["type"] == "tabitem"]
-        assert [c["props"]["label"] for c in tabs] == ["Change Risk Advisor", "Admin"]
+        assert [c["props"]["label"] for c in tabs] == ["Change Risk Advisor", "Evidence sources", "Admin"]
         admin_group = next(c for c in components if c["props"].get("elem_id") == "admin-trace-controls")
         assert admin_group["props"]["visible"] is False
         pin = next(c for c in components if c["props"].get("label") == "Demo PIN")

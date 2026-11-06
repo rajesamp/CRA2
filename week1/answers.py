@@ -42,6 +42,8 @@ def _evidence_list(hits, catalog=None):
             brief = ""
         brief = brief.replace("**", "")
         label = brief or hit.get("title", hit["doc_id"])
+        if hit.get("source_dataset") == "public_corporate":
+            label = "External analogue · " + hit["title"] + " · " + hit["service"]
         if hit.get("kind") == "runbook":
             label = responses.message(catalog, "guidance_prefix") + label
         identity = (hit["doc_id"], label)
@@ -54,6 +56,8 @@ def _evidence_list(hits, catalog=None):
             + " ("
             + _inline(hit["chunk_id"])
             + ")"
+            + (" — [Company source](" + hit["source"] + ")"
+               if hit.get("source_dataset") == "public_corporate" else "")
         )
     return responses.message(catalog, "evidence_heading") + "\n\n" + "\n".join(bullets)
 

@@ -1,0 +1,182 @@
+{
+  "checked_at_utc": "2026-11-05T21:45:27.033501+00:00",
+  "query": "Change checkout-service worker routing to withdraw DNS advertisements during backbone maintenance.",
+  "scope": "Actual pinned cached BGE encoder, current canonical index and stdio MCP; injected reviewer, no live Groq or Slack.",
+  "public_data_sha256": "01c370a5115c8d77444ca5f8bb6d719d411a179ac8340a02cbfd51ee2ce94925",
+  "cases": [
+    {
+      "context_mode": "full",
+      "review_mode": "Local evidence only",
+      "status": "evidence_only",
+      "external_id": "public-meta-2021-10-04#chunk-001",
+      "external_source": "https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/",
+      "external_service": "Facebook backbone and DNS infrastructure",
+      "actual_mcp_calls": [
+        "check_system_health",
+        "get_dependency_graph"
+      ],
+      "reviewer_fixture_calls": 0,
+      "live_provider_calls": 0,
+      "risk_floor": null,
+      "execution": {
+        "mode": "full",
+        "status": "completed",
+        "action_count": 3,
+        "completed_actions": 3,
+        "model_action_count": 0,
+        "state_bytes": 890,
+        "input_context_bytes": 15487,
+        "peak_context_bytes": 7850,
+        "compaction_count": 0,
+        "reduction_ms": 38.834197010146454,
+        "context_tokens": null,
+        "max_output_tokens": 1024
+      }
+    },
+    {
+      "context_mode": "full",
+      "review_mode": "Groq assessment",
+      "status": "assessed",
+      "external_id": "public-meta-2021-10-04#chunk-001",
+      "external_source": "https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/",
+      "external_service": "Facebook backbone and DNS infrastructure",
+      "actual_mcp_calls": [
+        "check_system_health",
+        "get_dependency_graph"
+      ],
+      "reviewer_fixture_calls": 1,
+      "live_provider_calls": 0,
+      "risk_floor": "medium",
+      "execution": {
+        "mode": "full",
+        "status": "completed",
+        "action_count": 4,
+        "completed_actions": 4,
+        "model_action_count": 1,
+        "state_bytes": 934,
+        "input_context_bytes": 30644,
+        "peak_context_bytes": 15157,
+        "compaction_count": 0,
+        "reduction_ms": 51.83097299595829,
+        "context_tokens": null,
+        "max_output_tokens": 1024
+      }
+    },
+    {
+      "context_mode": "threshold",
+      "review_mode": "Local evidence only",
+      "status": "evidence_only",
+      "external_id": "public-meta-2021-10-04#chunk-001",
+      "external_source": "https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/",
+      "external_service": "Facebook backbone and DNS infrastructure",
+      "actual_mcp_calls": [
+        "check_system_health",
+        "get_dependency_graph"
+      ],
+      "reviewer_fixture_calls": 0,
+      "live_provider_calls": 0,
+      "risk_floor": null,
+      "execution": {
+        "mode": "threshold",
+        "status": "completed",
+        "action_count": 3,
+        "completed_actions": 3,
+        "model_action_count": 0,
+        "state_bytes": 890,
+        "input_context_bytes": 14822,
+        "peak_context_bytes": 7406,
+        "compaction_count": 3,
+        "reduction_ms": 37.70492300100159,
+        "context_tokens": null,
+        "max_output_tokens": 1024
+      }
+    },
+    {
+      "context_mode": "threshold",
+      "review_mode": "Groq assessment",
+      "status": "assessed",
+      "external_id": "public-meta-2021-10-04#chunk-001",
+      "external_source": "https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/",
+      "external_service": "Facebook backbone and DNS infrastructure",
+      "actual_mcp_calls": [
+        "check_system_health",
+        "get_dependency_graph"
+      ],
+      "reviewer_fixture_calls": 1,
+      "live_provider_calls": 0,
+      "risk_floor": "medium",
+      "execution": {
+        "mode": "threshold",
+        "status": "completed",
+        "action_count": 4,
+        "completed_actions": 4,
+        "model_action_count": 1,
+        "state_bytes": 934,
+        "input_context_bytes": 29285,
+        "peak_context_bytes": 14463,
+        "compaction_count": 4,
+        "reduction_ms": 53.007401002105325,
+        "context_tokens": null,
+        "max_output_tokens": 1024
+      }
+    },
+    {
+      "context_mode": "sac",
+      "review_mode": "Local evidence only",
+      "status": "evidence_only",
+      "external_id": "public-meta-2021-10-04#chunk-001",
+      "external_source": "https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/",
+      "external_service": "Facebook backbone and DNS infrastructure",
+      "actual_mcp_calls": [
+        "check_system_health",
+        "get_dependency_graph"
+      ],
+      "reviewer_fixture_calls": 0,
+      "live_provider_calls": 0,
+      "risk_floor": null,
+      "execution": {
+        "mode": "sac",
+        "status": "completed",
+        "action_count": 3,
+        "completed_actions": 3,
+        "model_action_count": 0,
+        "state_bytes": 890,
+        "input_context_bytes": 14744,
+        "peak_context_bytes": 7380,
+        "compaction_count": 3,
+        "reduction_ms": 36.98160499334335,
+        "context_tokens": null,
+        "max_output_tokens": 1024
+      }
+    },
+    {
+      "context_mode": "sac",
+      "review_mode": "Groq assessment",
+      "status": "assessed",
+      "external_id": "public-meta-2021-10-04#chunk-001",
+      "external_source": "https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/",
+      "external_service": "Facebook backbone and DNS infrastructure",
+      "actual_mcp_calls": [
+        "check_system_health",
+        "get_dependency_graph"
+      ],
+      "reviewer_fixture_calls": 1,
+      "live_provider_calls": 0,
+      "risk_floor": "medium",
+      "execution": {
+        "mode": "sac",
+        "status": "completed",
+        "action_count": 4,
+        "completed_actions": 4,
+        "model_action_count": 1,
+        "state_bytes": 934,
+        "input_context_bytes": 29179,
+        "peak_context_bytes": 14435,
+        "compaction_count": 4,
+        "reduction_ms": 55.56440899090376,
+        "context_tokens": null,
+        "max_output_tokens": 1024
+      }
+    }
+  ]
+}

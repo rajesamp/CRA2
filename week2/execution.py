@@ -17,6 +17,7 @@ import anyio
 from jsonschema import Draft202012Validator
 
 from cra2 import system2
+from cra2.public_evidence import validate_public_hit
 
 from week2.compaction import initial_state, reduce_state
 from week2.context_builder import build_context, content_digest, context_json
@@ -73,12 +74,24 @@ def retrieval_records(hits, service):
         raise ContractError("invalid_retrieval_evidence")
     records, store = [], {}
     for hit in hits:
-        if (not Draft202012Validator(schema).is_valid(hit)
-                or hit["service"] not in (None, service)
-                or hit["chunk_id"] in store):
+        external = isinstance(hit, dict) and (
+            hit.get("source_dataset") == "public_corporate"
+            or hit.get("kind") in ("external_incident", "external_change_plan")
+            or str(hit.get("chunk_id", "")).startswith("public-")
+            or str(hit.get("doc_id", "")).startswith("public-")
+        )
+        if external:
+            try:
+                validate_public_hit(hit)
+            except (ValueError, TypeError, KeyError):
+                raise ContractError("invalid_retrieval_evidence") from None
+        elif (not Draft202012Validator(schema).is_valid(hit)
+              or hit["service"] not in (None, service)):
+            raise ContractError("invalid_retrieval_evidence")
+        if hit["chunk_id"] in store:
             raise ContractError("invalid_retrieval_evidence")
         records.append({"id": hit["chunk_id"], "service": service, "origin": "retrieve",
-            "kind": "historical", "source_service": hit["service"],
+            "kind": "external_public" if external else "historical", "source_service": hit["service"],
             "source_id": hit["source"], "content_digest": content_digest(hit)})
         store[hit["chunk_id"]] = deepcopy(hit)
     return records, store
@@ -311,7 +324,8 @@ class ActionExecution:
 
     def review_payload(self, payload, context):
         """Resolve evidence once; history contains references, not duplicated text."""
-        hits = [row["content"] for row in context["evidence"].values() if row["kind"] == "historical"]
+        hits = [row["content"] for row in context["evidence"].values()
+                if row["kind"] in {"historical", "external_public"}]
         outputs = {}
         for row in context["evidence"].values():
             if row["kind"] == "synthetic_snapshot":

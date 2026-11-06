@@ -14,6 +14,7 @@ from cra2.advisor import (
     TEAM_SETTINGS,
 )
 from cra2.incidents import load_incidents
+from cra2.public_evidence import validate_public_hit
 from cra2.team_settings import resolve_settings
 from week1 import answers, provider, responses, routing
 from week1.retrieval import search
@@ -194,14 +195,23 @@ def respond(
     query = question + (" " + service if service and service not in question else "")
     hits = (retriever or search)(query, index_path, limit=3, service=service)
     guard(hits)
+    for hit in hits:
+        if (hit.get("source_dataset") == "public_corporate"
+                or hit.get("kind") in ("external_incident", "external_change_plan")
+                or str(hit.get("chunk_id", "")).startswith("public-")
+                or str(hit.get("doc_id", "")).startswith("public-")):
+            validate_public_hit(hit)
     trace = {
         "scope": scope,
         "status": "evidence_ready",
-        "source_scope": "Static historical/sample corpus; no live system lookup",
+        "source_scope": "Static historical/sample corpus and curated external corporate analogues; no live system lookup",
         "retrieved": [
             {
                 "chunk_id": h["chunk_id"],
                 "source": h["source"],
+                "source_dataset": h.get("source_dataset"),
+                "source_service": h.get("service"),
+                "kind": h.get("kind"),
                 "similarity": round(h["score"], 4),
                 "text": h["text"],
             }

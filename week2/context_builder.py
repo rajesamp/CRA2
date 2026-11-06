@@ -10,6 +10,7 @@ import math
 import unicodedata
 from copy import deepcopy
 
+from cra2.public_evidence import validate_public_hit
 from cra2.team_settings import SETTING_FIELDS
 from week1.responses import guard
 from week2.contracts import (
@@ -115,6 +116,8 @@ def _historical(raw, record, service):
         if not isinstance(raw[field], str) or not raw[field].strip() or len(raw[field]) > limit:
             raise ContractError("invalid_action_context")
     if (raw["chunk_id"] != record["id"] or raw["source"] != record["source_id"]
+            or raw["chunk_id"].startswith("public-")
+            or raw["doc_id"].startswith("public-")
             or raw["service"] not in (None, service)
             or raw["service"] != record.get("source_service", record["service"])
             or raw["kind"] not in ("incident", "postmortem", "runbook", "policy")
@@ -125,6 +128,19 @@ def _historical(raw, record, service):
         raise ContractError("invalid_action_context")
 
 
+def _external_public(raw, record):
+    # A matching digest only proves that the caller resealed the supplied bytes.
+    # Recheck the canonical public document so source facts and CRA2 inference
+    # cannot be rewritten together with its digest or promoted to local history.
+    try:
+        validate_public_hit(raw)
+        if (raw["chunk_id"] != record["id"] or raw["source"] != record["source_id"]
+                or raw["service"] != record["source_service"]):
+            raise ValueError
+    except (ValueError, TypeError, KeyError):
+        raise ContractError("invalid_action_context") from None
+
+
 def _resolve(reference, record, evidence_store, service):
     if reference not in evidence_store:
         raise ContractError("invalid_action_context")
@@ -132,7 +148,10 @@ def _resolve(reference, record, evidence_store, service):
     if content_digest(raw) != record["content_digest"]:
         raise ContractError("invalid_action_context")
     if record["origin"] == "retrieve":
-        _historical(raw, record, service)
+        if record["kind"] == "external_public":
+            _external_public(raw, record)
+        else:
+            _historical(raw, record, service)
     else:
         validate_result(record["origin"], service, raw)
         if (raw["status"] != "ok" or raw["source"]["path"] != record["source_id"]
