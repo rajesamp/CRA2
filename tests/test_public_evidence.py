@@ -40,13 +40,13 @@ def hit(directory=None):
 
 def test_canonical_collection_preserves_facts_and_unknown_labels():
     records = load_public_evidence()
-    assert len(records) == 13
-    assert len({r["id"] for r in records}) == 13
+    assert len(records) == 19
+    assert len({r["id"] for r in records}) == 19
     assert all(r["id"].startswith("public-") for r in records)
     assert all(r["original_severity"] is None and r["prospective_cra2_risk"] is None for r in records)
     incidents = [r for r in records if r["record_type"] == "incident_report"]
     plans = [r for r in records if r["record_type"] == "change_plan"]
-    assert len(incidents) == 12 and len(plans) == 1
+    assert len(incidents) == 18 and len(plans) == 1
     assert plans[0]["incident_date"] is None
     assert plans[0]["reported_recovery"] is None
     assert plans[0]["planned_change_date"] == "2026-03-26"
@@ -129,9 +129,9 @@ def test_missing_required_fields_rejected(collection, field):
     lambda d: d["records"].append(deepcopy(d["records"][0])),
     lambda d: d.update(records=[]),
     lambda d: d.update(records=[deepcopy(d["records"][0])] * 257),
-    lambda d: d["records"][-1].update(incident_date="2026-03-26"),
-    lambda d: d["records"][-1].update(reported_recovery="Succeeded"),
-    lambda d: d["records"][-1].update(planned_change_date=None),
+    lambda d: next(r for r in d["records"] if r["record_type"] == "change_plan").update(incident_date="2026-03-26"),
+    lambda d: next(r for r in d["records"] if r["record_type"] == "change_plan").update(reported_recovery="Succeeded"),
+    lambda d: next(r for r in d["records"] if r["record_type"] == "change_plan").update(planned_change_date=None),
 ])
 def test_closed_versioned_schema_and_change_plan_outcome(collection, update):
     edit(collection, update)

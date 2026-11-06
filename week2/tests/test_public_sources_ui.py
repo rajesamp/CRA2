@@ -23,8 +23,8 @@ def projected_hit(record_type="incident_report"):
 def test_sources_show_original_identities_counts_and_limits():
     text = app.evidence_sources()
     assert "16 synthetic incidents" in text and "30 sanitized samples" in text
-    assert "13 external corporate records" in text
-    assert "12 incident reports and 1 change plan(s)" in text
+    assert "19 external corporate records" in text
+    assert "18 incident reports and 1 change plan(s)" in text
     assert "not local incident history, current health, or policy authority" in text
     assert "cannot establish failure probabilities" in text
     assert "do not establish successful outcomes" in text
@@ -93,7 +93,7 @@ def test_gradio_exposes_readonly_evidence_sources_tab(tmp_path):
         components = demo.config["components"]
         assert any(c["props"].get("label") == "Evidence sources" for c in components)
         source = next(c for c in components if c["props"].get("elem_id") == "evidence-sources")
-        assert source["type"] == "markdown" and "13 external corporate records" in source["props"]["value"]
+        assert source["type"] == "markdown" and "19 external corporate records" in source["props"]["value"]
         assert any("Sample history and external analogues" in c["props"].get("value", "")
                    for c in components if c["type"] == "markdown")
     finally:

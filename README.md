@@ -24,7 +24,7 @@ the user for public distribution and Groq context. Calibration scores measure
 calibration, not production accuracy. See the
 [code review](docs/evidence/code-review.md) for scope and findings.
 
-The chat also retrieves 13 curated [public corporate evidence records](docs/public-evidence.md)
+The chat also retrieves 19 curated [public corporate evidence records](docs/public-evidence.md)
 from nine companies. These retain their original service identities as external
 analogues. Browse the **Evidence sources** tab; rebuild the local index after
 adding or correcting records. The collection includes a staging change plan

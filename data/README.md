@@ -13,7 +13,7 @@ windows, configuration state, or an incident service.
 | `checkout_system.json` | Eight services: tier, direct dependencies, health, freeze state, rollback guidance, monitors, config-source/drift fields |
 | `incidents.json` | 16 original synthetic examples, `CX-101`–`CX-116`, with service, date, change type, severity, root cause |
 | `sample_incidents.json` | 30 user-provided sanitized samples, keeping original service/type labels and provenance |
-| `public_evidence.json` | 13 curated corporate analogues: 12 incident reports and one staging change plan; original company/service, official URLs, facts, recovery, separate inferences and caveats |
+| `public_evidence.json` | 19 curated corporate analogues: 18 incident reports and one staging change plan; original company/service, official URLs, facts, recovery, separate inferences and caveats |
 | `.staging/google-incidents.json` | Optional local Google feed candidates awaiting review; ignored by Git, excluded from retrieval and wheel resources |
 | `team_settings.json` | Bundled `sample-team` policy: `auth-service.high_risk = true`; unspecified fields keep lower-precedence values |
 

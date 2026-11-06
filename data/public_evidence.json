@@ -300,6 +300,140 @@
       "original_severity": null,
       "prospective_cra2_risk": null,
       "access_checked_on": "2026-11-05"
+    },
+    {
+      "id": "public-google-vertex-2026-02-27",
+      "incident_date": "2026-02-27",
+      "original_service": "Vertex AI Gemini API",
+      "reported_facts": "A safety-filter configuration activated request-dependent code paths that disrupted a shared filtering service. Reduced serving capacity caused overload and elevated 429 and 503 responses.",
+      "reported_recovery": "Google rolled back the configuration and added serving capacity.",
+      "risk_topics_inferred": [
+        "configuration activation",
+        "request-shape coverage",
+        "shared dependency capacity"
+      ],
+      "review_question_inferred": "Which request-shape tests and dependency-capacity checks cover this configuration rollout?",
+      "caveats": "Exact configuration and request conditions are undisclosed. Final impact times revise preliminary estimates; do not combine them into a longer outage.",
+      "company": "Google Cloud",
+      "record_type": "incident_report",
+      "planned_change_date": null,
+      "source_url": "https://status.cloud.google.com/incidents/41E5S3mkTGDfkZuJZH5k",
+      "source_kind": "first_party_corporate",
+      "original_severity": null,
+      "prospective_cra2_risk": null,
+      "access_checked_on": "2026-11-05"
+    },
+    {
+      "id": "public-google-gcve-2026-07-14",
+      "incident_date": "2026-07-14",
+      "original_service": "Google Cloud VMware Engine Stretched Clusters",
+      "reported_facts": "A structurally valid network configuration exposed routing defects that dropped selected private-address traffic and disrupted inter-zone connectivity. BGP and BFD checks used unaffected address spaces and remained functional.",
+      "reported_recovery": "Google rolled back configuration, reset network state and rerouted traffic.",
+      "risk_topics_inferred": [
+        "configuration validation",
+        "data-plane probes",
+        "selective routing failure"
+      ],
+      "review_question_inferred": "Which probes verify the actual private-address data path when control-plane health checks remain healthy?",
+      "caveats": "Final analysis differs from early BGP-flapping updates and revises the recovery time. Healthy control-plane checks did not establish end-to-end connectivity.",
+      "company": "Google Cloud",
+      "record_type": "incident_report",
+      "planned_change_date": null,
+      "source_url": "https://status.cloud.google.com/incidents/T8gmtofFSTGT5tbhyciF",
+      "source_kind": "first_party_corporate",
+      "original_severity": null,
+      "prospective_cra2_risk": null,
+      "access_checked_on": "2026-11-05"
+    },
+    {
+      "id": "public-google-network-2026-08-20",
+      "incident_date": "2026-08-20",
+      "original_service": "Google Cloud us-west1 inter-campus network",
+      "reported_facts": "Scheduled optical maintenance reduced network capacity. Automatic rerouting failed to use sufficient alternate capacity, causing congestion and packet loss. Shared consensus and metadata dependencies propagated failures to dependent services.",
+      "reported_recovery": "Google drained traffic, restored capacity and gradually reintroduced traffic; backlog and workflow recovery continued afterward.",
+      "risk_topics_inferred": [
+        "maintenance bandwidth",
+        "routing failover",
+        "shared dependencies",
+        "recovery backlogs"
+      ],
+      "review_question_inferred": "How will maintenance preserve alternate-path bandwidth and verify recovery of dependent services?",
+      "caveats": "The final core-impact window differs from dashboard times; product recovery was not simultaneous. Specific circuit changes and rerouting defects are unspecified.",
+      "company": "Google Cloud",
+      "record_type": "incident_report",
+      "planned_change_date": null,
+      "source_url": "https://status.cloud.google.com/incidents/utF3FMFdQfwBzJcGG6vf",
+      "source_kind": "first_party_corporate",
+      "original_severity": null,
+      "prospective_cra2_risk": null,
+      "access_checked_on": "2026-11-05"
+    },
+    {
+      "id": "public-google-router-2026-09-01",
+      "incident_date": "2026-09-01",
+      "original_service": "Google Compute Engine and Virtual Private Cloud (VPC)",
+      "reported_facts": "A router capacity upgrade used incompatible transceivers. Missing sequencing and verification allowed maintenance to disconnect redundant fiber paths, disrupting specific clusters and dependent services.",
+      "reported_recovery": "Google diverted traffic, reinstalled original transceivers and restored connectivity.",
+      "risk_topics_inferred": [
+        "transceiver compatibility",
+        "maintenance sequencing",
+        "redundant-path protection"
+      ],
+      "review_question_inferred": "How will compatibility and connectivity be verified before upgrading the next redundant router?",
+      "caveats": "Final analysis and an addendum expand preliminary scope to clusters spanning us-central1-b and us-central1-f, not whole-zone failures. Dashboard and narrative onset differ by one minute.",
+      "company": "Google Cloud",
+      "record_type": "incident_report",
+      "planned_change_date": null,
+      "source_url": "https://status.cloud.google.com/incidents/J5ia5t9p3g9Q5Wi7r8Ev",
+      "source_kind": "first_party_corporate",
+      "original_severity": null,
+      "prospective_cra2_risk": null,
+      "access_checked_on": "2026-11-05"
+    },
+    {
+      "id": "public-google-storage-2026-10-08",
+      "incident_date": "2026-10-08",
+      "original_service": "Google Cloud Storage us-central1",
+      "reported_facts": "A traffic-sorting configuration bypassed capacity-aware routing and overloaded storage nodes. An incomplete upload-planner rollback allowed recurrence the following day. A separate database issue affected metadata processing.",
+      "reported_recovery": "Google drained traffic and completed the routing rollback. A separate database rollback addressed metadata processing.",
+      "risk_topics_inferred": [
+        "routing invariants",
+        "backend capacity",
+        "rollback completeness",
+        "recurrence"
+      ],
+      "review_question_inferred": "How will rollback validation confirm that every traffic-planning component again respects backend capacity?",
+      "caveats": "October 8 and 9 had distinct impact periods, not continuous downtime. Final onset revises an initial estimate; retain the separate metadata cause.",
+      "company": "Google Cloud",
+      "record_type": "incident_report",
+      "planned_change_date": null,
+      "source_url": "https://status.cloud.google.com/incidents/mSFVt6PiP557bjRyYsut",
+      "source_kind": "first_party_corporate",
+      "original_severity": null,
+      "prospective_cra2_risk": null,
+      "access_checked_on": "2026-11-05"
+    },
+    {
+      "id": "public-google-power-2026-10-20",
+      "incident_date": "2026-10-20",
+      "original_service": "Google Cloud europe-west2 infrastructure",
+      "reported_facts": "During temporary single-feed maintenance, an external cable fault removed the active supply. Identical generator controllers sensed upstream voltage on an isolated feeder, ignored breaker position and withheld startup. UPS batteries depleted; failover stressed regional dependencies.",
+      "reported_recovery": "Google transferred utility supply, corrected controller checks and gradually restored infrastructure and traffic.",
+      "risk_topics_inferred": [
+        "maintenance topology",
+        "common-mode redundancy",
+        "failover capacity"
+      ],
+      "review_question_inferred": "Do failure tests cover breaker state, shared controller logic and capacity during the temporary maintenance configuration?",
+      "caveats": "Maintenance did not cause the external fault. UTC incident date corresponds to October 19 Pacific. Final timing and product scope revise early updates; recovery exceeded the headline window.",
+      "company": "Google Cloud",
+      "record_type": "incident_report",
+      "planned_change_date": null,
+      "source_url": "https://status.cloud.google.com/incidents/Xs2XTHzAVC9YnafnPyzj",
+      "source_kind": "first_party_corporate",
+      "original_severity": null,
+      "prospective_cra2_risk": null,
+      "access_checked_on": "2026-11-05"
     }
   ]
 }
