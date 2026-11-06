@@ -77,3 +77,50 @@ labels before the first evaluation and tune only on development cases. Published
 results or assistant-authored scenarios should not be described as a blind
 holdout. Broader, independently collected real change requests remain necessary
 before drawing production-quality conclusions.
+
+## Reviewer workspace and separate submissions
+
+Start the local review screen from the repository root:
+
+```sh
+PYTHONPATH=. week2/.venv/bin/python -m week2.reviewer_app
+```
+
+Open http://127.0.0.1:7863. Enter your reviewer identifier, choose a scenario,
+read the change and browse company sources. Select **Unsure / insufficient
+detail**, **No justified external analogue**, or **One relevant source**, explain
+why, and save the judgment. Selecting a source to read does not imply a match.
+The screen shows only your worksheet; it supplies no suggested labels, rankings,
+partition assignments or other reviewers' judgments. Do not use browser access
+as proof of identity or independence: this is a local, unauthenticated tool.
+
+You may revise your own unsent judgments in that session. Partial submissions
+are supported. Copy the submission JSON to a new local file before closing;
+drafts are session memory, not durable storage. Use separate sessions for the two
+reviewers. Nothing is imported or published when saving a judgment in the UI.
+The server binds only to loopback, disables Gradio analytics and does not enable
+public sharing. No model or ranking call is made by the workspace.
+
+The coordinator imports each submission into a new queue file:
+
+```sh
+PYTHONPATH=. .venv/bin/python scripts/review_exchange.py evals/retrieval-review-queue.json \
+  --submission /tmp/reviewer-a.json --out /tmp/queue-after-a.json
+PYTHONPATH=. .venv/bin/python scripts/review_exchange.py /tmp/queue-after-a.json \
+  --submission /tmp/reviewer-b.json --out /tmp/queue-after-b.json
+PYTHONPATH=. .venv/bin/python scripts/review_retrieval.py /tmp/queue-after-b.json
+```
+
+Both submissions can originate from the same original queue: importing one does
+not invalidate the other. The worksheet binds case definitions and the canonical
+source catalog, excluding mutable review progress. Changes to query, service,
+split, rationale or source catalog invalidate a submission. Unknown/duplicate
+case IDs, invalid labels, repeated reviewers and more than two reviews are
+rejected before writing. Import never overwrites existing judgments or files;
+revisions after import require the explicit queue-review procedure above.
+
+For reviewers who prefer a text editor, omit `--submission` to export an empty
+individual worksheet. Each judgment has `case_id`, `source_ids` and `reason`;
+set the top-level `reviewer`. Worksheet hashes are consistency checks, not digital
+signatures. Conflicting/uncertain judgments are retained for resolution and
+still block freezing. No review has been supplied on anyone's behalf.
