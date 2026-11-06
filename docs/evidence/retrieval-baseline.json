@@ -1,0 +1,346 @@
+{
+  "metrics": {
+    "development": {
+      "positive_cases": 2,
+      "target_hits_at_3": 2,
+      "target_hit_rate_at_3": 1.0,
+      "mean_reciprocal_rank_at_3": 1.0,
+      "negative_cases": 1,
+      "negative_passes": 1
+    },
+    "evaluation": {
+      "positive_cases": 4,
+      "target_hits_at_3": 4,
+      "target_hit_rate_at_3": 1.0,
+      "mean_reciprocal_rank_at_3": 1.0,
+      "negative_cases": 2,
+      "negative_passes": 2
+    }
+  },
+  "cases": [
+    {
+      "id": "dev-router",
+      "split": "development",
+      "query": "Replace transceivers on redundant fiber routers during the worker network capacity upgrade.",
+      "expected_source_ids": [
+        "public-google-router-2026-09-01"
+      ],
+      "target_rank": 1,
+      "negative_pass": null,
+      "hits": [
+        {
+          "chunk_id": "public-google-router-2026-09-01#chunk-001",
+          "doc_id": "public-google-router-2026-09-01",
+          "service": "Google Compute Engine and Virtual Private Cloud (VPC)",
+          "source": "https://status.cloud.google.com/incidents/J5ia5t9p3g9Q5Wi7r8Ev",
+          "source_dataset": "public_corporate",
+          "score": 0.691468
+        },
+        {
+          "chunk_id": "pm-cx102-checkout-retries#chunk-001",
+          "doc_id": "pm-cx102-checkout-retries",
+          "service": "checkout-service",
+          "source": "week1/corpus/pm-cx102-checkout-retries.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.640871
+        },
+        {
+          "chunk_id": "pm-cx102-checkout-retries#chunk-002",
+          "doc_id": "pm-cx102-checkout-retries",
+          "service": "checkout-service",
+          "source": "week1/corpus/pm-cx102-checkout-retries.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.629918
+        }
+      ]
+    },
+    {
+      "id": "dev-storage",
+      "split": "development",
+      "query": "Roll back worker upload routing after backend capacity overload; verify every planner reverted.",
+      "expected_source_ids": [
+        "public-google-storage-2026-10-08"
+      ],
+      "target_rank": 1,
+      "negative_pass": null,
+      "hits": [
+        {
+          "chunk_id": "public-google-storage-2026-10-08#chunk-001",
+          "doc_id": "public-google-storage-2026-10-08",
+          "service": "Google Cloud Storage us-central1",
+          "source": "https://status.cloud.google.com/incidents/mSFVt6PiP557bjRyYsut",
+          "source_dataset": "public_corporate",
+          "score": 0.737973
+        },
+        {
+          "chunk_id": "pm-cx102-checkout-retries#chunk-002",
+          "doc_id": "pm-cx102-checkout-retries",
+          "service": "checkout-service",
+          "source": "week1/corpus/pm-cx102-checkout-retries.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.673322
+        },
+        {
+          "chunk_id": "pm-cx102-checkout-retries#chunk-001",
+          "doc_id": "pm-cx102-checkout-retries",
+          "service": "checkout-service",
+          "source": "week1/corpus/pm-cx102-checkout-retries.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.662642
+        }
+      ]
+    },
+    {
+      "id": "dev-generic",
+      "split": "development",
+      "query": "Review the planned worker configuration update.",
+      "expected_source_ids": [],
+      "target_rank": null,
+      "negative_pass": true,
+      "hits": [
+        {
+          "chunk_id": "rb-checkout-config-risk#chunk-001",
+          "doc_id": "rb-checkout-config-risk",
+          "service": "checkout-service",
+          "source": "week1/corpus/rb-checkout-config-risk.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.695701
+        },
+        {
+          "chunk_id": "pm-cx102-checkout-retries#chunk-002",
+          "doc_id": "pm-cx102-checkout-retries",
+          "service": "checkout-service",
+          "source": "week1/corpus/pm-cx102-checkout-retries.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.675122
+        },
+        {
+          "chunk_id": "rb-checkout-config-risk#chunk-002",
+          "doc_id": "rb-checkout-config-risk",
+          "service": "checkout-service",
+          "source": "week1/corpus/rb-checkout-config-risk.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.669081
+        }
+      ]
+    },
+    {
+      "id": "eval-regex",
+      "split": "evaluation",
+      "query": "Deploy a worker regular expression rule; test backtracking CPU limits before global activation.",
+      "expected_source_ids": [
+        "public-cloudflare-2019-07-02"
+      ],
+      "target_rank": 1,
+      "negative_pass": null,
+      "hits": [
+        {
+          "chunk_id": "public-cloudflare-2019-07-02#chunk-001",
+          "doc_id": "public-cloudflare-2019-07-02",
+          "service": "Cloudflare WAF",
+          "source": "https://blog.cloudflare.com/details-of-the-cloudflare-outage-on-july-2-2019/",
+          "source_dataset": "public_corporate",
+          "score": 0.66761
+        },
+        {
+          "chunk_id": "rb-team-advisory#chunk-002",
+          "doc_id": "rb-team-advisory",
+          "service": null,
+          "source": "week1/corpus/rb-team-advisory.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.653044
+        },
+        {
+          "chunk_id": "pm-cx102-checkout-retries#chunk-002",
+          "doc_id": "pm-cx102-checkout-retries",
+          "service": "checkout-service",
+          "source": "week1/corpus/pm-cx102-checkout-retries.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.652961
+        }
+      ]
+    },
+    {
+      "id": "eval-delete",
+      "split": "evaluation",
+      "query": "Remove obsolete app identifiers in a worker maintenance script; verify site deletion scope and bulk restoration.",
+      "expected_source_ids": [
+        "public-atlassian-2022-04-05"
+      ],
+      "target_rank": 1,
+      "negative_pass": null,
+      "hits": [
+        {
+          "chunk_id": "public-atlassian-2022-04-05#chunk-001",
+          "doc_id": "public-atlassian-2022-04-05",
+          "service": "Atlassian Cloud sites",
+          "source": "https://www.atlassian.com/blog/how-we-build/post-incident-review-april-2022-outage",
+          "source_dataset": "public_corporate",
+          "score": 0.733381
+        },
+        {
+          "chunk_id": "rb-similar-incidents#chunk-001",
+          "doc_id": "rb-similar-incidents",
+          "service": null,
+          "source": "week1/corpus/rb-similar-incidents.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.682075
+        },
+        {
+          "chunk_id": "rb-similar-incidents#chunk-002",
+          "doc_id": "rb-similar-incidents",
+          "service": null,
+          "source": "week1/corpus/rb-similar-incidents.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.644974
+        }
+      ]
+    },
+    {
+      "id": "eval-failback",
+      "split": "evaluation",
+      "query": "Perform network maintenance while database failover can move writes across regions; validate replication consistency and failback.",
+      "expected_source_ids": [
+        "public-github-2018-10-21"
+      ],
+      "target_rank": 1,
+      "negative_pass": null,
+      "hits": [
+        {
+          "chunk_id": "public-github-2018-10-21#chunk-001",
+          "doc_id": "public-github-2018-10-21",
+          "service": "GitHub database infrastructure",
+          "source": "https://github.blog/news-insights/company-news/oct21-post-incident-analysis/",
+          "source_dataset": "public_corporate",
+          "score": 0.729132
+        },
+        {
+          "chunk_id": "rb-checkout-config-risk#chunk-002",
+          "doc_id": "rb-checkout-config-risk",
+          "service": "checkout-service",
+          "source": "week1/corpus/rb-checkout-config-risk.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.667129
+        },
+        {
+          "chunk_id": "pm-cx102-checkout-retries#chunk-002",
+          "doc_id": "pm-cx102-checkout-retries",
+          "service": "checkout-service",
+          "source": "week1/corpus/pm-cx102-checkout-retries.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.652919
+        }
+      ]
+    },
+    {
+      "id": "eval-dns",
+      "split": "evaluation",
+      "query": "Change worker backbone routing and DNS advertisements; ensure recovery access survives network disconnection.",
+      "expected_source_ids": [
+        "public-meta-2021-10-04"
+      ],
+      "target_rank": 1,
+      "negative_pass": null,
+      "hits": [
+        {
+          "chunk_id": "public-meta-2021-10-04#chunk-001",
+          "doc_id": "public-meta-2021-10-04",
+          "service": "Facebook backbone and DNS infrastructure",
+          "source": "https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/",
+          "source_dataset": "public_corporate",
+          "score": 0.741795
+        },
+        {
+          "chunk_id": "rb-checkout-config-risk#chunk-002",
+          "doc_id": "rb-checkout-config-risk",
+          "service": "checkout-service",
+          "source": "week1/corpus/rb-checkout-config-risk.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.664042
+        },
+        {
+          "chunk_id": "pm-cx102-checkout-retries#chunk-002",
+          "doc_id": "pm-cx102-checkout-retries",
+          "service": "checkout-service",
+          "source": "week1/corpus/pm-cx102-checkout-retries.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.64366
+        }
+      ]
+    },
+    {
+      "id": "eval-generic",
+      "split": "evaluation",
+      "query": "Plan a production software update for the worker.",
+      "expected_source_ids": [],
+      "target_rank": null,
+      "negative_pass": true,
+      "hits": [
+        {
+          "chunk_id": "rb-checkout-config-risk#chunk-001",
+          "doc_id": "rb-checkout-config-risk",
+          "service": "checkout-service",
+          "source": "week1/corpus/rb-checkout-config-risk.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.606818
+        },
+        {
+          "chunk_id": "rb-team-advisory#chunk-002",
+          "doc_id": "rb-team-advisory",
+          "service": null,
+          "source": "week1/corpus/rb-team-advisory.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.602463
+        },
+        {
+          "chunk_id": "rb-similar-incidents#chunk-001",
+          "doc_id": "rb-similar-incidents",
+          "service": null,
+          "source": "week1/corpus/rb-similar-incidents.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.601519
+        }
+      ]
+    },
+    {
+      "id": "eval-single",
+      "split": "evaluation",
+      "query": "Review worker backtracking.",
+      "expected_source_ids": [],
+      "target_rank": null,
+      "negative_pass": true,
+      "hits": [
+        {
+          "chunk_id": "rb-checkout-config-risk#chunk-001",
+          "doc_id": "rb-checkout-config-risk",
+          "service": "checkout-service",
+          "source": "week1/corpus/rb-checkout-config-risk.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.656011
+        },
+        {
+          "chunk_id": "pm-cx102-checkout-retries#chunk-002",
+          "doc_id": "pm-cx102-checkout-retries",
+          "service": "checkout-service",
+          "source": "week1/corpus/pm-cx102-checkout-retries.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.653648
+        },
+        {
+          "chunk_id": "rb-team-advisory#chunk-002",
+          "doc_id": "rb-team-advisory",
+          "service": null,
+          "source": "week1/corpus/rb-team-advisory.md",
+          "source_dataset": "corpus_markdown",
+          "score": 0.648874
+        }
+      ]
+    }
+  ],
+  "schema_version": 1,
+  "cases_sha256": "cccbe2a49500618f98f4d4f6e4e28d1ab41821e2e9f2cfc267c14e9d51854d51",
+  "corpus_digest": "d54362b5ea9e51f8197c6844d072039b4893a880d0a1fd9f3c7692dc6c6bdb0f",
+  "encoder_fingerprint": "fastembed-artifacts-sha256:6df0bb4a5b7e0d3b1524076116a802509249de2cea5c8b1be7a443d66b7d4338",
+  "provider_requests": 0,
+  "scope": "Small assistant-authored source-separated scenarios; not blind evaluation, exhaustive relevance labels, or production accuracy."
+}

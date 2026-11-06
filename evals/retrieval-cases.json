@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "dev-router",
+      "split": "development",
+      "service": "checkout-service",
+      "query": "Replace transceivers on redundant fiber routers during the worker network capacity upgrade.",
+      "expected_source_ids": [
+        "public-google-router-2026-09-01"
+      ],
+      "rationale": "Hardware compatibility and preserving redundant connectivity."
+    },
+    {
+      "id": "dev-storage",
+      "split": "development",
+      "service": "checkout-service",
+      "query": "Roll back worker upload routing after backend capacity overload; verify every planner reverted.",
+      "expected_source_ids": [
+        "public-google-storage-2026-10-08"
+      ],
+      "rationale": "Rollback completeness across routing components."
+    },
+    {
+      "id": "dev-generic",
+      "split": "development",
+      "service": "checkout-service",
+      "query": "Review the planned worker configuration update.",
+      "expected_source_ids": [],
+      "rationale": "Generic change language does not justify an external analogue."
+    },
+    {
+      "id": "eval-regex",
+      "split": "evaluation",
+      "service": "checkout-service",
+      "query": "Deploy a worker regular expression rule; test backtracking CPU limits before global activation.",
+      "expected_source_ids": [
+        "public-cloudflare-2019-07-02"
+      ],
+      "rationale": "Configuration complexity and rollout scope."
+    },
+    {
+      "id": "eval-delete",
+      "split": "evaluation",
+      "service": "checkout-service",
+      "query": "Remove obsolete app identifiers in a worker maintenance script; verify site deletion scope and bulk restoration.",
+      "expected_source_ids": [
+        "public-atlassian-2022-04-05"
+      ],
+      "rationale": "Typed destructive targets and restore scope."
+    },
+    {
+      "id": "eval-failback",
+      "split": "evaluation",
+      "service": "checkout-service",
+      "query": "Perform network maintenance while database failover can move writes across regions; validate replication consistency and failback.",
+      "expected_source_ids": [
+        "public-github-2018-10-21"
+      ],
+      "rationale": "Network partition and database topology interactions."
+    },
+    {
+      "id": "eval-dns",
+      "split": "evaluation",
+      "service": "checkout-service",
+      "query": "Change worker backbone routing and DNS advertisements; ensure recovery access survives network disconnection.",
+      "expected_source_ids": [
+        "public-meta-2021-10-04"
+      ],
+      "rationale": "Recovery dependencies after network control changes."
+    },
+    {
+      "id": "eval-generic",
+      "split": "evaluation",
+      "service": "checkout-service",
+      "query": "Plan a production software update for the worker.",
+      "expected_source_ids": [],
+      "rationale": "No concrete shared failure mechanism."
+    },
+    {
+      "id": "eval-single",
+      "split": "evaluation",
+      "service": "checkout-service",
+      "query": "Review worker backtracking.",
+      "expected_source_ids": [],
+      "rationale": "One distinctive content term is insufficient."
+    }
+  ]
+}
