@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "origin": "assistant_authored_synthetic",
+  "cases": [
+    {
+      "id": "review-01",
+      "split": "development",
+      "service": "checkout-service",
+      "query": "Swap one network optic at a time during tonight\u2019s capacity expansion.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-02",
+      "split": "development",
+      "service": "checkout-service",
+      "query": "Revert the upload scheduler settings after nodes became overloaded. Confirm all schedulers use the old settings.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-03",
+      "split": "development",
+      "service": "auth-service",
+      "query": "Enable a new content filter for a small fraction of requests before expanding traffic.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-04",
+      "split": "development",
+      "service": "inventory-service",
+      "query": "Change the route used for private traffic between two availability zones.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-05",
+      "split": "development",
+      "service": "order-service",
+      "query": "Update the service configuration.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-06",
+      "split": "development",
+      "service": "checkout-service",
+      "query": "Rename the owner label on the change request; no runtime settings will change.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-07",
+      "split": "evaluation",
+      "service": "checkout-service",
+      "query": "Publish a new pattern-matching rule everywhere after a functional test on a small request sample.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-08",
+      "split": "evaluation",
+      "service": "order-service",
+      "query": "Remove unused tenants using a script that accepts both application and customer identifiers.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-09",
+      "split": "evaluation",
+      "service": "inventory-service",
+      "query": "Perform network maintenance while the database can automatically switch writers to another region.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-10",
+      "split": "evaluation",
+      "service": "auth-service",
+      "query": "Withdraw network routes during maintenance; administrators rely on the same network to recover access.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-11",
+      "split": "evaluation",
+      "service": "checkout-service",
+      "query": "Remove idle capacity using a command-line parameter. Check how long a full restart takes.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-12",
+      "split": "evaluation",
+      "service": "order-service",
+      "query": "Reset replication on a database host after the replica stopped catching up.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-13",
+      "split": "evaluation",
+      "service": "auth-service",
+      "query": "Expand database read permissions for a job that generates runtime configuration.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-14",
+      "split": "evaluation",
+      "service": "inventory-service",
+      "query": "Run a cleanup task with an optional prefix filter left blank.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-15",
+      "split": "evaluation",
+      "service": "checkout-service",
+      "query": "Raise CPU reservations for a stateful pod while eviction controls are enabled.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-16",
+      "split": "evaluation",
+      "service": "order-service",
+      "query": "Increase capacity before the expected traffic surge; the actual bottleneck is still unknown.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-17",
+      "split": "evaluation",
+      "service": "auth-service",
+      "query": "Rotate the support contact listed in the runbook; there is no deployment.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    },
+    {
+      "id": "review-18",
+      "split": "evaluation",
+      "service": "checkout-service",
+      "query": "The change request says only: fix production.",
+      "rationale": "Synthetic proposed change; reviewers must judge relevance independently and explain uncertainty.",
+      "reviews": []
+    }
+  ]
+}
