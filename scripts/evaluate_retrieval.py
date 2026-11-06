@@ -13,7 +13,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def load_cases(path):
-    data = json.loads(Path(path).read_text())
+    return validate_cases(json.loads(Path(path).read_text()))
+
+
+def validate_cases(data):
+    if not isinstance(data, dict):
+        raise ValueError('Invalid evaluation schema')
     if set(data) != {'schema_version', 'cases'} or type(data['schema_version']) is not int or data['schema_version'] != 1:
         raise ValueError('Invalid evaluation schema')
     cases = data['cases']
@@ -31,7 +36,7 @@ def load_cases(path):
             raise ValueError('Duplicate case or query')
         seen.add(case['id'])
         queries.add(case['query'].strip().lower())
-        if case['split'] not in ('development', 'evaluation') or case['service'] not in CATALOG:
+        if not isinstance(case['service'], str) or case['split'] not in ('development', 'evaluation') or case['service'] not in CATALOG:
             raise ValueError('Invalid split or service')
         expected = case['expected_source_ids']
         if not isinstance(expected, list) or len(expected) > 1 or any(not isinstance(x, str) or x not in sources for x in expected):
@@ -80,17 +85,29 @@ def evaluate(cases, search):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--cases', type=Path, default=ROOT / 'evals/retrieval-cases.json')
+    inputs = parser.add_mutually_exclusive_group()
+    inputs.add_argument('--cases', type=Path)
+    inputs.add_argument('--review-bundle', type=Path)
     parser.add_argument('--index', type=Path, default=ROOT / 'week1/.cache/index.sqlite3')
     parser.add_argument('--out', type=Path, required=True)
     args = parser.parse_args()
-    cases = load_cases(args.cases)
+    if args.review_bundle:
+        from scripts.review_retrieval import load_frozen_bundle
+        raw = args.review_bundle.read_bytes()
+        cases = load_frozen_bundle(json.loads(raw))
+    else:
+        raw = (args.cases or ROOT / 'evals/retrieval-cases.json').read_bytes()
+        cases = validate_cases(json.loads(raw))
     from week1 import retrieval
     result = evaluate(cases, lambda query, **kw: retrieval.search(query, args.index, **kw))
     # search validates corpus/model fingerprints against the current index.
     connection, metadata = retrieval._open_index(args.index)
     connection.close()
-    result.update(schema_version=1, cases_sha256=hashlib.sha256(args.cases.read_bytes()).hexdigest(),
+    result.update(schema_version=1, cases_sha256=hashlib.sha256(
+                      json.dumps(cases, sort_keys=True).encode() if args.review_bundle else raw
+                  ).hexdigest(),
+                  input_sha256=hashlib.sha256(raw).hexdigest(),
+                  reviewed_bundle=bool(args.review_bundle),
                   corpus_digest=metadata['corpus_digest'], encoder_fingerprint=metadata['encoder_fingerprint'],
                   provider_requests=0,
                   scope='Small assistant-authored source-separated scenarios; not blind evaluation, exhaustive relevance labels, or production accuracy.')

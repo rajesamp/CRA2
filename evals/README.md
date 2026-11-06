@@ -129,3 +129,9 @@ Week 2 environment against a current local index. See the
 [baseline and limitations](../docs/evidence/retrieval-baseline.md).
 This is separate from deterministic policy calibration and does not change
 risk thresholds or provide deployment authorization.
+
+`retrieval-review-queue.json` adds 18 pending synthetic scenarios. The
+[review workflow](../docs/retrieval-review.md) distinguishes unknown labels from
+negative labels, requires two agreeing reviewer identities, and freezes reviewed
+cases with corpus checksums before evaluation. It does not fabricate independent
+review or automatically change ranking.
