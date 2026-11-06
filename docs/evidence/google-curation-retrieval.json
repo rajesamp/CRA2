@@ -1,0 +1,181 @@
+{
+  "model": "BAAI/bge-small-en-v1.5",
+  "dimensions": 384,
+  "scope": "Seven deliberately chosen local-encoder smoke queries, not a held-out retrieval benchmark or proof of causation.",
+  "provider_requests": 0,
+  "results": [
+    {
+      "scenario": "vertex",
+      "query": "Change checkout-service worker safety filter configuration for request-dependent serving capacity and 429 503 overload.",
+      "hits": [
+        {
+          "doc_id": "rb-checkout-config-risk",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.739844
+        },
+        {
+          "doc_id": "rb-checkout-config-risk",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.735499
+        },
+        {
+          "doc_id": "pm-cx101-checkout-timeout",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.719919
+        }
+      ]
+    },
+    {
+      "scenario": "gcve",
+      "query": "Change checkout-service worker private-address routing configuration with BGP and BFD health checks.",
+      "hits": [
+        {
+          "doc_id": "rb-checkout-config-risk",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.683956
+        },
+        {
+          "doc_id": "public-google-gcve-2026-07-14",
+          "source_service": "Google Cloud VMware Engine Stretched Clusters",
+          "source_dataset": "public_corporate",
+          "score": 0.680915
+        },
+        {
+          "doc_id": "rb-checkout-config-risk",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.675806
+        }
+      ]
+    },
+    {
+      "scenario": "network",
+      "query": "Change checkout-service worker optical network maintenance with alternate capacity, congestion and packet loss checks.",
+      "hits": [
+        {
+          "doc_id": "rb-checkout-config-risk",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.712847
+        },
+        {
+          "doc_id": "pm-cx102-checkout-retries",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.70932
+        },
+        {
+          "doc_id": "public-google-network-2026-08-20",
+          "source_service": "Google Cloud us-west1 inter-campus network",
+          "source_dataset": "public_corporate",
+          "score": 0.699123
+        }
+      ]
+    },
+    {
+      "scenario": "router",
+      "query": "Change checkout-service worker network router capacity by replacing transceivers and redundant fiber paths.",
+      "hits": [
+        {
+          "doc_id": "pm-cx102-checkout-retries",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.679024
+        },
+        {
+          "doc_id": "pm-cx102-checkout-retries",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.672521
+        },
+        {
+          "doc_id": "pm-cx101-checkout-timeout",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.671242
+        }
+      ]
+    },
+    {
+      "scenario": "storage",
+      "query": "Change checkout-service worker upload-planner traffic-sorting configuration and capacity-aware routing rollback.",
+      "hits": [
+        {
+          "doc_id": "rb-checkout-config-risk",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.72172
+        },
+        {
+          "doc_id": "pm-cx102-checkout-retries",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.705522
+        },
+        {
+          "doc_id": "pm-cx102-checkout-retries",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.702497
+        }
+      ]
+    },
+    {
+      "scenario": "power",
+      "query": "Change checkout-service worker power maintenance topology with generator controllers, breaker position and UPS failover.",
+      "hits": [
+        {
+          "doc_id": "rb-checkout-config-risk",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.643206
+        },
+        {
+          "doc_id": "public-google-power-2026-10-20",
+          "source_service": "Google Cloud europe-west2 infrastructure",
+          "source_dataset": "public_corporate",
+          "score": 0.633106
+        },
+        {
+          "doc_id": "pm-cx102-checkout-retries",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.632218
+        }
+      ]
+    },
+    {
+      "scenario": "generic",
+      "query": "Change checkout-service worker configuration for production review.",
+      "hits": [
+        {
+          "doc_id": "rb-checkout-config-risk",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.765707
+        },
+        {
+          "doc_id": "rb-checkout-config-risk",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.721597
+        },
+        {
+          "doc_id": "pm-cx102-checkout-retries",
+          "source_service": "checkout-service",
+          "source_dataset": "corpus_markdown",
+          "score": 0.704332
+        }
+      ]
+    }
+  ],
+  "recorded_at": "2026-11-06T01:59:35.254740+00:00",
+  "corpus_digest": "d54362b5ea9e51f8197c6844d072039b4893a880d0a1fd9f3c7692dc6c6bdb0f",
+  "public_records": 19,
+  "maximum_external_per_query": 1,
+  "maximum_results_per_query": 3
+}

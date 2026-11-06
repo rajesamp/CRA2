@@ -1,7 +1,7 @@
 # Public corporate evidence for Change Risk Advisor
 
-CRA2's Week 1 retrieval and Week 2 app now include 13 curated summaries from
-first-party corporate sources: 12 incident reports and one staging change plan.
+CRA2's Week 1 retrieval and Week 2 app now include 19 curated summaries from
+first-party corporate sources: 18 incident reports and one staging change plan.
 They complement the 16 synthetic incidents, 30 sanitized samples, and Markdown
 corpus. They do not extend the service catalog or local incident history used by
 the root CLI's deterministic risk rules.
@@ -83,8 +83,9 @@ measured recall guarantee.
 1. Review the original company source and record its URL and access-check date.
    Keep reported facts, recovery, limitations and CRA2 inferences separate.
 2. Add a record to `data/public_evidence.json` matching an existing record's
-   closed schema and explicit type. Use a unique `public-` ID, the actual company
-   and service, and the appropriate event date. Preserve unknown values as null.
+   closed schema and explicit type. Use a unique `public-` ID and source URL,
+   the actual company and service, and the appropriate event date. Preserve
+   unknown values as null.
    Do not manufacture a SEV, a successful outcome or a CRA2 risk rating.
 3. Run the validator above. New publishers require a deliberate reviewed update
    to the publisher host allow-list, not a user-supplied arbitrary fetch URL.
@@ -94,6 +95,11 @@ measured recall guarantee.
 The [Google Cloud JSON importer](google-incident-import.md) now provides bounded
 fetching, source-specific extraction and deduplicated staging for human review.
 Staged records do not enter retrieval until manually curated and validated.
+The [first Google curation review](evidence/google-curation-review.md) selects six
+of eight staged incidents, with a decision ledger for all eight. It adds
+configuration, rollback, network-maintenance and maintenance-topology examples.
+Source revisions and differing impact windows remain attached as caveats;
+severity is not mapped into CRA2 risk. The importer still cannot promote records.
 Future work: verified Google/GitLab change outcomes could reduce the outage
 selection bias after individual review. Build
 an incident-level held-out retrieval benchmark before claiming quality gains;

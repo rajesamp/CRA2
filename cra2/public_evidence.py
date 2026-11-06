@@ -150,6 +150,7 @@ def _collection(data_dir=None):
     if not isinstance(records, list) or not 1 <= len(records) <= 256:
         _fail()
     seen = set()
+    seen_urls = set()
     for record in records:
         if not isinstance(record, dict) or set(record) != _FIELDS:
             _fail()
@@ -169,6 +170,9 @@ def _collection(data_dir=None):
             _fail()
         seen.add(record["id"])
         _url(record["source_url"])
+        if record["source_url"] in seen_urls:
+            _fail()
+        seen_urls.add(record["source_url"])
         _date(record["access_checked_on"])
         if record["record_type"] == "incident_report":
             _date(record["incident_date"])

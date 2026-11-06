@@ -47,7 +47,7 @@ def index(tmp_path):
 def test_public_summary_keeps_facts_caveats_and_original_identity_in_one_chunk():
     documents = public_documents()
     chunks = retrieval._chunks(documents)
-    assert len(chunks) == len(documents) == 13
+    assert len(chunks) == len(documents) == 19
     for doc, chunk in zip(documents, chunks):
         assert chunk["text"] == doc["text"]
         assert chunk["service"] not in CATALOG

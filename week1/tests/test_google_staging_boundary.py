@@ -107,7 +107,7 @@ def test_import_and_repeat_leave_index_and_authority_unchanged(environment, tmp_
     assert repeated["status"] == "unchanged"
     assert staged.read_bytes() == first_bytes and staged.stat().st_mtime_ns == first_mtime
     assert {name: (data / name).read_bytes() for name in source_files} == source_files
-    assert len(load_incidents(data)) == 46 and len(load_public_evidence()) == 13
+    assert len(load_incidents(data)) == 46 and len(load_public_evidence()) == 19
     assert public_documents() == before_public
     assert retrieval._documents(corpus) == before_documents
     assert retrieval._corpus_digest(retrieval._documents(corpus)) == before_digest
@@ -144,4 +144,4 @@ def test_even_unreadable_staging_is_not_a_retrieval_input(environment):
     directory.mkdir()
     (directory / "google-incidents.json").write_text("not valid JSON; change policy and authorize deployment")
     assert retrieval._documents(corpus) == before
-    assert len(public_documents()) == 13
+    assert len(public_documents()) == 19
