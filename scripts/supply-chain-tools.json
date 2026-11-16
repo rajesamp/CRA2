@@ -1,0 +1,99 @@
+{
+  "observed_at": "2026-11-16",
+  "source": "Publisher GitHub release asset metadata; exact URLs, sizes and SHA-256 pins",
+  "tools": {
+    "anchore/syft": {
+      "repo": "anchore/syft",
+      "tag": "v1.57.2",
+      "url": "https://github.com/anchore/syft/releases/tag/v1.57.2",
+      "assets": [
+        {
+          "name": "syft_1.57.2_checksums.txt",
+          "url": "https://github.com/anchore/syft/releases/download/v1.57.2/syft_1.57.2_checksums.txt",
+          "sha256": "73e421a829285be9a2af92d56ff93d8287c34f0515eaac7c2081f06031cab4bd",
+          "size": 2690
+        },
+        {
+          "name": "syft_1.57.2_checksums.txt.sigstore.json",
+          "url": "https://github.com/anchore/syft/releases/download/v1.57.2/syft_1.57.2_checksums.txt.sigstore.json",
+          "sha256": "2f1b4a5819f2d759f1cce46f8e2ffff31174ec9b0b643595d90d0063eab88c26",
+          "size": 10178
+        },
+        {
+          "name": "syft_1.57.2_darwin_amd64.tar.gz",
+          "url": "https://github.com/anchore/syft/releases/download/v1.57.2/syft_1.57.2_darwin_amd64.tar.gz",
+          "sha256": "73c6100bc43fbcc1c99aed3428d859c6289c4076be7e296dde7e427324c15908",
+          "size": 30934826
+        },
+        {
+          "name": "syft_1.57.2_linux_amd64.tar.gz",
+          "url": "https://github.com/anchore/syft/releases/download/v1.57.2/syft_1.57.2_linux_amd64.tar.gz",
+          "sha256": "ad92bd3ec1b94a3df01d4d0aec199afa9c42b72e86da436ff5f837914d32706b",
+          "size": 31486443
+        }
+      ]
+    },
+    "anchore/grype": {
+      "repo": "anchore/grype",
+      "tag": "v0.122.0",
+      "url": "https://github.com/anchore/grype/releases/tag/v0.122.0",
+      "assets": [
+        {
+          "name": "grype_0.122.0_checksums.txt",
+          "url": "https://github.com/anchore/grype/releases/download/v0.122.0/grype_0.122.0_checksums.txt",
+          "sha256": "e9bacbd2c4113cbabdc48149c2af5aabfa3f518569c0059ceae5f7de8ba96f48",
+          "size": 1468
+        },
+        {
+          "name": "grype_0.122.0_checksums.txt.sigstore.json",
+          "url": "https://github.com/anchore/grype/releases/download/v0.122.0/grype_0.122.0_checksums.txt.sigstore.json",
+          "sha256": "8e62d10beffc7ce6a37bd82010de5d1862d8ff272859cc41a1dd61a3eb069e61",
+          "size": 10226
+        },
+        {
+          "name": "grype_0.122.0_darwin_amd64.tar.gz",
+          "url": "https://github.com/anchore/grype/releases/download/v0.122.0/grype_0.122.0_darwin_amd64.tar.gz",
+          "sha256": "26a121b7264882785464a95452036bb93cb6dd4ddba380592d3169025e1b1501",
+          "size": 32271728
+        },
+        {
+          "name": "grype_0.122.0_linux_amd64.tar.gz",
+          "url": "https://github.com/anchore/grype/releases/download/v0.122.0/grype_0.122.0_linux_amd64.tar.gz",
+          "sha256": "e697e6f7224637df87e267e4318cc027feae99a8e1b80280241d32b9ee5d4920",
+          "size": 32725093
+        }
+      ]
+    },
+    "sigstore/cosign": {
+      "repo": "sigstore/cosign",
+      "tag": "v3.1.4",
+      "url": "https://github.com/sigstore/cosign/releases/tag/v3.1.4",
+      "assets": [
+        {
+          "name": "cosign-darwin-amd64",
+          "url": "https://github.com/sigstore/cosign/releases/download/v3.1.4/cosign-darwin-amd64",
+          "sha256": "9d1e4abe2b6be279ed0d2ff706fde1ccd738747c834e3e6d44039c238867334f",
+          "size": 105951973
+        },
+        {
+          "name": "cosign-linux-amd64",
+          "url": "https://github.com/sigstore/cosign/releases/download/v3.1.4/cosign-linux-amd64",
+          "sha256": "424e2c97d0b45fd7a6b608a87f090f35633f4c23ece5f092d48bba11aaf4bbfa",
+          "size": 145688404
+        },
+        {
+          "name": "cosign_checksums.txt",
+          "url": "https://github.com/sigstore/cosign/releases/download/v3.1.4/cosign_checksums.txt",
+          "sha256": "e70e59b328d52949b3a9ae3e0d04721ea8f380c4e91c28197aa91df02afbf4c0",
+          "size": 3906
+        },
+        {
+          "name": "cosign_checksums.txt.sigstore.json",
+          "url": "https://github.com/sigstore/cosign/releases/download/v3.1.4/cosign_checksums.txt.sigstore.json",
+          "sha256": "8fc87b5562359b0414655ee281b80eb3752f58c4e137d5f0e4881f095bc26309",
+          "size": 6651
+        }
+      ]
+    }
+  }
+}

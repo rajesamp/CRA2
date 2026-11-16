@@ -1,0 +1,24 @@
+{
+  "sha256": "d5ad1651bf490ea3788effa67aa28d646332a1565ce08e08116e4288bbfc873c",
+  "level": "suitable",
+  "delta": "option_added",
+  "delta_basis": "Streamlit added to the earlier Gradio-only delivery plan; the earlier comparison was incomplete.",
+  "previous_plan_revision": "c3b117ac034cb68b3f3eaa089fe6a8237c04cc8e",
+  "previous_framework_verdict": null,
+  "scope_note": "First validated UI-framework comparison; earlier access-architecture verdicts are separate.",
+  "verdict": {
+    "option_id": "gradio",
+    "level": "suitable",
+    "evidence_ids": [
+      "E1",
+      "E2",
+      "E3",
+      "E4",
+      "E5",
+      "E6"
+    ],
+    "rationale": "Existing tests and container evidence support continuing Gradio while completing the outstanding deployment gates. Streamlit has documented hosting and session capabilities, but CRA2 feature parity and migration effort remain unknown. Changing the UI alone does not resolve the encoder provisioning blocker. No comparative evidence establishes superiority on the top priority, and deployed authentication, isolation and owner acceptance remain unverified. Winner not established.",
+    "winner_established": false,
+    "separating_test": "Implement one isolated Streamlit chat slice using the same guarded workflow, cooldown and trace helpers. Exercise normal and refused requests, two isolated sessions, clear/undo and trace display; compare required code changes and implementation time with the existing Gradio baseline. If IAP transport is the disputed blocker, run the same owner-controlled allowed/denied-account and reconnect probe through IAP for both."
+  }
+}

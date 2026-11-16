@@ -1,0 +1,1483 @@
+{
+  "status": "blocked",
+  "image_id": "sha256:3cfc9d4ef06018d3a25b7570f388cc51dd69dbcab9d346c28046db79f94226f6",
+  "packages_examined": 162,
+  "matches_examined": 398,
+  "suppressed_matches_examined": 0,
+  "severity_counts": {
+    "Critical": 17,
+    "High": 120,
+    "Medium": 146,
+    "Negligible": 57,
+    "Low": 29,
+    "Unknown": 29
+  },
+  "database_built": "2026-11-16T06:30:54Z",
+  "blocking_findings": [
+    {
+      "package": "brotli",
+      "version": "1.2.0",
+      "type": "python",
+      "id": "GHSA-9v8h-qqgm-4m35",
+      "severity": "Critical",
+      "fix_versions": [
+        "1.2.1"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112900",
+      "severity": "Critical",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-w889-685w-c8fh",
+      "severity": "Critical",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112393",
+      "severity": "Critical",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "libgssapi-krb5-2",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112314",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libk5crypto3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112314",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5-3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112314",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5support0",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112314",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-332p-7hrc-92wf",
+      "severity": "Critical",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "libgssapi-krb5-2",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112321",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libk5crypto3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112321",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5-3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112321",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5support0",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112321",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112403",
+      "severity": "Critical",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-8g5g-8vmr-9782",
+      "severity": "Critical",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "libgssapi-krb5-2",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112322",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libk5crypto3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112322",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5-3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112322",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5support0",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112322",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libgssapi-krb5-2",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112320",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libk5crypto3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112320",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5-3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112320",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5support0",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112320",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libgssapi-krb5-2",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112323",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libgssapi-krb5-2",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-119079",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libk5crypto3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112323",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libk5crypto3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-119079",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5-3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112323",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5-3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-119079",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5support0",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-112323",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5support0",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-119079",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112398",
+      "severity": "Critical",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-5x8w-8jj5-q52h",
+      "severity": "Critical",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-96639",
+      "severity": "Critical",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-v9pv-5gc8-w2m6",
+      "severity": "Critical",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112902",
+      "severity": "Critical",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "libpython3.13-minimal",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-7210",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libpython3.13-stdlib",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-7210",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "python3.13-minimal",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-7210",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "python3.13-venv",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-7210",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-xvh5-g6gv-559v",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112396",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-c6hw-5grf-ff96",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112404",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-65qm-jvmh-6pqg",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-jg86-v3jv-hrpm",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-7mwm-ghpf-9vrm",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-cp9v-662q-vvx9",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-p4wg-p73j-c528",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "libpython3.13-minimal",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-15308",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libpython3.13-stdlib",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-15308",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "python3.13-minimal",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-15308",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "python3.13-venv",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-15308",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112401",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "libpython3.13-minimal",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-19445",
+      "severity": "Critical",
+      "fix_versions": []
+    },
+    {
+      "package": "libpython3.13-stdlib",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-19445",
+      "severity": "Critical",
+      "fix_versions": []
+    },
+    {
+      "package": "python3.13-minimal",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-19445",
+      "severity": "Critical",
+      "fix_versions": []
+    },
+    {
+      "package": "python3.13-venv",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-19445",
+      "severity": "Critical",
+      "fix_versions": []
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-mrfp-p49p-3hf2",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-22hg-r758-rrw9",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-27h8-gf7j-v5hc",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-58r4-6rv3-gfh8",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-f2g6-542v-9j58",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-96640",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112400",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112894",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112402",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112405",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112895",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112390",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112392",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112397",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112406",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-j4m9-6w36-pw47",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-5xm2-6676-qcp9",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112893",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112391",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "libpython3.13-minimal",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-19553",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libpython3.13-stdlib",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-19553",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "python3.13-minimal",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-19553",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "python3.13-venv",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-19553",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112399",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112394",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-gg2r-wvfm-q9rx",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112891",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "libncursesw6",
+      "version": "6.5+20250216-2",
+      "type": "deb",
+      "id": "CVE-2025-69720",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libtinfo6",
+      "version": "6.5+20250216-2",
+      "type": "deb",
+      "id": "CVE-2025-69720",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112892",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112901",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-q45j-58j2-45rg",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-pchr-8j38-3x4p",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112395",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "libexpat1",
+      "version": "2.9.0-1~deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-113351",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-112896",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "gcc-14-base",
+      "version": "14.2.0-19",
+      "type": "deb",
+      "id": "CVE-2026-95619",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libgcc-s1",
+      "version": "14.2.0-19",
+      "type": "deb",
+      "id": "CVE-2026-95619",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libgomp1",
+      "version": "14.2.0-19",
+      "type": "deb",
+      "id": "CVE-2026-95619",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libstdc++6",
+      "version": "14.2.0-19",
+      "type": "deb",
+      "id": "CVE-2026-95619",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libexpat1",
+      "version": "2.9.0-1~deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-115506",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-xcvg-w56q-r89m",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-96778",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-g7cr-3p24-7wf7",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "libexpat1",
+      "version": "2.9.0-1~deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-117610",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "gcc-14-base",
+      "version": "14.2.0-19",
+      "type": "deb",
+      "id": "CVE-2026-102010",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libgcc-s1",
+      "version": "14.2.0-19",
+      "type": "deb",
+      "id": "CVE-2026-102010",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libgomp1",
+      "version": "14.2.0-19",
+      "type": "deb",
+      "id": "CVE-2026-102010",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libstdc++6",
+      "version": "14.2.0-19",
+      "type": "deb",
+      "id": "CVE-2026-102010",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libgssapi-krb5-2",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-107778",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libk5crypto3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-107778",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5-3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-107778",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5support0",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-107778",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libexpat1",
+      "version": "2.9.0-1~deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-118370",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "CVE-2026-96644",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-9v9v-9qvf-h2hj",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-g4qv-2jxx-769h",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-g842-9rc4-69pw",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-3j72-p6qg-6xp7",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "libc-bin",
+      "version": "2.41-12+deb13u4",
+      "type": "deb",
+      "id": "CVE-2026-19499",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libc6",
+      "version": "2.41-12+deb13u4",
+      "type": "deb",
+      "id": "CVE-2026-19499",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libsqlite3-0",
+      "version": "3.46.1-7+deb13u2",
+      "type": "deb",
+      "id": "CVE-2026-119379",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libc-bin",
+      "version": "2.41-12+deb13u4",
+      "type": "deb",
+      "id": "CVE-2026-84243",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libc6",
+      "version": "2.41-12+deb13u4",
+      "type": "deb",
+      "id": "CVE-2026-84243",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "follow-redirects",
+      "version": "1.16.1",
+      "type": "npm",
+      "id": "GHSA-mrwp-f3q8-3g9p",
+      "severity": "High",
+      "fix_versions": [
+        "1.16.2"
+      ]
+    },
+    {
+      "package": "libsqlite3-0",
+      "version": "3.46.1-7+deb13u2",
+      "type": "deb",
+      "id": "CVE-2026-119374",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libuuid1",
+      "version": "2.41.5-0+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-78408",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libc-bin",
+      "version": "2.41-12+deb13u4",
+      "type": "deb",
+      "id": "CVE-2026-5435",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libc6",
+      "version": "2.41-12+deb13u4",
+      "type": "deb",
+      "id": "CVE-2026-5435",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libuuid1",
+      "version": "2.41.5-0+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-76642",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libuuid1",
+      "version": "2.41.5-0+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-78410",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libpython3.13-minimal",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-82049",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libpython3.13-stdlib",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-82049",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "python3.13-minimal",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-82049",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "python3.13-venv",
+      "version": "3.13.5-2+deb13u5",
+      "type": "deb",
+      "id": "CVE-2026-82049",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libuuid1",
+      "version": "2.41.5-0+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-78409",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libsqlite3-0",
+      "version": "3.46.1-7+deb13u2",
+      "type": "deb",
+      "id": "CVE-2026-119373",
+      "severity": "High",
+      "fix_versions": []
+    },
+    {
+      "package": "libssl3t64",
+      "version": "3.5.7-1~deb13u3",
+      "type": "deb",
+      "id": "CVE-2026-95692",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libssl3t64",
+      "version": "3.5.7-1~deb13u3",
+      "type": "deb",
+      "id": "CVE-2026-88822",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libssl3t64",
+      "version": "3.5.7-1~deb13u3",
+      "type": "deb",
+      "id": "CVE-2026-95691",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libssl3t64",
+      "version": "3.5.7-1~deb13u3",
+      "type": "deb",
+      "id": "CVE-2026-88823",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libssl3t64",
+      "version": "3.5.7-1~deb13u3",
+      "type": "deb",
+      "id": "CVE-2026-107496",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "certifi",
+      "version": "2026.7.22",
+      "type": "python",
+      "id": "GHSA-6q48-6c7w-9gw2",
+      "severity": "Critical",
+      "fix_versions": [
+        "2026.10.18"
+      ]
+    },
+    {
+      "package": "pillow",
+      "version": "12.3.0",
+      "type": "python",
+      "id": "GHSA-78g4-xqwv-q3g8",
+      "severity": "High",
+      "fix_versions": [
+        "13.0.0"
+      ]
+    },
+    {
+      "package": "libgssapi-krb5-2",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-107364",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libgssapi-krb5-2",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-107884",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libgssapi-krb5-2",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-111423",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libgssapi-krb5-2",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-118380",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libgssapi-krb5-2",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-71199",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libgssapi-krb5-2",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-71200",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libk5crypto3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-107364",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libk5crypto3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-107884",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libk5crypto3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-111423",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libk5crypto3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-118380",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libk5crypto3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-71199",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libk5crypto3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-71200",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5-3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-107364",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5-3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-107884",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5-3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-111423",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5-3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-118380",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5-3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-71199",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5-3",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-71200",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5support0",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-107364",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5support0",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-107884",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5support0",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-111423",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5support0",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-118380",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5support0",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-71199",
+      "severity": "Unknown",
+      "fix_versions": []
+    },
+    {
+      "package": "libkrb5support0",
+      "version": "1.21.3-5+deb13u1",
+      "type": "deb",
+      "id": "CVE-2026-71200",
+      "severity": "Unknown",
+      "fix_versions": []
+    }
+  ],
+  "scanner_exit_code": 2,
+  "detection_control": {
+    "status": "passed",
+    "blocking_matches": 27
+  },
+  "evidence_sha256": {
+    "cra2-gcp-owner.oci": "181f6c961918df267b2ee8604b598aab8e971fe89eb101ef7778fbaa462c88b3",
+    "cra2-gcp-container.json": "1242b9978c3c569ba5adc9678bf0b0f854604c3d07c45d0ef87be7dfd5c7043a",
+    "sbom.json": "cecfcacb0780a1ca6cbbc7da2c4982b4c2f033c0305a6ea97406f77e026b4b8f",
+    "scan.json": "b29cd25b6052b602e257724767bd49b476c6b239e0369613119f12212d71d0d1",
+    "canary-sbom.json": "8b08bbd10a0c39b449982f02614dfa1659db38e46625ff27f995f1581aecf4fd",
+    "canary-scan.json": "0ffaa454d726be67494bd607dc42da681032aedeb1ec5aebeec95ecbf0946e6e"
+  }
+}

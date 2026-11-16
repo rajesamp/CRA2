@@ -1,0 +1,58 @@
+{
+  "planning_budget_usd_month": 10,
+  "configured_in_gcp": false,
+  "as_of": "2026-11-16",
+  "price_reference": "https://cloud.google.com/run/pricing",
+  "assumptions": {
+    "billing": "request-based, Tier 1 public reference rates; verify actual region before apply",
+    "vcpu": 1,
+    "memory_gib": 2,
+    "month_days": 30,
+    "minimum_instances": 0,
+    "query_seconds": 5,
+    "queries_per_active_user_per_day": 5,
+    "billing_time_model": "Serial non-overlapping requests, no additional open-stream time; not a load measurement"
+  },
+  "rates": {
+    "cpu_usd_per_vcpu_second": 2.4e-05,
+    "memory_usd_per_gib_second": 2.5e-06,
+    "request_usd_per_million": 0.4
+  },
+  "scenarios": {
+    "owner_10_active_hours": {
+      "billed_instance_seconds": 36000,
+      "requests": 10000,
+      "usd_before_free_tier": 1.048,
+      "usd_if_full_free_tier_available": 0.0
+    },
+    "1000_registered_100_daily_active": {
+      "billed_instance_seconds": 75000,
+      "requests": 15000,
+      "usd_before_free_tier": 2.181,
+      "usd_if_full_free_tier_available": 0.0
+    },
+    "1000_daily_active": {
+      "billed_instance_seconds": 750000,
+      "requests": 150000,
+      "usd_before_free_tier": 21.81,
+      "usd_if_full_free_tier_available": 16.53
+    },
+    "one_instance_active_all_month": {
+      "billed_instance_seconds": 2592000,
+      "requests": 0,
+      "usd_before_free_tier": 75.168,
+      "usd_if_full_free_tier_available": 69.948
+    }
+  },
+  "exclusions": [
+    "provider tokens",
+    "registry and durable storage",
+    "network and DNS",
+    "builds",
+    "audit retention",
+    "logging beyond allowances",
+    "startup/shutdown time",
+    "Gradio heartbeat and SSE open-connection time"
+  ],
+  "limits": "Neither a total-bill forecast nor a strict spending guarantee. Free allowances are shared by the billing account. Spend-cap enforcement is delayed and scoped to one service/project; not configured."
+}

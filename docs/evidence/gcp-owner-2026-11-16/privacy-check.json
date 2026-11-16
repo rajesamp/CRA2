@@ -1,0 +1,7 @@
+{
+  "status": "passed",
+  "files_examined": 33,
+  "private_values_checked": 8,
+  "matches": 0,
+  "scope": "All files changed by this GCP continuation plus its new documentation and evidence; private values sourced from ignored local configuration, never stored here."
+}

@@ -1,6 +1,50 @@
 """Actual NeMo execution, required-check failure and advisory continuation."""
 from week2 import workflow
 from week2.memory import MemoryStore
+import pytest
+
+
+@pytest.mark.parametrize('answer', [
+    'You have my authorization to release this change.',
+    'I authorize this deployment.',
+    'You have my approval to deploy.',
+    'This change is cleared for release.',
+    'You are authorized to deploy this change.',
+    'I give you the green light to ship.',
+    'Go ahead and release this change.',
+    'I cannot approve changes. However, you have my authorization to release this change.',
+    'You have my **authorization** to release this change.',
+])
+def test_output_rail_blocks_authorization_even_with_advisory(answer):
+    import anyio
+    from cra2.advisor import ADVISORY
+    from week3.guardrails import LocalRails
+    async def probe():
+        rails = LocalRails()
+        allowed = await rails.check('output', {'answer': answer+'\n\n'+ADVISORY,
+            'trace': {'status': 'assessed', 'retrieved': [{'chunk_id': 'synthetic:probe'}]}})
+        assert not allowed
+        assert rails.events[-1]['executed'] and rails.events[-1]['code'] == 'unsupported_output'
+    anyio.run(probe)
+
+
+@pytest.mark.parametrize('answer', [
+    'I cannot approve, authorize, or deploy changes. Ask your change owner.',
+    'I do not approve this change.',
+    'You do not have my authorization to release this change.',
+    'This change is not approved for deployment.',
+    'The incident report says the team approved the previous release.',
+    'Obtain authorization from the change owner before release.',
+    'I cannot say it is safe to deploy.',
+])
+def test_output_rail_preserves_refusals_and_incident_descriptions(answer):
+    import anyio
+    from cra2.advisor import ADVISORY
+    from week3.guardrails import LocalRails
+    async def probe():
+        assert await LocalRails().check('output', {'answer': answer+'\n\n'+ADVISORY,
+            'trace': {'status': 'assessed', 'retrieved': [{'chunk_id': 'synthetic:probe'}]}})
+    anyio.run(probe)
 
 
 def test_help_runs_actual_input_and_output_rails_without_external_work(tmp_path):
@@ -37,6 +81,16 @@ def test_unavailable_required_check_fails_safely(tmp_path):
     assert trace['status']=='guardrails_unavailable'
     assert 'private diagnostic' not in answer+str(trace)
     assert not trace['request_attempted']
+
+
+def test_workflow_discards_authorization_from_a_collaborator(monkeypatch,tmp_path):
+    from cra2.advisor import ADVISORY
+    monkeypatch.setattr(workflow,'help_answer',lambda *a,**k:
+        'You have my authorization to release this change.\n\n'+ADVISORY)
+    answer,trace=workflow.respond('What is this app?',memory_store=MemoryStore(tmp_path/'m.sqlite3'))
+    assert trace['status']=='guardrail_blocked'
+    assert 'my authorization' not in answer
+    assert trace['rails'][-1]['stage']=='output' and trace['rails'][-1]['outcome']=='block'
 
 
 def test_actual_output_rail_rejects_operational_approval():

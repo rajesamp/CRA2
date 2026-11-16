@@ -1,0 +1,37 @@
+# Podman also honors .dockerignore. Send only application/build inputs.
+**
+!Containerfile
+!pyproject.toml
+!uv.lock
+!README.md
+!cra2/
+!cra2/**
+!data/
+!data/**
+!evals/
+!evals/**
+!week1/
+!week1/**
+!week2/
+!week2/**
+!week3/
+!week3/**
+!week4/
+!week4/**
+**/.venv
+**/.cache
+**/.local
+**/__pycache__
+**/.pytest_cache
+**/.env
+**/.env.*
+**/tests
+**/*.sqlite3
+**/*.sqlite3-wal
+**/*.sqlite3-shm
+# One explicitly pinned public build input. All other cache contents stay out.
+!week1/.cache/
+week1/.cache/**
+!week1/.cache/models/
+week1/.cache/models/**
+!week1/.cache/models/fast-bge-small-en-v1.5.tar.gz

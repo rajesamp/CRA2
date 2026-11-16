@@ -5,9 +5,9 @@ import os
 from pathlib import Path
 from uuid import uuid4
 
-# All generated UI files stay inside the permitted local workspace.
+# Local runs use the workspace; containers provide a writable temporary path.
 os.environ["GRADIO_ANALYTICS_ENABLED"] = "False"
-os.environ["GRADIO_TEMP_DIR"] = str(Path(__file__).with_name(".local") / "gradio")
+os.environ.setdefault("GRADIO_TEMP_DIR", str(Path(__file__).with_name(".local") / "gradio"))
 
 import gradio as gr
 
@@ -238,13 +238,14 @@ def request_client(request):
     return host
 
 
-def build_app(*, memory_store=None, abuse_gate=None):
+def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None):
     configure_sdk_logging()
     store = MemoryStore() if memory_store is None else memory_store
     gate = AbuseGate() if abuse_gate is None else abuse_gate
+    identity = identity_resolver or request_client
 
     def reply(message, history, mode, session_id, traces, request: gr.Request):
-        client = request_client(request)
+        client = identity(request)
         answer, _, trace = guarded_ui_reply(message, history, mode, session_id, gate=gate, client=client, memory_store=store)
         updated = retain_trace(traces, trace)
         display, poll = langsmith_view(trace["turn"], updated)
@@ -253,7 +254,7 @@ def build_app(*, memory_store=None, abuse_gate=None):
 
     def cooldown(request: gr.Request):
         try:
-            return cooldown_view(gate, request_client(request))
+            return cooldown_view(gate, identity(request))
         except (ValueError, AttributeError):
             return gr.update(value="Security check unavailable.", visible=True), gr.update(visible=False), gr.update(active=False)
 
@@ -312,13 +313,20 @@ def build_app(*, memory_store=None, abuse_gate=None):
     return demo
 
 
-def main():
+def main(argv=None):
+    if os.environ.get("K_SERVICE"):
+        raise RuntimeError("Cloud Run requires the authenticated week2.cloud_app entrypoint")
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--port", type=int, default=7862)
+    parser.add_argument("--host", choices=("127.0.0.1", "0.0.0.0"), default="127.0.0.1",
+        help="Use 0.0.0.0 explicitly when running behind the deployment's authentication gateway")
+    parser.add_argument("--port", type=int, default=os.environ.get("PORT", "7862"))
     parser.add_argument("--memory-file", type=Path, help="Trusted host configuration; must be inside CRA2 or /tmp")
     parser.add_argument("--audit-file", type=Path, help="Trusted owner-only audit path inside CRA2 or /tmp")
-    args = parser.parse_args()
-    # Direct loopback app: forwarded headers must not spoof cooldown identity.
+    args = parser.parse_args(argv)
+    if not 1 <= args.port <= 65535:
+        parser.error("port must be between 1 and 65535")
+    # Forwarded headers must not spoof cooldown identity. Cloud authentication
+    # and verified principal identity are separate deployment requirements.
     os.environ["FORWARDED_ALLOW_IPS"] = ""
     store = MemoryStore() if args.memory_file is None else MemoryStore(args.memory_file)
     root = Path(__file__).resolve().parents[1]
@@ -327,7 +335,7 @@ def main():
     if selected:
         blocked.append(str(Path(selected).expanduser().resolve()))
     gate = AbuseGate(store=OwnerAuditStore(args.audit_file)) if args.audit_file is not None else None
-    build_app(memory_store=store, abuse_gate=gate).launch(server_name="127.0.0.1", server_port=args.port,
+    build_app(memory_store=store, abuse_gate=gate).launch(server_name=args.host, server_port=args.port,
         share=False, inbrowser=False, blocked_paths=blocked, show_error=False,
         enable_monitoring=False, run_history=False, mcp_server=False,
         footer_links=[], max_file_size="1mb")

@@ -1,0 +1,10 @@
+{
+  "source_revision": "c3b117ac034cb68b3f3eaa089fe6a8237c04cc8e",
+  "source": "docs/cloud-run-plan.md",
+  "sha256": "9896ec64bde11475891ba01980566f542fbd7775ee2c9f59117cc79ee3661065",
+  "planned_options": [
+    "gradio"
+  ],
+  "prior_framework_verdict": null,
+  "scope": "Earlier delivery plan assumed Gradio; no prior validated framework comparison existed."
+}

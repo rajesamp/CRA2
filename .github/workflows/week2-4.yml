@@ -1,0 +1,75 @@
+name: week2-4
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.13"]
+    env:
+      GRADIO_ANALYTICS_ENABLED: "False"
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      GROQ_API_KEY: ""
+      CRA2_RUN_LIVE_TESTS: "0"
+      CRA2_LANGSMITH_ENABLED: "false"
+      LANGSMITH_TRACING: "false"
+      LANGCHAIN_TRACING_V2: "false"
+      # Store path validation permits /tmp on every supported platform.
+      TMPDIR: /tmp
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install uv in an isolated tool environment
+        run: |
+          python -m venv "$RUNNER_TEMP/uv-tool"
+          "$RUNNER_TEMP/uv-tool/bin/pip" install uv==0.12.16
+          echo "$RUNNER_TEMP/uv-tool/bin" >> "$GITHUB_PATH"
+      - name: Install locked application and test dependencies
+        run: uv sync --locked --project week2 --python "${{ matrix.python-version }}"
+      - name: Provision reviewed encoder asset and build synthetic index
+        env:
+          CRA2_MODEL_ARCHIVE_URL: ${{ vars.CRA2_MODEL_ARCHIVE_URL }}
+        run: |
+          if [ -z "$CRA2_MODEL_ARCHIVE_URL" ]; then
+            echo "::error::Set CRA2_MODEL_ARCHIVE_URL to the reviewed mirror of the pinned encoder archive. The original public source returns HTTP 403."
+            exit 1
+          fi
+          mkdir -p week1/.cache/models
+          curl --fail --location --proto '=https' --proto-redir '=https' --max-time 300 --max-filesize 76692531 \
+            --output week1/.cache/models/fast-bge-small-en-v1.5.tar.gz "$CRA2_MODEL_ARCHIVE_URL"
+          # Setup verifies exact archive size/hash and all extracted file hashes.
+          week2/.venv/bin/python -m week1.setup_index
+      - name: Run Week 2–4 tests without model providers
+        run: |
+          mkdir -p "$RUNNER_TEMP/week2-4-evidence"
+          week2/.venv/bin/python -m pytest week2/tests week3/tests week4/tests -q -m "not live" --junitxml="$RUNNER_TEMP/week2-4-evidence/tests.xml"
+      - name: Verify scorer negative and positive controls
+        run: week2/.venv/bin/python -m week4.evaluate --verify-canaries --out "$RUNNER_TEMP/week2-4-evidence/canaries.json"
+      - name: Evaluate development and validation contracts
+        run: week2/.venv/bin/python -m week4.evaluate --out "$RUNNER_TEMP/week2-4-evidence/development-validation.json"
+      - name: Evaluate corrected reserved contracts
+        run: week2/.venv/bin/python -m week4.evaluate --split reserved --cases week4/reserved-cases-v2.json --out "$RUNNER_TEMP/week2-4-evidence/reserved.json"
+      - name: Inject required-check, capacity and dependency faults
+        run: week2/.venv/bin/python -m week4.faults --out "$RUNNER_TEMP/week2-4-evidence/faults.json"
+      - name: Preserve bounded synthetic test evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: week2-4-python-${{ matrix.python-version }}
+          path: ${{ runner.temp }}/week2-4-evidence/
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,1573 @@
+{
+  "image_id": "3b231fe1a00f1b2b256c4f140a036843bcf613f1717f5f220b27aae76f925be0",
+  "os": "linux",
+  "architecture": "amd64",
+  "user": "65532:65532",
+  "offline_six_intents": {
+    "mode": "Local evidence only",
+    "passed": 6,
+    "total": 6,
+    "provider_attempts": 0,
+    "cases": [
+      {
+        "question": "Change checkout-service config timeout from 4 seconds to 400 milliseconds.",
+        "answer": "Local evidence only; no model risk indication.\n\n**Evidence \u00b7 historical/sample**\n\n- The timeout for payment-gateway calls was cut from 4 seconds to 400 milliseconds. Slow authorisations were abandoned while still in flight. Some shoppers were charged even though no order was created. (pm-cx101-checkout-timeout#chunk-001)\n- Guidance: Runbook: review a checkout-service config change (rb-checkout-config-risk#chunk-002)\n\n**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded health for checkout-service: **Healthy**. Reported freeze status: **not_reported**. Active incidents: unknown. Evidence: catalog:checkout-service.status, catalog:checkout-service.freeze_window_active.\n\nRecorded graph for checkout-service:\n\n- Direct dependencies: auth-service, inventory-service, payment-gateway\n- All reachable dependencies: auth-service, inventory-service, notification-service, payment-gateway\n- Direct dependents: order-service\n- All reachable dependents: mobile-frontend, order-service, web-frontend\n\nEvidence: graph:checkout-service.dependents, graph:checkout-service.dependencies.\n\nThis is advisory only. The decision to ship requires a human.",
+        "trace": {
+          "scope": "cra2",
+          "status": "evidence_only",
+          "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+          "retrieved": [
+            {
+              "chunk_id": "pm-cx101-checkout-timeout#chunk-001",
+              "source": "week1/corpus/pm-cx101-checkout-timeout.md",
+              "similarity": 0.7484,
+              "text": "# Checkout config incident: payment timeout cut too far Document type: synthetic postmortem derived from a historical fixture. This is a fictional training example, not current production evidence. Source: [canonical synthetic incidents](../../data/incidents.json), incident **CX-101**. Service: **checkout-service**. Date: **2025-10-14**. Change type: **Config change**. Severity: **SEV1**. ## Recorded facts The timeout for payment-gateway calls was cut from **4 seconds to 400 milliseconds**. Slow authorisations were abandoned while still in flight. Some shoppers were charged even though no order was created. The fixture does not record the outage duration, customer count, investigation timeline, or recovery procedure. Those details are unknown. It does not establish the effect of a different timeout value or the current health of either service. ## Suggested checks for a proposed change These are review recommendations, not additional incident facts: - Ask for the current and proposed timeout values and the affected checkout calls. - Check payment-authorisation latency and what happens when a request times out after the external payment"
+            },
+            {
+              "chunk_id": "rb-checkout-config-risk#chunk-002",
+              "source": "week1/corpus/rb-checkout-config-risk.md",
+              "similarity": 0.7482,
+              "text": "1 to 5 while staging remained at 1, amplifying a payment-gateway slowdown into a retry storm. These incidents are candidates for timeout, retry, and environment-drift changes. Explain the connection to the proposed field; do not cite them as proof that every checkout config change is high-risk. ## Recommended review questions - What failure or latency behavior does the new value permit? - Which callers and dependencies might experience that behavior? - Can the prior configuration and consistent payment/order behavior be restored? - Which named signals reveal retries, timeouts, or incomplete orders? The catalog is a fictional snapshot. Week 1 retrieval does not call a current-health or freeze tool. Label such status as unverified. Cite the relevant incident or source passage for each risk reason, and leave the shipping decision to a human."
+            },
+            {
+              "chunk_id": "rb-checkout-config-risk#chunk-001",
+              "source": "week1/corpus/rb-checkout-config-risk.md",
+              "similarity": 0.7433,
+              "text": "# Runbook: review a checkout-service config change This is a fictional review guide derived from synthetic historical records. Its checklist is recommended review work, not a report of completed controls or live system state. Sources: [CX-101 and CX-102](../../data/incidents.json), [synthetic catalog snapshot](../../data/checkout_system.json). ## Establish what will change For \u201cHow risky is this change to the checkout-service config?\u201d, first obtain the config field, current and proposed values, affected environment, and expected behavior. The question alone does not establish a specific change. Retrieve relevant history while asking for these details; do not invent a before/after state to produce a score. ## Match evidence to the mechanism CX-101 records a payment-call timeout cut from 4 seconds to 400 milliseconds, followed by abandoned authorisations and charges without orders. CX-102 records a production retry increase from 1 to 5 while staging remained at 1, amplifying a payment-gateway slowdown into a retry storm. These incidents are candidates for timeout, retry, and environment-drift changes. Explain the connection to"
+            }
+          ],
+          "support": {
+            "status": "not_disproven",
+            "method": "bounded_lexical_mechanism_coverage_v1",
+            "requested": [
+              "timeout"
+            ],
+            "covered": [
+              "timeout"
+            ],
+            "passages_examined": 3
+          },
+          "assessment_tool_citations": [],
+          "events": [
+            {
+              "event": "metadata_admitted",
+              "tools": [
+                "check_system_health",
+                "get_dependency_graph"
+              ],
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "event": "tool_result",
+              "transport": "mcp-stdio",
+              "tool": "check_system_health",
+              "input": {
+                "service_name": "checkout-service"
+              },
+              "output": {
+                "status": "ok",
+                "service_name": "checkout-service",
+                "health": "Healthy",
+                "active_incidents": null,
+                "active_incidents_status": "unknown",
+                "freeze_window": {
+                  "reported_active": false,
+                  "status": "not_reported"
+                },
+                "source": {
+                  "path": "data/checkout_system.json",
+                  "kind": "synthetic_snapshot",
+                  "observed_at": null,
+                  "freshness": "unknown"
+                },
+                "evidence": [
+                  "catalog:checkout-service.status",
+                  "catalog:checkout-service.freeze_window_active"
+                ]
+              },
+              "duration_ms": 14.641,
+              "started_at": "2026-11-16T21:27:48.198017+00:00",
+              "ended_at": "2026-11-16T21:27:48.212666+00:00",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "event": "metadata_admitted",
+              "tools": [
+                "check_system_health",
+                "get_dependency_graph"
+              ],
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "event": "tool_result",
+              "transport": "mcp-stdio",
+              "tool": "get_dependency_graph",
+              "input": {
+                "service_name": "checkout-service"
+              },
+              "output": {
+                "status": "ok",
+                "service_name": "checkout-service",
+                "dependents": {
+                  "direct": [
+                    "order-service"
+                  ],
+                  "transitive": [
+                    "mobile-frontend",
+                    "order-service",
+                    "web-frontend"
+                  ]
+                },
+                "dependencies": {
+                  "direct": [
+                    "auth-service",
+                    "inventory-service",
+                    "payment-gateway"
+                  ],
+                  "transitive": [
+                    "auth-service",
+                    "inventory-service",
+                    "notification-service",
+                    "payment-gateway"
+                  ]
+                },
+                "source": {
+                  "path": "data/checkout_system.json",
+                  "kind": "synthetic_snapshot",
+                  "observed_at": null,
+                  "freshness": "unknown"
+                },
+                "evidence": [
+                  "graph:checkout-service.dependents",
+                  "graph:checkout-service.dependencies"
+                ]
+              },
+              "duration_ms": 19.038,
+              "started_at": "2026-11-16T21:27:50.590973+00:00",
+              "ended_at": "2026-11-16T21:27:50.610019+00:00",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            }
+          ],
+          "mcp": {
+            "attempted": 2,
+            "failed": 0,
+            "status": "measured"
+          },
+          "memory": {
+            "status": "empty",
+            "record": null,
+            "effective_policy": {
+              "team": "sample-team",
+              "effective": {
+                "high_risk": false,
+                "freeze_window_active": false
+              },
+              "sources": {
+                "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+                "high_risk": "default:high_risk"
+              },
+              "conflicts": []
+            }
+          },
+          "rails": [
+            {
+              "stage": "input",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 249.326,
+              "started_at": "2026-11-16T21:27:44.067872+00:00",
+              "ended_at": "2026-11-16T21:27:44.317228+00:00",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "stage": "context",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 13.305,
+              "started_at": "2026-11-16T21:27:45.915713+00:00",
+              "ended_at": "2026-11-16T21:27:45.929052+00:00",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "stage": "output",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 18.382,
+              "started_at": "2026-11-16T21:27:50.839455+00:00",
+              "ended_at": "2026-11-16T21:27:50.857868+00:00",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            }
+          ],
+          "cache": [
+            {
+              "outcome": "miss",
+              "stored": true,
+              "age_ms": 0,
+              "ttl_seconds": 86400,
+              "duration_ms": 14.906,
+              "layer": "query_embedding",
+              "source_version": "fastembed-artifacts-sha256:dbfeb9161233d9d25c37b15a85a4bba7107f9bf18abb161d6abd1093caf0e71c",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "outcome": "miss",
+              "stored": true,
+              "age_ms": 0,
+              "ttl_seconds": 300,
+              "duration_ms": 33.709,
+              "layer": "retrieval",
+              "source_version": "4bf40752abf62df3931babc77448879724324cb0996942f47d89d7041655309c",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "outcome": "miss",
+              "stored": true,
+              "age_ms": 0,
+              "ttl_seconds": 300,
+              "duration_ms": 2470.039,
+              "layer": "tool",
+              "tool": "check_system_health",
+              "source_version": "0a119c8216dc2f44d7cac6a90647091fbc3c66b13ec59fd1dd851b49565c5416",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "outcome": "miss",
+              "stored": true,
+              "age_ms": 0,
+              "ttl_seconds": 300,
+              "duration_ms": 2415.389,
+              "layer": "tool",
+              "tool": "get_dependency_graph",
+              "source_version": "0a119c8216dc2f44d7cac6a90647091fbc3c66b13ec59fd1dd851b49565c5416",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            }
+          ],
+          "provider_used": false,
+          "request_attempted": false,
+          "request_id": "642943024ef546b9bb4d7f9625d7af32",
+          "session_id": "1e15aa53390f4944b02d438ca37754d3",
+          "orchestration": "langgraph",
+          "transport": "cli",
+          "turn": 1,
+          "review_mode": "Local evidence only",
+          "duration_ms": 6978.417,
+          "spans": [
+            {
+              "stage": "classify",
+              "outcome": "completed",
+              "duration_ms": 253.071,
+              "started_at": "2026-11-16T21:27:44.067844+00:00",
+              "ended_at": "2026-11-16T21:27:44.320920+00:00",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "stage": "memory_read",
+              "outcome": "completed",
+              "duration_ms": 0.528,
+              "started_at": "2026-11-16T21:27:44.323037+00:00",
+              "ended_at": "2026-11-16T21:27:44.323568+00:00",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "stage": "retrieve",
+              "outcome": "completed",
+              "duration_ms": 1604.509,
+              "started_at": "2026-11-16T21:27:44.324555+00:00",
+              "ended_at": "2026-11-16T21:27:45.929065+00:00",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "stage": "tools",
+              "outcome": "completed",
+              "duration_ms": 4893.766,
+              "started_at": "2026-11-16T21:27:45.930219+00:00",
+              "ended_at": "2026-11-16T21:27:50.823994+00:00",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "stage": "compose",
+              "outcome": "completed",
+              "duration_ms": 2.833,
+              "started_at": "2026-11-16T21:27:50.824945+00:00",
+              "ended_at": "2026-11-16T21:27:50.827786+00:00",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "stage": "output_guard",
+              "outcome": "completed",
+              "duration_ms": 29.069,
+              "started_at": "2026-11-16T21:27:50.828819+00:00",
+              "ended_at": "2026-11-16T21:27:50.857888+00:00",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "stage": "rail_input",
+              "duration_ms": 249.326,
+              "outcome": "allow",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "stage": "rail_context",
+              "duration_ms": 13.305,
+              "outcome": "allow",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "stage": "rail_output",
+              "duration_ms": 18.382,
+              "outcome": "allow",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "stage": "cache_query_embedding",
+              "duration_ms": 14.906,
+              "outcome": "miss",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "stage": "cache_retrieval",
+              "duration_ms": 33.709,
+              "outcome": "miss",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "stage": "cache_tool",
+              "duration_ms": 2470.039,
+              "outcome": "miss",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            },
+            {
+              "stage": "cache_tool",
+              "duration_ms": 2415.389,
+              "outcome": "miss",
+              "request_id": "642943024ef546b9bb4d7f9625d7af32"
+            }
+          ],
+          "started_at": "2026-11-16T21:27:43.880184+00:00",
+          "ended_at": "2026-11-16T21:27:50.858632+00:00",
+          "langsmith": {
+            "status": "not_enabled_for_transport"
+          }
+        },
+        "id": "checkout",
+        "expected": "evidence_only",
+        "passed": true
+      },
+      {
+        "question": "What similar incidents has checkout-service had before?",
+        "answer": "Past incidents for comparison; a match does not prove the same failure will recur.\n\n**Evidence \u00b7 historical/sample**\n\n- The timeout for payment-gateway calls was cut from 4 seconds to 400 milliseconds. Slow authorisations were abandoned while still in flight. Some shoppers were charged even though no order was created. (pm-cx101-checkout-timeout#chunk-001)\n- Timeout for payment-gateway calls cut from 4 s to 400 ms; slow authorisations were abandoned mid-flight, so some shoppers were charged with no order created (CX-101#chunk-001)\n- Checkout config incident: payment timeout cut too far (pm-cx101-checkout-timeout#chunk-002)\n\nThis is advisory only. The decision to ship requires a human.",
+        "trace": {
+          "scope": "cra2",
+          "status": "history_only",
+          "source_scope": "Static historical/sample corpus; no live system lookup",
+          "retrieved": [
+            {
+              "chunk_id": "pm-cx101-checkout-timeout#chunk-001",
+              "source": "week1/corpus/pm-cx101-checkout-timeout.md",
+              "similarity": 0.7726,
+              "text": "# Checkout config incident: payment timeout cut too far Document type: synthetic postmortem derived from a historical fixture. This is a fictional training example, not current production evidence. Source: [canonical synthetic incidents](../../data/incidents.json), incident **CX-101**. Service: **checkout-service**. Date: **2025-10-14**. Change type: **Config change**. Severity: **SEV1**. ## Recorded facts The timeout for payment-gateway calls was cut from **4 seconds to 400 milliseconds**. Slow authorisations were abandoned while still in flight. Some shoppers were charged even though no order was created. The fixture does not record the outage duration, customer count, investigation timeline, or recovery procedure. Those details are unknown. It does not establish the effect of a different timeout value or the current health of either service. ## Suggested checks for a proposed change These are review recommendations, not additional incident facts: - Ask for the current and proposed timeout values and the affected checkout calls. - Check payment-authorisation latency and what happens when a request times out after the external payment"
+            },
+            {
+              "chunk_id": "CX-101#chunk-001",
+              "source": "data/incidents.json#CX-101",
+              "similarity": 0.7578,
+              "text": "# Incident CX-101 Service: checkout-service Date: 2025-10-14 Change type: Config change Severity: SEV1 Source dataset: synthetic Source label: synthetic Root cause: Timeout for payment-gateway calls cut from 4 s to 400 ms; slow authorisations were abandoned mid-flight, so some shoppers were charged with no order created"
+            },
+            {
+              "chunk_id": "pm-cx101-checkout-timeout#chunk-002",
+              "source": "week1/corpus/pm-cx101-checkout-timeout.md",
+              "similarity": 0.7482,
+              "text": "- Ask for the current and proposed timeout values and the affected checkout calls. - Check payment-authorisation latency and what happens when a request times out after the external payment operation has started. - Examine whether cancellation, retry, and order creation can leave payment and order state inconsistent. - Ask how to restore the prior setting and how monitoring would detect charges without completed orders. This history is directly relevant to a checkout payment-timeout config change. A shared service or config label alone does not prove that another change has the same failure mechanism. Cite CX-101 and explain the connection before using it as a risk reason. The assessment remains advisory; a human makes the shipping decision."
+            }
+          ],
+          "memory": {
+            "status": "empty",
+            "record": null,
+            "effective_policy": {
+              "team": "sample-team",
+              "effective": {
+                "high_risk": false,
+                "freeze_window_active": false
+              },
+              "sources": {
+                "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+                "high_risk": "default:high_risk"
+              },
+              "conflicts": []
+            }
+          },
+          "rails": [
+            {
+              "stage": "input",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 9.991,
+              "started_at": "2026-11-16T21:27:51.032169+00:00",
+              "ended_at": "2026-11-16T21:27:51.042185+00:00",
+              "request_id": "96b3eed874c04064a1a85d5bd41f4c32"
+            },
+            {
+              "stage": "context",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 11.294,
+              "started_at": "2026-11-16T21:27:51.089851+00:00",
+              "ended_at": "2026-11-16T21:27:51.101196+00:00",
+              "request_id": "96b3eed874c04064a1a85d5bd41f4c32"
+            },
+            {
+              "stage": "output",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 11.44,
+              "started_at": "2026-11-16T21:27:51.109233+00:00",
+              "ended_at": "2026-11-16T21:27:51.120706+00:00",
+              "request_id": "96b3eed874c04064a1a85d5bd41f4c32"
+            }
+          ],
+          "cache": [
+            {
+              "outcome": "miss",
+              "stored": true,
+              "age_ms": 0,
+              "ttl_seconds": 86400,
+              "duration_ms": 11.084,
+              "layer": "query_embedding",
+              "source_version": "fastembed-artifacts-sha256:dbfeb9161233d9d25c37b15a85a4bba7107f9bf18abb161d6abd1093caf0e71c",
+              "request_id": "96b3eed874c04064a1a85d5bd41f4c32"
+            },
+            {
+              "outcome": "miss",
+              "stored": true,
+              "age_ms": 0,
+              "ttl_seconds": 300,
+              "duration_ms": 29.815,
+              "layer": "retrieval",
+              "source_version": "4bf40752abf62df3931babc77448879724324cb0996942f47d89d7041655309c",
+              "request_id": "96b3eed874c04064a1a85d5bd41f4c32"
+            }
+          ],
+          "mcp": {
+            "status": "not_accessed",
+            "attempted": 0,
+            "failed": 0
+          },
+          "provider_used": false,
+          "request_attempted": false,
+          "request_id": "96b3eed874c04064a1a85d5bd41f4c32",
+          "session_id": "b19b345cfc8248c8b7992331dc6e6695",
+          "orchestration": "langgraph",
+          "transport": "cli",
+          "turn": 1,
+          "review_mode": "Local evidence only",
+          "duration_ms": 261.063,
+          "spans": [
+            {
+              "stage": "classify",
+              "outcome": "completed",
+              "duration_ms": 10.661,
+              "started_at": "2026-11-16T21:27:51.032145+00:00",
+              "ended_at": "2026-11-16T21:27:51.042809+00:00",
+              "request_id": "96b3eed874c04064a1a85d5bd41f4c32"
+            },
+            {
+              "stage": "memory_read",
+              "outcome": "completed",
+              "duration_ms": 0.659,
+              "started_at": "2026-11-16T21:27:51.045036+00:00",
+              "ended_at": "2026-11-16T21:27:51.045700+00:00",
+              "request_id": "96b3eed874c04064a1a85d5bd41f4c32"
+            },
+            {
+              "stage": "legacy",
+              "outcome": "completed",
+              "duration_ms": 53.626,
+              "started_at": "2026-11-16T21:27:51.047581+00:00",
+              "ended_at": "2026-11-16T21:27:51.101207+00:00",
+              "request_id": "96b3eed874c04064a1a85d5bd41f4c32"
+            },
+            {
+              "stage": "output_guard",
+              "outcome": "completed",
+              "duration_ms": 18.917,
+              "started_at": "2026-11-16T21:27:51.101801+00:00",
+              "ended_at": "2026-11-16T21:27:51.120719+00:00",
+              "request_id": "96b3eed874c04064a1a85d5bd41f4c32"
+            },
+            {
+              "stage": "rail_input",
+              "duration_ms": 9.991,
+              "outcome": "allow",
+              "request_id": "96b3eed874c04064a1a85d5bd41f4c32"
+            },
+            {
+              "stage": "rail_context",
+              "duration_ms": 11.294,
+              "outcome": "allow",
+              "request_id": "96b3eed874c04064a1a85d5bd41f4c32"
+            },
+            {
+              "stage": "rail_output",
+              "duration_ms": 11.44,
+              "outcome": "allow",
+              "request_id": "96b3eed874c04064a1a85d5bd41f4c32"
+            },
+            {
+              "stage": "cache_query_embedding",
+              "duration_ms": 11.084,
+              "outcome": "miss",
+              "request_id": "96b3eed874c04064a1a85d5bd41f4c32"
+            },
+            {
+              "stage": "cache_retrieval",
+              "duration_ms": 29.815,
+              "outcome": "miss",
+              "request_id": "96b3eed874c04064a1a85d5bd41f4c32"
+            }
+          ],
+          "started_at": "2026-11-16T21:27:50.860200+00:00",
+          "ended_at": "2026-11-16T21:27:51.121281+00:00",
+          "langsmith": {
+            "status": "not_enabled_for_transport"
+          }
+        },
+        "id": "history",
+        "expected": "history_only",
+        "passed": true
+      },
+      {
+        "question": "Is checkout-service in a freeze window right now?",
+        "answer": "**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded health for checkout-service: **Healthy**. Reported freeze status: **not_reported**. Active incidents: unknown. Evidence: catalog:checkout-service.status, catalog:checkout-service.freeze_window_active.\n\nThis is advisory only. The decision to ship requires a human.",
+        "trace": {
+          "status": "tool_evidence",
+          "retrieved": [],
+          "provider_used": false,
+          "request_attempted": false,
+          "events": [
+            {
+              "event": "cache_result",
+              "tool": "check_system_health",
+              "source_version": "0a119c8216dc2f44d7cac6a90647091fbc3c66b13ec59fd1dd851b49565c5416",
+              "input": {
+                "service_name": "checkout-service"
+              },
+              "output": {
+                "active_incidents": null,
+                "active_incidents_status": "unknown",
+                "evidence": [
+                  "catalog:checkout-service.status",
+                  "catalog:checkout-service.freeze_window_active"
+                ],
+                "freeze_window": {
+                  "reported_active": false,
+                  "status": "not_reported"
+                },
+                "health": "Healthy",
+                "service_name": "checkout-service",
+                "source": {
+                  "freshness": "unknown",
+                  "kind": "synthetic_snapshot",
+                  "observed_at": null,
+                  "path": "data/checkout_system.json"
+                },
+                "status": "ok"
+              },
+              "request_id": "47e740a1a9c24186bddfd686e7f97840"
+            }
+          ],
+          "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+          "mcp": {
+            "attempted": 0,
+            "failed": 0,
+            "status": "measured"
+          },
+          "memory": {
+            "status": "empty",
+            "record": null,
+            "effective_policy": {
+              "team": "sample-team",
+              "effective": {
+                "high_risk": false,
+                "freeze_window_active": false
+              },
+              "sources": {
+                "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+                "high_risk": "default:high_risk"
+              },
+              "conflicts": []
+            }
+          },
+          "rails": [
+            {
+              "stage": "input",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 12.982,
+              "started_at": "2026-11-16T21:27:51.280604+00:00",
+              "ended_at": "2026-11-16T21:27:51.293612+00:00",
+              "request_id": "47e740a1a9c24186bddfd686e7f97840"
+            },
+            {
+              "stage": "output",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 14.942,
+              "started_at": "2026-11-16T21:27:51.305362+00:00",
+              "ended_at": "2026-11-16T21:27:51.320333+00:00",
+              "request_id": "47e740a1a9c24186bddfd686e7f97840"
+            }
+          ],
+          "cache": [
+            {
+              "age_ms": 2896.064,
+              "ttl_seconds": 300,
+              "outcome": "hit",
+              "duration_ms": 1.068,
+              "layer": "tool",
+              "tool": "check_system_health",
+              "source_version": "0a119c8216dc2f44d7cac6a90647091fbc3c66b13ec59fd1dd851b49565c5416",
+              "request_id": "47e740a1a9c24186bddfd686e7f97840"
+            }
+          ],
+          "request_id": "47e740a1a9c24186bddfd686e7f97840",
+          "session_id": "69a03a68d4454545920c42f6c4991f7a",
+          "orchestration": "langgraph",
+          "transport": "cli",
+          "turn": 1,
+          "review_mode": "Local evidence only",
+          "duration_ms": 198.579,
+          "spans": [
+            {
+              "stage": "classify",
+              "outcome": "completed",
+              "duration_ms": 13.31,
+              "started_at": "2026-11-16T21:27:51.280584+00:00",
+              "ended_at": "2026-11-16T21:27:51.293898+00:00",
+              "request_id": "47e740a1a9c24186bddfd686e7f97840"
+            },
+            {
+              "stage": "memory_read",
+              "outcome": "completed",
+              "duration_ms": 0.64,
+              "started_at": "2026-11-16T21:27:51.295954+00:00",
+              "ended_at": "2026-11-16T21:27:51.296600+00:00",
+              "request_id": "47e740a1a9c24186bddfd686e7f97840"
+            },
+            {
+              "stage": "tools",
+              "outcome": "completed",
+              "duration_ms": 4.445,
+              "started_at": "2026-11-16T21:27:51.298058+00:00",
+              "ended_at": "2026-11-16T21:27:51.302507+00:00",
+              "request_id": "47e740a1a9c24186bddfd686e7f97840"
+            },
+            {
+              "stage": "compose",
+              "outcome": "completed",
+              "duration_ms": 0.038,
+              "started_at": "2026-11-16T21:27:51.303227+00:00",
+              "ended_at": "2026-11-16T21:27:51.303267+00:00",
+              "request_id": "47e740a1a9c24186bddfd686e7f97840"
+            },
+            {
+              "stage": "output_guard",
+              "outcome": "completed",
+              "duration_ms": 16.602,
+              "started_at": "2026-11-16T21:27:51.303743+00:00",
+              "ended_at": "2026-11-16T21:27:51.320346+00:00",
+              "request_id": "47e740a1a9c24186bddfd686e7f97840"
+            },
+            {
+              "stage": "rail_input",
+              "duration_ms": 12.982,
+              "outcome": "allow",
+              "request_id": "47e740a1a9c24186bddfd686e7f97840"
+            },
+            {
+              "stage": "rail_output",
+              "duration_ms": 14.942,
+              "outcome": "allow",
+              "request_id": "47e740a1a9c24186bddfd686e7f97840"
+            },
+            {
+              "stage": "cache_tool",
+              "duration_ms": 1.068,
+              "outcome": "hit",
+              "request_id": "47e740a1a9c24186bddfd686e7f97840"
+            }
+          ],
+          "started_at": "2026-11-16T21:27:51.122253+00:00",
+          "ended_at": "2026-11-16T21:27:51.320854+00:00",
+          "langsmith": {
+            "status": "not_enabled_for_transport"
+          }
+        },
+        "id": "freeze",
+        "expected": "tool_evidence",
+        "passed": true
+      },
+      {
+        "question": "What services depend on payment-gateway?",
+        "answer": "**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded graph for payment-gateway:\n\n- Direct dependencies: notification-service\n- All reachable dependencies: notification-service\n- Direct dependents: checkout-service\n- All reachable dependents: checkout-service, mobile-frontend, order-service, web-frontend\n\nEvidence: graph:payment-gateway.dependents, graph:payment-gateway.dependencies.\n\nThis is advisory only. The decision to ship requires a human.",
+        "trace": {
+          "status": "tool_evidence",
+          "retrieved": [],
+          "provider_used": false,
+          "request_attempted": false,
+          "events": [
+            {
+              "event": "metadata_admitted",
+              "tools": [
+                "check_system_health",
+                "get_dependency_graph"
+              ],
+              "request_id": "2eae89396c7149eb991462641cb8def7"
+            },
+            {
+              "event": "tool_result",
+              "transport": "mcp-stdio",
+              "tool": "get_dependency_graph",
+              "input": {
+                "service_name": "payment-gateway"
+              },
+              "output": {
+                "status": "ok",
+                "service_name": "payment-gateway",
+                "dependents": {
+                  "direct": [
+                    "checkout-service"
+                  ],
+                  "transitive": [
+                    "checkout-service",
+                    "mobile-frontend",
+                    "order-service",
+                    "web-frontend"
+                  ]
+                },
+                "dependencies": {
+                  "direct": [
+                    "notification-service"
+                  ],
+                  "transitive": [
+                    "notification-service"
+                  ]
+                },
+                "source": {
+                  "path": "data/checkout_system.json",
+                  "kind": "synthetic_snapshot",
+                  "observed_at": null,
+                  "freshness": "unknown"
+                },
+                "evidence": [
+                  "graph:payment-gateway.dependents",
+                  "graph:payment-gateway.dependencies"
+                ]
+              },
+              "duration_ms": 21.122,
+              "started_at": "2026-11-16T21:27:53.751529+00:00",
+              "ended_at": "2026-11-16T21:27:53.772662+00:00",
+              "request_id": "2eae89396c7149eb991462641cb8def7"
+            }
+          ],
+          "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+          "mcp": {
+            "attempted": 1,
+            "failed": 0,
+            "status": "measured"
+          },
+          "memory": {
+            "status": "empty",
+            "record": null,
+            "effective_policy": {
+              "team": "sample-team",
+              "effective": {
+                "high_risk": false,
+                "freeze_window_active": false
+              },
+              "sources": {
+                "freeze_window_active": "catalog:payment-gateway.freeze_window_active",
+                "high_risk": "default:high_risk"
+              },
+              "conflicts": []
+            }
+          },
+          "rails": [
+            {
+              "stage": "input",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 12.827,
+              "started_at": "2026-11-16T21:27:51.478723+00:00",
+              "ended_at": "2026-11-16T21:27:51.491579+00:00",
+              "request_id": "2eae89396c7149eb991462641cb8def7"
+            },
+            {
+              "stage": "output",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 19.736,
+              "started_at": "2026-11-16T21:27:54.012369+00:00",
+              "ended_at": "2026-11-16T21:27:54.032159+00:00",
+              "request_id": "2eae89396c7149eb991462641cb8def7"
+            }
+          ],
+          "cache": [
+            {
+              "outcome": "miss",
+              "stored": true,
+              "age_ms": 0,
+              "ttl_seconds": 300,
+              "duration_ms": 2507.092,
+              "layer": "tool",
+              "tool": "get_dependency_graph",
+              "source_version": "0a119c8216dc2f44d7cac6a90647091fbc3c66b13ec59fd1dd851b49565c5416",
+              "request_id": "2eae89396c7149eb991462641cb8def7"
+            }
+          ],
+          "request_id": "2eae89396c7149eb991462641cb8def7",
+          "session_id": "3932ffc6f6464f538ebbd68ea6fbb1a2",
+          "orchestration": "langgraph",
+          "transport": "cli",
+          "turn": 1,
+          "review_mode": "Local evidence only",
+          "duration_ms": 2710.741,
+          "spans": [
+            {
+              "stage": "classify",
+              "outcome": "completed",
+              "duration_ms": 13.246,
+              "started_at": "2026-11-16T21:27:51.478702+00:00",
+              "ended_at": "2026-11-16T21:27:51.491952+00:00",
+              "request_id": "2eae89396c7149eb991462641cb8def7"
+            },
+            {
+              "stage": "memory_read",
+              "outcome": "completed",
+              "duration_ms": 0.588,
+              "started_at": "2026-11-16T21:27:51.493869+00:00",
+              "ended_at": "2026-11-16T21:27:51.494461+00:00",
+              "request_id": "2eae89396c7149eb991462641cb8def7"
+            },
+            {
+              "stage": "tools",
+              "outcome": "completed",
+              "duration_ms": 2511.967,
+              "started_at": "2026-11-16T21:27:51.495561+00:00",
+              "ended_at": "2026-11-16T21:27:54.007540+00:00",
+              "request_id": "2eae89396c7149eb991462641cb8def7"
+            },
+            {
+              "stage": "compose",
+              "outcome": "completed",
+              "duration_ms": 0.042,
+              "started_at": "2026-11-16T21:27:54.008688+00:00",
+              "ended_at": "2026-11-16T21:27:54.008734+00:00",
+              "request_id": "2eae89396c7149eb991462641cb8def7"
+            },
+            {
+              "stage": "output_guard",
+              "outcome": "completed",
+              "duration_ms": 22.723,
+              "started_at": "2026-11-16T21:27:54.009458+00:00",
+              "ended_at": "2026-11-16T21:27:54.032181+00:00",
+              "request_id": "2eae89396c7149eb991462641cb8def7"
+            },
+            {
+              "stage": "rail_input",
+              "duration_ms": 12.827,
+              "outcome": "allow",
+              "request_id": "2eae89396c7149eb991462641cb8def7"
+            },
+            {
+              "stage": "rail_output",
+              "duration_ms": 19.736,
+              "outcome": "allow",
+              "request_id": "2eae89396c7149eb991462641cb8def7"
+            },
+            {
+              "stage": "cache_tool",
+              "duration_ms": 2507.092,
+              "outcome": "miss",
+              "request_id": "2eae89396c7149eb991462641cb8def7"
+            }
+          ],
+          "started_at": "2026-11-16T21:27:51.322085+00:00",
+          "ended_at": "2026-11-16T21:27:54.032853+00:00",
+          "langsmith": {
+            "status": "not_enabled_for_transport"
+          }
+        },
+        "id": "dependents",
+        "expected": "tool_evidence",
+        "passed": true
+      },
+      {
+        "id": "memory",
+        "expected": "write, separate-process recall, different-team empty",
+        "passed": true,
+        "sessions": {
+          "write": {
+            "question": "Remember that checkout-service is always high-risk for our team.",
+            "answer": "Saved an explicit team preference for checkout-service. It will be recalled in a new session for this configured team.\n\nRemembered team preference: high-risk flag for checkout-service = true. Effective high-risk policy = true. Source: memory:checkout-service.high_risk.\n\nThis is advisory only. The decision to ship requires a human.",
+            "trace": {
+              "status": "memory_saved",
+              "retrieved": [],
+              "provider_used": false,
+              "request_attempted": false,
+              "events": [
+                {
+                  "event": "memory_written",
+                  "service": "checkout-service",
+                  "request_id": "defdd5e78a1e41dc8c8d18e0675eaf27"
+                }
+              ],
+              "memory": {
+                "status": "recalled",
+                "record": {
+                  "team": "acceptance-team",
+                  "service": "checkout-service",
+                  "high_risk": true,
+                  "freeze_notes": null,
+                  "updated_at": "2026-11-16T21:28:00.780348+00:00",
+                  "source": "explicit_team_preference"
+                },
+                "effective_policy": {
+                  "team": "sample-team",
+                  "effective": {
+                    "high_risk": true,
+                    "freeze_window_active": false
+                  },
+                  "sources": {
+                    "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+                    "high_risk": "memory:checkout-service.high_risk"
+                  },
+                  "conflicts": []
+                }
+              },
+              "rails": [
+                {
+                  "stage": "input",
+                  "engine": "nemoguardrails",
+                  "version": "0.24.1",
+                  "executed": true,
+                  "outcome": "allow",
+                  "severity": "M0",
+                  "code": "contract_valid",
+                  "duration_ms": 444.117,
+                  "started_at": "2026-11-16T21:28:00.326714+00:00",
+                  "ended_at": "2026-11-16T21:28:00.770898+00:00",
+                  "request_id": "defdd5e78a1e41dc8c8d18e0675eaf27"
+                },
+                {
+                  "stage": "output",
+                  "engine": "nemoguardrails",
+                  "version": "0.24.1",
+                  "executed": true,
+                  "outcome": "allow",
+                  "severity": "M0",
+                  "code": "contract_valid",
+                  "duration_ms": 18.287,
+                  "started_at": "2026-11-16T21:28:00.784757+00:00",
+                  "ended_at": "2026-11-16T21:28:00.803156+00:00",
+                  "request_id": "defdd5e78a1e41dc8c8d18e0675eaf27"
+                }
+              ],
+              "mcp": {
+                "status": "not_accessed",
+                "attempted": 0,
+                "failed": 0
+              },
+              "request_id": "defdd5e78a1e41dc8c8d18e0675eaf27",
+              "session_id": "bb4f52d8ebae45a8987ef3c4b45f8fab",
+              "orchestration": "langgraph",
+              "transport": "cli",
+              "turn": 1,
+              "review_mode": "Local evidence only",
+              "duration_ms": 762.849,
+              "spans": [
+                {
+                  "stage": "classify",
+                  "outcome": "completed",
+                  "duration_ms": 448.066,
+                  "started_at": "2026-11-16T21:28:00.326557+00:00",
+                  "ended_at": "2026-11-16T21:28:00.774627+00:00",
+                  "request_id": "defdd5e78a1e41dc8c8d18e0675eaf27"
+                },
+                {
+                  "stage": "memory_write",
+                  "outcome": "completed",
+                  "duration_ms": 3.6,
+                  "started_at": "2026-11-16T21:28:00.777696+00:00",
+                  "ended_at": "2026-11-16T21:28:00.781308+00:00",
+                  "request_id": "defdd5e78a1e41dc8c8d18e0675eaf27"
+                },
+                {
+                  "stage": "output_guard",
+                  "outcome": "completed",
+                  "duration_ms": 20.23,
+                  "started_at": "2026-11-16T21:28:00.782950+00:00",
+                  "ended_at": "2026-11-16T21:28:00.803179+00:00",
+                  "request_id": "defdd5e78a1e41dc8c8d18e0675eaf27"
+                },
+                {
+                  "stage": "rail_input",
+                  "duration_ms": 444.117,
+                  "outcome": "allow",
+                  "request_id": "defdd5e78a1e41dc8c8d18e0675eaf27"
+                },
+                {
+                  "stage": "rail_output",
+                  "duration_ms": 18.287,
+                  "outcome": "allow",
+                  "request_id": "defdd5e78a1e41dc8c8d18e0675eaf27"
+                }
+              ],
+              "started_at": "2026-11-16T21:28:00.040966+00:00",
+              "ended_at": "2026-11-16T21:28:00.803818+00:00",
+              "langsmith": {
+                "status": "not_enabled_for_transport"
+              }
+            }
+          },
+          "read": {
+            "question": "What services depend on checkout-service?",
+            "answer": "**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded graph for checkout-service:\n\n- Direct dependencies: auth-service, inventory-service, payment-gateway\n- All reachable dependencies: auth-service, inventory-service, notification-service, payment-gateway\n- Direct dependents: order-service\n- All reachable dependents: mobile-frontend, order-service, web-frontend\n\nEvidence: graph:checkout-service.dependents, graph:checkout-service.dependencies.\n\nRemembered team preference: high-risk flag for checkout-service = true. Effective high-risk policy = true. Source: memory:checkout-service.high_risk.\n\nThis is advisory only. The decision to ship requires a human.",
+            "trace": {
+              "status": "tool_evidence",
+              "retrieved": [],
+              "provider_used": false,
+              "request_attempted": false,
+              "events": [
+                {
+                  "event": "metadata_admitted",
+                  "tools": [
+                    "check_system_health",
+                    "get_dependency_graph"
+                  ],
+                  "request_id": "8fc4b0786cf940098bbcd5fb56663dbb"
+                },
+                {
+                  "event": "tool_result",
+                  "transport": "mcp-stdio",
+                  "tool": "get_dependency_graph",
+                  "input": {
+                    "service_name": "checkout-service"
+                  },
+                  "output": {
+                    "status": "ok",
+                    "service_name": "checkout-service",
+                    "dependents": {
+                      "direct": [
+                        "order-service"
+                      ],
+                      "transitive": [
+                        "mobile-frontend",
+                        "order-service",
+                        "web-frontend"
+                      ]
+                    },
+                    "dependencies": {
+                      "direct": [
+                        "auth-service",
+                        "inventory-service",
+                        "payment-gateway"
+                      ],
+                      "transitive": [
+                        "auth-service",
+                        "inventory-service",
+                        "notification-service",
+                        "payment-gateway"
+                      ]
+                    },
+                    "source": {
+                      "path": "data/checkout_system.json",
+                      "kind": "synthetic_snapshot",
+                      "observed_at": null,
+                      "freshness": "unknown"
+                    },
+                    "evidence": [
+                      "graph:checkout-service.dependents",
+                      "graph:checkout-service.dependencies"
+                    ]
+                  },
+                  "duration_ms": 21.142,
+                  "started_at": "2026-11-16T21:28:10.480084+00:00",
+                  "ended_at": "2026-11-16T21:28:10.501237+00:00",
+                  "request_id": "8fc4b0786cf940098bbcd5fb56663dbb"
+                }
+              ],
+              "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+              "mcp": {
+                "attempted": 1,
+                "failed": 0,
+                "status": "measured"
+              },
+              "memory": {
+                "status": "recalled",
+                "record": {
+                  "team": "acceptance-team",
+                  "service": "checkout-service",
+                  "high_risk": true,
+                  "freeze_notes": null,
+                  "updated_at": "2026-11-16T21:28:00.780348+00:00",
+                  "source": "explicit_team_preference"
+                },
+                "effective_policy": {
+                  "team": "sample-team",
+                  "effective": {
+                    "high_risk": true,
+                    "freeze_window_active": false
+                  },
+                  "sources": {
+                    "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+                    "high_risk": "memory:checkout-service.high_risk"
+                  },
+                  "conflicts": []
+                }
+              },
+              "rails": [
+                {
+                  "stage": "input",
+                  "engine": "nemoguardrails",
+                  "version": "0.24.1",
+                  "executed": true,
+                  "outcome": "allow",
+                  "severity": "M0",
+                  "code": "contract_valid",
+                  "duration_ms": 315.713,
+                  "started_at": "2026-11-16T21:28:07.535087+00:00",
+                  "ended_at": "2026-11-16T21:28:07.850836+00:00",
+                  "request_id": "8fc4b0786cf940098bbcd5fb56663dbb"
+                },
+                {
+                  "stage": "output",
+                  "engine": "nemoguardrails",
+                  "version": "0.24.1",
+                  "executed": true,
+                  "outcome": "allow",
+                  "severity": "M0",
+                  "code": "contract_valid",
+                  "duration_ms": 15.203,
+                  "started_at": "2026-11-16T21:28:10.700575+00:00",
+                  "ended_at": "2026-11-16T21:28:10.715820+00:00",
+                  "request_id": "8fc4b0786cf940098bbcd5fb56663dbb"
+                }
+              ],
+              "request_id": "8fc4b0786cf940098bbcd5fb56663dbb",
+              "session_id": "7c06a7891ea94cb7a973171dcccc8953",
+              "orchestration": "langgraph",
+              "transport": "cli",
+              "turn": 1,
+              "review_mode": "Local evidence only",
+              "duration_ms": 3395.986,
+              "spans": [
+                {
+                  "stage": "classify",
+                  "outcome": "completed",
+                  "duration_ms": 321.29,
+                  "started_at": "2026-11-16T21:28:07.535059+00:00",
+                  "ended_at": "2026-11-16T21:28:07.856360+00:00",
+                  "request_id": "8fc4b0786cf940098bbcd5fb56663dbb"
+                },
+                {
+                  "stage": "memory_read",
+                  "outcome": "completed",
+                  "duration_ms": 1.573,
+                  "started_at": "2026-11-16T21:28:07.859281+00:00",
+                  "ended_at": "2026-11-16T21:28:07.860865+00:00",
+                  "request_id": "8fc4b0786cf940098bbcd5fb56663dbb"
+                },
+                {
+                  "stage": "tools",
+                  "outcome": "completed",
+                  "duration_ms": 2834.676,
+                  "started_at": "2026-11-16T21:28:07.862845+00:00",
+                  "ended_at": "2026-11-16T21:28:10.697530+00:00",
+                  "request_id": "8fc4b0786cf940098bbcd5fb56663dbb"
+                },
+                {
+                  "stage": "compose",
+                  "outcome": "completed",
+                  "duration_ms": 0.066,
+                  "started_at": "2026-11-16T21:28:10.698461+00:00",
+                  "ended_at": "2026-11-16T21:28:10.698531+00:00",
+                  "request_id": "8fc4b0786cf940098bbcd5fb56663dbb"
+                },
+                {
+                  "stage": "output_guard",
+                  "outcome": "completed",
+                  "duration_ms": 16.622,
+                  "started_at": "2026-11-16T21:28:10.699227+00:00",
+                  "ended_at": "2026-11-16T21:28:10.715850+00:00",
+                  "request_id": "8fc4b0786cf940098bbcd5fb56663dbb"
+                },
+                {
+                  "stage": "rail_input",
+                  "duration_ms": 315.713,
+                  "outcome": "allow",
+                  "request_id": "8fc4b0786cf940098bbcd5fb56663dbb"
+                },
+                {
+                  "stage": "rail_output",
+                  "duration_ms": 15.203,
+                  "outcome": "allow",
+                  "request_id": "8fc4b0786cf940098bbcd5fb56663dbb"
+                }
+              ],
+              "started_at": "2026-11-16T21:28:07.320851+00:00",
+              "ended_at": "2026-11-16T21:28:10.716955+00:00",
+              "langsmith": {
+                "status": "not_enabled_for_transport"
+              }
+            }
+          },
+          "control": {
+            "question": "What services depend on checkout-service?",
+            "answer": "**Operational evidence via MCP \u00b7 synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded graph for checkout-service:\n\n- Direct dependencies: auth-service, inventory-service, payment-gateway\n- All reachable dependencies: auth-service, inventory-service, notification-service, payment-gateway\n- Direct dependents: order-service\n- All reachable dependents: mobile-frontend, order-service, web-frontend\n\nEvidence: graph:checkout-service.dependents, graph:checkout-service.dependencies.\n\nThis is advisory only. The decision to ship requires a human.",
+            "trace": {
+              "status": "tool_evidence",
+              "retrieved": [],
+              "provider_used": false,
+              "request_attempted": false,
+              "events": [
+                {
+                  "event": "metadata_admitted",
+                  "tools": [
+                    "check_system_health",
+                    "get_dependency_graph"
+                  ],
+                  "request_id": "eb06dcde62734db79fa72140e35a6cac"
+                },
+                {
+                  "event": "tool_result",
+                  "transport": "mcp-stdio",
+                  "tool": "get_dependency_graph",
+                  "input": {
+                    "service_name": "checkout-service"
+                  },
+                  "output": {
+                    "status": "ok",
+                    "service_name": "checkout-service",
+                    "dependents": {
+                      "direct": [
+                        "order-service"
+                      ],
+                      "transitive": [
+                        "mobile-frontend",
+                        "order-service",
+                        "web-frontend"
+                      ]
+                    },
+                    "dependencies": {
+                      "direct": [
+                        "auth-service",
+                        "inventory-service",
+                        "payment-gateway"
+                      ],
+                      "transitive": [
+                        "auth-service",
+                        "inventory-service",
+                        "notification-service",
+                        "payment-gateway"
+                      ]
+                    },
+                    "source": {
+                      "path": "data/checkout_system.json",
+                      "kind": "synthetic_snapshot",
+                      "observed_at": null,
+                      "freshness": "unknown"
+                    },
+                    "evidence": [
+                      "graph:checkout-service.dependents",
+                      "graph:checkout-service.dependencies"
+                    ]
+                  },
+                  "duration_ms": 23.083,
+                  "started_at": "2026-11-16T21:28:20.606430+00:00",
+                  "ended_at": "2026-11-16T21:28:20.629524+00:00",
+                  "request_id": "eb06dcde62734db79fa72140e35a6cac"
+                }
+              ],
+              "source_scope": "Historical evidence and MCP synthetic snapshots; current state unverified",
+              "mcp": {
+                "attempted": 1,
+                "failed": 0,
+                "status": "measured"
+              },
+              "memory": {
+                "status": "empty",
+                "record": null,
+                "effective_policy": {
+                  "team": "sample-team",
+                  "effective": {
+                    "high_risk": false,
+                    "freeze_window_active": false
+                  },
+                  "sources": {
+                    "freeze_window_active": "catalog:checkout-service.freeze_window_active",
+                    "high_risk": "default:high_risk"
+                  },
+                  "conflicts": []
+                }
+              },
+              "rails": [
+                {
+                  "stage": "input",
+                  "engine": "nemoguardrails",
+                  "version": "0.24.1",
+                  "executed": true,
+                  "outcome": "allow",
+                  "severity": "M0",
+                  "code": "contract_valid",
+                  "duration_ms": 288.652,
+                  "started_at": "2026-11-16T21:28:17.724259+00:00",
+                  "ended_at": "2026-11-16T21:28:18.012948+00:00",
+                  "request_id": "eb06dcde62734db79fa72140e35a6cac"
+                },
+                {
+                  "stage": "output",
+                  "engine": "nemoguardrails",
+                  "version": "0.24.1",
+                  "executed": true,
+                  "outcome": "allow",
+                  "severity": "M0",
+                  "code": "contract_valid",
+                  "duration_ms": 18.198,
+                  "started_at": "2026-11-16T21:28:20.842797+00:00",
+                  "ended_at": "2026-11-16T21:28:20.861101+00:00",
+                  "request_id": "eb06dcde62734db79fa72140e35a6cac"
+                }
+              ],
+              "request_id": "eb06dcde62734db79fa72140e35a6cac",
+              "session_id": "3df4328ceb3249d0b28fa8bfec3e4505",
+              "orchestration": "langgraph",
+              "transport": "cli",
+              "turn": 1,
+              "review_mode": "Local evidence only",
+              "duration_ms": 3367.21,
+              "spans": [
+                {
+                  "stage": "classify",
+                  "outcome": "completed",
+                  "duration_ms": 293.522,
+                  "started_at": "2026-11-16T21:28:17.724231+00:00",
+                  "ended_at": "2026-11-16T21:28:18.017764+00:00",
+                  "request_id": "eb06dcde62734db79fa72140e35a6cac"
+                },
+                {
+                  "stage": "memory_read",
+                  "outcome": "completed",
+                  "duration_ms": 2.804,
+                  "started_at": "2026-11-16T21:28:18.021605+00:00",
+                  "ended_at": "2026-11-16T21:28:18.024425+00:00",
+                  "request_id": "eb06dcde62734db79fa72140e35a6cac"
+                },
+                {
+                  "stage": "tools",
+                  "outcome": "completed",
+                  "duration_ms": 2811.524,
+                  "started_at": "2026-11-16T21:28:18.026472+00:00",
+                  "ended_at": "2026-11-16T21:28:20.838021+00:00",
+                  "request_id": "eb06dcde62734db79fa72140e35a6cac"
+                },
+                {
+                  "stage": "compose",
+                  "outcome": "completed",
+                  "duration_ms": 0.077,
+                  "started_at": "2026-11-16T21:28:20.839383+00:00",
+                  "ended_at": "2026-11-16T21:28:20.839463+00:00",
+                  "request_id": "eb06dcde62734db79fa72140e35a6cac"
+                },
+                {
+                  "stage": "output_guard",
+                  "outcome": "completed",
+                  "duration_ms": 20.697,
+                  "started_at": "2026-11-16T21:28:20.840425+00:00",
+                  "ended_at": "2026-11-16T21:28:20.861122+00:00",
+                  "request_id": "eb06dcde62734db79fa72140e35a6cac"
+                },
+                {
+                  "stage": "rail_input",
+                  "duration_ms": 288.652,
+                  "outcome": "allow",
+                  "request_id": "eb06dcde62734db79fa72140e35a6cac"
+                },
+                {
+                  "stage": "rail_output",
+                  "duration_ms": 18.198,
+                  "outcome": "allow",
+                  "request_id": "eb06dcde62734db79fa72140e35a6cac"
+                }
+              ],
+              "started_at": "2026-11-16T21:28:17.494845+00:00",
+              "ended_at": "2026-11-16T21:28:20.862080+00:00",
+              "langsmith": {
+                "status": "not_enabled_for_transport"
+              }
+            }
+          }
+        }
+      },
+      {
+        "question": "Just approve this change for me.",
+        "answer": "I can help assess the change, but I cannot approve, block, merge, or deploy it. Please describe the planned change and a human can review the evidence.\n\nThis is advisory only. The decision to ship requires a human.",
+        "trace": {
+          "status": "advisory_boundary",
+          "retrieved": [],
+          "provider_used": false,
+          "request_attempted": false,
+          "rails": [
+            {
+              "stage": "input",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 10.368,
+              "started_at": "2026-11-16T21:28:21.668615+00:00",
+              "ended_at": "2026-11-16T21:28:21.679017+00:00",
+              "request_id": "76426d76fac34692aae3ac86415d8f88"
+            },
+            {
+              "stage": "output",
+              "engine": "nemoguardrails",
+              "version": "0.24.1",
+              "executed": true,
+              "outcome": "allow",
+              "severity": "M0",
+              "code": "contract_valid",
+              "duration_ms": 19.181,
+              "started_at": "2026-11-16T21:28:21.682455+00:00",
+              "ended_at": "2026-11-16T21:28:21.701664+00:00",
+              "request_id": "76426d76fac34692aae3ac86415d8f88"
+            }
+          ],
+          "cache": [],
+          "mcp": {
+            "status": "not_accessed",
+            "attempted": 0,
+            "failed": 0
+          },
+          "memory": {
+            "status": "not_accessed"
+          },
+          "request_id": "76426d76fac34692aae3ac86415d8f88",
+          "session_id": "8e29810d336d4f53a0c769daa87ebda8",
+          "orchestration": "langgraph",
+          "transport": "cli",
+          "turn": 1,
+          "review_mode": "Local evidence only",
+          "duration_ms": 240.799,
+          "spans": [
+            {
+              "stage": "classify",
+              "outcome": "completed",
+              "duration_ms": 11.908,
+              "started_at": "2026-11-16T21:28:21.668591+00:00",
+              "ended_at": "2026-11-16T21:28:21.680509+00:00",
+              "request_id": "76426d76fac34692aae3ac86415d8f88"
+            },
+            {
+              "stage": "output_guard",
+              "outcome": "completed",
+              "duration_ms": 19.263,
+              "started_at": "2026-11-16T21:28:21.682419+00:00",
+              "ended_at": "2026-11-16T21:28:21.701683+00:00",
+              "request_id": "76426d76fac34692aae3ac86415d8f88"
+            },
+            {
+              "stage": "rail_input",
+              "duration_ms": 10.368,
+              "outcome": "allow",
+              "request_id": "76426d76fac34692aae3ac86415d8f88"
+            },
+            {
+              "stage": "rail_output",
+              "duration_ms": 19.181,
+              "outcome": "allow",
+              "request_id": "76426d76fac34692aae3ac86415d8f88"
+            }
+          ],
+          "started_at": "2026-11-16T21:28:21.461756+00:00",
+          "ended_at": "2026-11-16T21:28:21.702584+00:00",
+          "langsmith": {
+            "status": "not_enabled_for_transport"
+          }
+        },
+        "id": "approval",
+        "expected": "advisory_boundary",
+        "passed": true
+      }
+    ]
+  },
+  "http": {
+    "config_status": 200,
+    "component_count": 40,
+    "port": 8087,
+    "transport": "container loopback, networking disabled",
+    "listen_address": "0.0.0.0",
+    "application_file_status": 403
+  },
+  "cloud_entrypoint": {
+    "health_status": 200,
+    "unsigned_identity_routes": {
+      "/": 401,
+      "/config": 401,
+      "/gradio_api/queue/join": 401,
+      "/gradio_api/queue/data?session_hash=other": 401
+    },
+    "live_google_identity_tested": false
+  },
+  "source_hashes": {
+    "Containerfile": "829f1b1628af337995600250577f206d20388ed7c690ec6885fcd789bbecc173",
+    ".dockerignore": "7dd92632291a14779a7104c78af52775f30c9e2d838e3428837e4c2113e78f90",
+    "week2/app.py": "0389d009bc9db20edf477efabefc847efd3668e85982c09e79a82ae5d986558d",
+    "week3/guardrails.py": "743d3ea515a930e52382d1d5c3e2bba133bfa0e59ca129a596f8268a91d79fda",
+    "week2/iap.py": "a3614ad4155790e55548161a555ec418ec70e5dd86f8b7aa9bcc70ca7102cb97",
+    "week2/cloud_app.py": "6a7d85d432bd823841a8f54612263707151cdcfba6954af844f9d1707bbb82c7",
+    "week2/uv.lock": "b00464ce1914e0b75dad78a55a79fd7c068c9a1d7c3a585a2e7876e738987dbc",
+    "scripts/check_container.py": "32b7a221b4cbe4584668e06d6e7a481b93563bd719bf3b98f1d62fe0c6de38c3"
+  }
+}

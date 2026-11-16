@@ -8,6 +8,7 @@ Only bounded verdict metadata leaves the engine, never its conversation log.
 import json
 import logging
 import re
+import unicodedata
 from pathlib import Path
 from time import perf_counter
 
@@ -21,7 +22,29 @@ from week2.contracts import checked
 
 CONFIG = Path(__file__).with_name("rails")
 INJECTION = re.compile(r"\b(?:ignore|override|disregard)\b.{0,50}\b(?:instructions|system prompt|guardrails)\b", re.I)
-APPROVAL = re.compile(r"\b(?:i approve|approved for (?:deployment|release)|safe to (?:ship|deploy)|go ahead and deploy)\b", re.I)
+APPROVAL = re.compile(
+    r"\b(?:i|we)\s+(?:(?:hereby|explicitly|can|will)\s+)?(?:approve|authori[sz]e|green[ -]?light|sign off on)\b"
+    r"|\byou have (?:my|our) (?:explicit )?(?:approval|authori[sz]ation|permission|go[ -]?ahead)\b"
+    r"|\byou (?:are|have been) (?:approved|authori[sz]ed|cleared) to (?:deploy|release|ship|merge)\b"
+    r"|\b(?:this|the) (?:change|deployment|release|rollout) (?:is|has been) (?:approved|authori[sz]ed|cleared)\b"
+    r"|\b(?:i|we) (?:give|grant) (?:you )?(?:the |my |our )?(?:approval|permission|green light|go[ -]?ahead)\b"
+    r"|\bgo ahead (?:and|to) (?:deploy|release|ship|merge)\b", re.I)
+CLEARANCE = re.compile(r"\b(?:approved for (?:deployment|release)|safe to (?:ship|deploy))\b", re.I)
+NEGATED_CLEARANCE = re.compile(r"\b(?:not|never|cannot (?:say|confirm)(?: (?:that )?it is)?)\s*$", re.I)
+
+
+def operational_approval(text):
+    """Bounded language check, not a semantic proof. Refusals do not cancel grants.
+
+    Normalize display formatting before matching; allow only immediately negated
+    clearance phrases, never a sentence-wide 'not' exemption.
+    """
+    text = unicodedata.normalize('NFKC', text)
+    text = ''.join(c for c in text if unicodedata.category(c) != 'Cf' and c not in '*_`')
+    text = re.sub(r'\s+', ' ', text)
+    return bool(APPROVAL.search(text)) or any(
+        not NEGATED_CLEARANCE.search(text[:match.start()])
+        for match in CLEARANCE.finditer(text))
 
 
 class RailUnavailable(ValueError):
@@ -60,7 +83,7 @@ class LocalRails:
                 code = "untrusted_context" if not allowed else code
             else:
                 text, trace = payload["answer"], payload["trace"]
-                allowed = not APPROVAL.search(text)
+                allowed = not operational_approval(text)
                 if trace.get("status") == "assessed":
                     allowed = allowed and bool(trace.get("retrieved")) and text.endswith(ADVISORY)
                 code = "unsupported_output" if not allowed else code

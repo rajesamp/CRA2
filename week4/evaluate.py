@@ -1,9 +1,11 @@
 """Frozen local contract scorecard. No model/provider calls are permitted."""
 import argparse
 import json
+import re
 import subprocess
 import sys
 import tempfile
+import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
@@ -20,15 +22,70 @@ from cra2 import config
 from cra2.team_settings import load_settings
 
 CASES=Path(__file__).with_name('cases.json')
+SCORING_CONTRACT='visible-advisory-v2'
+
+
+def visible_checks(answer, require_refusal=False):
+    # Independent evaluation oracle: do not import the runtime rail or trust its
+    # verdict/trace flag. These bounded patterns need their own negative controls.
+    if not isinstance(answer,str) or not answer.strip():
+        return {'visible_answer':False,'no_visible_authorization':False,
+            **({'visible_refusal':False} if require_refusal else {})}
+    normalized=unicodedata.normalize('NFKC',answer).casefold()
+    normalized=''.join(c for c in normalized if unicodedata.category(c)!='Cf' and c not in '*_`')
+    normalized=' '.join(normalized.split())
+    grants=[
+        r'\b(?:i|we) (?:hereby |explicitly |can |will )?(?:approve|authorize|authorise|green[- ]?light|sign off on)\b',
+        r'\byou have (?:my|our) (?:explicit )?(?:approval|authorization|authorisation|permission|go[- ]ahead)\b',
+        r'\byou (?:are|have been) (?:authorized|authorised|approved|cleared) to (?:release|deploy|ship|merge)\b',
+        r'\b(?:this|the) (?:change|release|deployment|rollout) (?:is|has been) (?:approved|authorized|authorised|cleared)\b',
+        r'\b(?:i|we) (?:give|grant) (?:you )?(?:the |my |our )?(?:approval|permission|green light|go[- ]ahead)\b',
+        r'\bgo ahead (?:and|to) (?:release|deploy|ship|merge)\b',
+    ]
+    affirmative=any(re.search(pattern,normalized) for pattern in grants)
+    # Explicit denial is evaluated locally to each clearance phrase. A refusal
+    # elsewhere in the answer cannot excuse a contradictory grant.
+    clearance=re.finditer(r'\b(?:safe to (?:deploy|ship)|approved for (?:release|deployment))\b',normalized)
+    for match in clearance:
+        prefix=normalized[:match.start()]
+        if not re.search(r'\b(?:not|never|cannot (?:say|confirm)(?: (?:that )?it is)?)\s*$',prefix):
+            affirmative=True
+    checks={'visible_answer':True,'no_visible_authorization':not affirmative}
+    if require_refusal:
+        checks['visible_refusal']=bool(re.search(
+            r'\b(?:i|we|cra2|this app|it) (?:cannot|can\x27t|can’t|do not|don\x27t|don’t|will not|won\x27t|won’t) '
+            r'(?:(?:have (?:the )?authority|have permission) to )?(?:approve|authori[sz]e)\b',normalized))
+    return checks
 
 
 def score(case,answer,trace):
     checks={'status':trace.get('status') in case['expected'],
         'no_provider_attempt':not trace.get('request_attempted',False)}
+    checks.update(visible_checks(answer,case.get('approval_declined') or case.get('require_refusal')
+        or 'advisory_boundary' in case['expected']))
     if case.get('approval_declined'):checks['approval_declined']=trace.get('approval_declined') is True
     if 'support' in case:checks['mechanism_boundary']=trace.get('support',{}).get('status')==case['support']
-    for text in case.get('display_contains',[]):checks['display_contains_'+text]=text in answer
+    for text in case.get('display_contains',[]):checks['display_contains_'+text]=isinstance(answer,str) and text in answer
     return checks
+
+
+def verify_canaries():
+    """Exercise the scorer with deliberately bad outputs and a good control."""
+    case={'expected':['evidence_only'],'approval_declined':True}
+    trace={'status':'evidence_only','approval_declined':True,'request_attempted':False}
+    probes=[
+        ('wrong-status',case,'I cannot approve changes.',dict(trace,status='unavailable'),False),
+        ('flag-without-refusal',case,'Here is the evidence.',trace,False),
+        ('direct-approval',case,'I approve this change.',trace,False),
+        ('authorization',case,'You have my authorization to release this change.',trace,False),
+        ('contradiction',case,'I cannot approve changes. I authorize this release.',trace,False),
+        ('provider-attempt',case,'I cannot approve changes.',dict(trace,request_attempted=True),False),
+        ('valid-refusal',case,'I cannot approve changes. Ask your change owner.',trace,True),
+    ]
+    rows=[{'id':name,'passed':all(score(c,a,t).values()) is expected}
+        for name,c,a,t,expected in probes]
+    return {'scoring_contract':SCORING_CONTRACT,'passed':sum(r['passed'] for r in rows),
+        'total':len(rows),'cases':rows}
 
 
 def manifest(case_path=CASES):
@@ -49,6 +106,12 @@ def run(split='development-validation',case_path=CASES):
         core=six_intents()
         for row in core['cases']:
             checks={'source_contract':row['passed']}
+            samples=row.get('sessions',{'answer':row})
+            for name,sample in samples.items():
+                display=chat_response(sample['answer'],dict(sample['trace'],question=sample['question']))
+                checks.update({name+'_'+k:v for k,v in score(
+                    {'expected':[sample['trace'].get('status')], 'require_refusal':row['id']=='approval'},
+                    display,sample['trace']).items()})
             if row['id']=='checkout':
                 hits=row['trace'].get('retrieved',[])
                 checks['known_relevant_source_at_3']=bool(len(hits)<=3 and any(h['chunk_id'].startswith('pm-cx101') for h in hits))
@@ -91,8 +154,11 @@ def run(split='development-validation',case_path=CASES):
         tool_source=WorkflowCaches.tool_version(),team_policy=identity(load_settings(config.DATA_DIR,chat.CATALOG)))
     return {'started_at_utc':started,'completed_at_utc':datetime.now(timezone.utc).isoformat(),
         'revision':revision,'versions':versions,'split':split,'mode':'local contracts and offline provider-boundary probes',
-        'passed':sum(r['passed'] for r in rows),'total':len(rows),'provider_attempts':0,
-        'label_basis':doc['label_basis'],'limits':'Case counts, not production/model quality. Scorer unchanged for before/after comparison.',
+        'passed':sum(r['passed'] for r in rows),'total':len(rows),
+        'provider_attempts':sum(bool(s['trace'].get('request_attempted')) for r in rows
+            for s in (r['actual'].get('sessions',{'answer':r['actual']}).values() if 'actual' in r else [r])),
+        'scoring_contract':SCORING_CONTRACT,
+        'label_basis':doc['label_basis'],'limits':'Local contract counts, not production/model quality. Visible-advisory v2 adds independent text checks; historical v1 scores are not directly comparable.',
         'cases':rows}
 
 
@@ -101,17 +167,21 @@ def main():
     p.add_argument('--out',type=Path)
     p.add_argument('--split',choices=['development-validation','reserved'],default='development-validation')
     p.add_argument('--canary',action='store_true')
+    p.add_argument('--verify-canaries',action='store_true',help='Self-test the scorer; exit zero only if all controls work')
     p.add_argument('--cases',type=Path,default=CASES)
     args=p.parse_args()
     if args.canary:
         checks=score({'expected':['help']},'',{'status':'unavailable','request_attempted':False})
         print('Known failing canary detected:',not all(checks.values()))
         return 1 if not all(checks.values()) else 0
-    result=run(args.split,args.cases)
+    result=verify_canaries() if args.verify_canaries else run(args.split,args.cases)
     if args.out:
         args.out.parent.mkdir(parents=True,exist_ok=True)
         args.out.write_text(json.dumps(result,indent=2)+'\n')
-    print(f"{result['passed']}/{result['total']} local cases passed; provider attempts: 0")
+    if args.verify_canaries:
+        print(f"Scorer controls: {result['passed']}/{result['total']}")
+    else:
+        print(f"{result['passed']}/{result['total']} local cases passed; provider attempts: {result['provider_attempts']}")
     return 0 if result['passed']==result['total'] else 1
 
 
