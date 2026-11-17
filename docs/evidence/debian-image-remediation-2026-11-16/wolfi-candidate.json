@@ -1,0 +1,111 @@
+{
+  "checked_at": "2026-11-16",
+  "scope": "Local Linux amd64 candidate. The workflow rechecks the committed recipe. No live IAP or release signing is asserted.",
+  "recipe_sha256": "3288625bfba9aba904189bd8c0757bec918ad4cb168671d5e280c08af4968e87",
+  "dependency_lock_sha256": "b00464ce1914e0b75dad78a55a79fd7c068c9a1d7c3a585a2e7876e738987dbc",
+  "image": {
+    "image_id": "sha256:69e81e481eaf10b8a6a32a16c634302c33de7624d4fe188c825267b82f18e81c",
+    "oci_manifest_digest": "sha256:9a01e70b08bdd0e181bb9720194868212c404f30cd44bc58d4bc1f1cb03a0c12"
+  },
+  "base": {
+    "index_digest": "sha256:2c12da5496e21e99003b3db3b9246f025e53d533c4df334205391260f1e8f85b",
+    "linux_amd64_manifest": "sha256:fa63d07ad857b4fb4dacb80f3f269116d24e3f27f9ce41feed5c0f617afcaf7e",
+    "reference": "cgr.dev/chainguard/wolfi-base@sha256:2c12da5496e21e99003b3db3b9246f025e53d533c4df334205391260f1e8f85b",
+    "verified_signature_count": 1,
+    "signature_evidence_sha256": "32915f4be663cef738b34c5a908682dc650351e5531bad999cefd31b9abb5c9b",
+    "verified_issuer": "https://token.actions.githubusercontent.com",
+    "verified_subject": "https://github.com/chainguard-images/images/.github/workflows/release.yaml@refs/heads/main"
+  },
+  "binary_packages": [
+    "apk-tools-2.14.13-r1",
+    "busybox-1.38.0-r3",
+    "ca-certificates-bundle-20261020-r0",
+    "gdbm-1.26-r10",
+    "glibc-2.44-2.44-r20",
+    "glibc-2.44-locale-posix-2.44-r20",
+    "ld-linux-2.44-2.44-r20",
+    "libbrotlicommon1-1.2.1-r3",
+    "libbrotlidec1-1.2.1-r3",
+    "libbrotlienc1-1.2.1-r3",
+    "libbz2-1-1.0.8-r31",
+    "libcrypt1-2.44-2.44-r20",
+    "libexpat1-2.10.0-r1",
+    "libffi-3.8.1-r0",
+    "libgcc-16.2.0-r4",
+    "libgomp-16.2.0-r4",
+    "libstdc++-16.2.0-r4",
+    "libuuid-2.42.4-r3",
+    "libxcrypt-4.5.2-r8",
+    "mpdecimal-4.0.1-r6",
+    "ncurses-6.6.20261114-r0",
+    "ncurses-terminfo-base-6.6.20261114-r0",
+    "openssl-4.0-libcrypto-4.0.3-r8",
+    "openssl-4.0-libssl-4.0.3-r8",
+    "openssl-provider-legacy-allowed-4.1.0-r0",
+    "py3-pip-wheel-26.2.2-r3",
+    "python-3.13-3.13.18_git20261115-r1",
+    "python-3.13-base-3.13.18_git20261115-r1",
+    "readline-8.3-r4",
+    "sqlite-libs-3.54.1-r0",
+    "wolfi-base-1-r7",
+    "wolfi-baselayout-20230201-r31",
+    "wolfi-keys-1-r14",
+    "xz-5.8.4-r2",
+    "zlib-1.4-r0"
+  ],
+  "smoke": {
+    "os": "linux",
+    "architecture": "amd64",
+    "user": "65532:65532",
+    "http": {
+      "config_status": 200,
+      "component_count": 40,
+      "port": 8087,
+      "transport": "container loopback, networking disabled",
+      "listen_address": "0.0.0.0",
+      "application_file_status": 403
+    },
+    "cloud_entrypoint": {
+      "health_status": 200,
+      "unsigned_identity_routes": {
+        "/": 401,
+        "/config": 401,
+        "/gradio_api/queue/join": 401,
+        "/gradio_api/queue/data?session_hash=other": 401
+      },
+      "live_google_identity_tested": false
+    }
+  },
+  "workflows": {
+    "passed": 6,
+    "total": 6,
+    "provider_attempts": 0
+  },
+  "smoke_report_sha256": "87f56056a0796922df09dc96160c37b34ff704dc16ec300db994939a45bcb6e0",
+  "scan": {
+    "status": "passed",
+    "image_id": "sha256:69e81e481eaf10b8a6a32a16c634302c33de7624d4fe188c825267b82f18e81c",
+    "packages_examined": 159,
+    "matches_examined": 4,
+    "suppressed_matches_examined": 0,
+    "severity_counts": {
+      "Medium": 3,
+      "Low": 1
+    },
+    "database_built": "2026-11-16T06:30:54Z",
+    "blocking_findings": [],
+    "scanner_exit_code": 0,
+    "detection_control": {
+      "status": "passed",
+      "blocking_matches": 27
+    },
+    "evidence_sha256": {
+      "candidate.oci": "e6db13cb42b20a0ac94ba7da8ccb6f9cd0ee0aa85845ba7561303a6aef2c1d82",
+      "image-id.json": "10afd0389b06145685169824c3cb06dd97d05782ca870ccb5d04d7d2ea798c64",
+      "sbom.json": "72de17d2b0b0bcc35b7e00b5da2273ae612c5c1abbe35083cd51ed38dbeb8328",
+      "scan.json": "a3d757edc8b74a9a3aea89b84ec2fd67b47b40846b802a42119bf6760a226911",
+      "canary-sbom.json": "82c53cde9d8d61f3ee38d166e4e480514e36fc7c731c27cc48fc28176ec179cb",
+      "canary-scan.json": "e6a8a07666ac73591aa47cc229587c415559385ad5feb2347130989c7483e0ce"
+    }
+  }
+}

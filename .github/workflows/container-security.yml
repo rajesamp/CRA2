@@ -29,21 +29,21 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/container-evidence"
           python scripts/install_supply_chain_tools.py --dest "$RUNNER_TEMP/security-tools" > "$RUNNER_TEMP/container-evidence/tool-install.json"
-      - name: Verify pinned distroless builder and runtime signatures
+      - name: Verify pinned Wolfi base signature
         run: |
           python - <<'PY'
           import os, pathlib, re, subprocess
           root = pathlib.Path(os.environ['RUNNER_TEMP'])
-          images = re.findall(r'^FROM (gcr\.io/distroless/\S+)', pathlib.Path('Containerfile').read_text(), re.M)
-          if len(images) != 2:
-              raise SystemExit('Expected both pinned distroless image inputs')
-          for number, image in enumerate(images):
-              if not re.search(r'@sha256:[a-f0-9]{64}$', image):
-                  raise SystemExit('Base image is not pinned')
-              with (root / 'container-evidence' / f'base-{number}-signature.json').open('w') as output:
-                  subprocess.run([str(root / 'security-tools' / 'cosign'), 'verify',
-                      '--certificate-identity', 'keyless@distroless.iam.gserviceaccount.com',
-                      '--certificate-oidc-issuer', 'https://accounts.google.com', image], stdout=output, check=True)
+          recipe = pathlib.Path('Containerfile').read_text()
+          images = re.findall(r'^FROM (cgr\.dev/chainguard/wolfi-base@sha256:[a-f0-9]{64}) AS os$', recipe, re.M)
+          if len(images) != 1:
+              raise SystemExit('Expected one pinned Wolfi base used by the builder and runtime')
+          identity = 'https://github.com/chainguard-images/images/.github/workflows/release.yaml@refs/heads/main'
+          with (root / 'container-evidence' / 'wolfi-base-signature.json').open('w') as output:
+              subprocess.run([str(root / 'security-tools' / 'cosign'), 'verify',
+                  '--certificate-identity', identity,
+                  '--certificate-oidc-issuer', 'https://token.actions.githubusercontent.com',
+                  images[0]], stdout=output, check=True)
           PY
       - name: Fetch the reviewed encoder build input
         env:

@@ -1,0 +1,18 @@
+{
+  "sha256": "1a890720e11c970f75a39da0f77c8e8be897e682f812e3153858d8f873b6c73f",
+  "level": "preferred",
+  "delta": "evidence",
+  "previous_manifest": "7ed4866bd2b31ff0ef3d364460576969f6ac2fcce8b24cc1bf835f53a91d4f46",
+  "decision_scope": "Base image to advance to hosted CI for CRA2 owner-only Cloud Run preparation",
+  "verdict": {
+    "option_id": "wolfi-build",
+    "level": "preferred",
+    "evidence_ids": [
+      "E7",
+      "E8"
+    ],
+    "rationale": "In the controlled local comparison, Wolfi had zero blocking matches and Debian had 104. Both passed the vulnerability detection control. The Wolfi base signature was verified, and the candidate passed six offline intent checks, nonroot HTTP startup, and four unsigned IAP route denials. The hosted CI result remains unknown under P3.",
+    "winner_established": true,
+    "separating_test": null
+  }
+}
