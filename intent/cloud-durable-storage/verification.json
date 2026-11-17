@@ -1,0 +1,13 @@
+{
+  "environment": "macOS Python 3.13, frozen dependencies, provider calls and tracing disabled",
+  "pytest": {
+    "passed": 391,
+    "warnings": 161,
+    "seconds": 92.74,
+    "log_sha256": "f6ccedf2bbe0f2977d06164f69dc9ec4532fe4d8d071a9f899550525bca3d92c"
+  },
+  "restart_test": "Independent Python processes retained a preference and two metadata audit records using a shared persistent GCS contract fixture. The second scope could not read the preference.",
+  "retention_test": "2,002 metadata events accepted, seven-day telemetry and 30-day audit expiration tested with a fixture clock, preferences retained.",
+  "failure_tests": "Known generation conflicts retried; storage policy mismatch and audit failure reject mutations; missing bucket does not become an empty preference.",
+  "scope_limit": "No live GCS bucket, IAM, Bucket Lock, lifecycle job or Cloud Run deployment was exercised."
+}

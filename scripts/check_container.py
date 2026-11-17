@@ -102,12 +102,14 @@ def main():
     report["cloud_entrypoint"] = verify_http([
         "-e", "K_SERVICE=synthetic-service", "-e", "CRA2_OWNER_EMAIL=owner@example.test",
         "-e", "CRA2_IAP_AUDIENCE=/projects/123456789/locations/test-region/services/test-service",
+        "-e", "CRA2_STATE_BUCKET=state-synthetic", "-e", "CRA2_AUDIT_BUCKET=audit-synthetic",
         "--entrypoint", PYTHON, image, "-m", "week2.cloud_app",
     ], READY.replace("/config", "/healthz"), CLOUD_HTTP)
     report["source_hashes"] = {
         name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
         for name in ("Containerfile", ".dockerignore", "week2/app.py", "week3/guardrails.py",
-                     "week2/iap.py", "week2/cloud_app.py", "week2/uv.lock", "scripts/check_container.py")
+                     "week2/iap.py", "week2/cloud_app.py", "week2/cloud_storage.py", "week2/uv.lock",
+                     "scripts/check_container.py")
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(report, indent=2) + "\n")

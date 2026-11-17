@@ -129,12 +129,14 @@ def chat_response(answer, trace):
     return text + "\n\n" + ADVISORY
 
 
-def ui_reply(message, history, mode, session_id, *, memory_store=None, transport="browser"):
-    host_store=getattr(memory_store,"store",memory_store)
-    memory_path=Path(getattr(host_store,"path",Path(__file__).with_name(".local")/"team-memory.sqlite3"))
-    telemetry=TelemetryStore(memory_path.parent/"telemetry"/"requests.sqlite3")
+def ui_reply(message, history, mode, session_id, *, memory_store=None, transport="browser",
+             telemetry_store=None):
+    if telemetry_store is None:
+        host_store = getattr(memory_store, "store", memory_store)
+        memory_path = Path(getattr(host_store, "path", Path(__file__).with_name(".local") / "team-memory.sqlite3"))
+        telemetry_store = TelemetryStore(memory_path.parent / "telemetry" / "requests.sqlite3")
     answer, trace = respond(message, history, mode, session_id=session_id, memory_store=memory_store, caches=HOST_CACHES,
-        telemetry_store=telemetry, transport=transport)
+        telemetry_store=telemetry_store, transport=transport)
     turn = 1 + sum(1 for item in (history or []) if isinstance(item, dict) and item.get("role") == "user")
     question = message if trace.get("status") != "unavailable" and isinstance(message, str) and 0 < len(message) <= 4000 else "Input withheld"
     review_mode = mode if mode in ("Local evidence only", "Groq assessment") else "Unavailable"
@@ -208,11 +210,13 @@ def protected_reply(history, mode, session_id, *, transport="browser"):
     return answer, trace_summary(trace), trace
 
 
-def guarded_ui_reply(message, history, mode, session_id, *, gate, client, memory_store=None, transport="browser"):
+def guarded_ui_reply(message, history, mode, session_id, *, gate, client, memory_store=None, transport="browser",
+                     telemetry_store=None):
     admission = gate.admit(message, client)
     if admission["blocked"]:
         return protected_reply(history, mode, session_id,transport=transport)
-    result = ui_reply(message, history, mode, session_id, memory_store=memory_store,transport=transport)
+    result = ui_reply(message, history, mode, session_id, memory_store=memory_store, transport=transport,
+                      telemetry_store=telemetry_store)
     if result[2]["status"] == "out_of_scope":
         if not gate.record_out_of_scope(message, client, admission["verdict"]):
             return protected_reply(history, mode, session_id,transport=transport)
@@ -238,15 +242,20 @@ def request_client(request):
     return host
 
 
-def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None):
+def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, memory_resolver=None,
+              telemetry_store=None):
     configure_sdk_logging()
-    store = MemoryStore() if memory_store is None else memory_store
+    if memory_resolver is not None and (identity_resolver is None or memory_store is not None or telemetry_store is None):
+        raise ValueError("Cloud storage requires a verified identity and explicit telemetry store")
+    store = MemoryStore() if memory_store is None and memory_resolver is None else memory_store
     gate = AbuseGate() if abuse_gate is None else abuse_gate
     identity = identity_resolver or request_client
 
     def reply(message, history, mode, session_id, traces, request: gr.Request):
         client = identity(request)
-        answer, _, trace = guarded_ui_reply(message, history, mode, session_id, gate=gate, client=client, memory_store=store)
+        memory = memory_resolver(client) if memory_resolver is not None else store
+        answer, _, trace = guarded_ui_reply(message, history, mode, session_id, gate=gate, client=client,
+                                           memory_store=memory, telemetry_store=telemetry_store)
         updated = retain_trace(traces, trace)
         display, poll = langsmith_view(trace["turn"], updated)
         choices = gr.update(choices=trace_choices(updated), value=trace["turn"], interactive=True)
@@ -302,7 +311,10 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None):
             chatbot.clear(reset_trace, outputs=[trace_display, trace_history, turn_selector, cache_status, dashboard, trace_timer, session_id], queue=False, api_visibility="private")
             chatbot.undo(undo_trace, inputs=[trace_history], outputs=[trace_display, trace_history, turn_selector, cache_status, dashboard, trace_timer], queue=False, api_visibility="private")
             gr.Markdown("Ask **What is this app?**, **What services do you support?**, or **How do I get started?** View execution traces in the **LangSmith** tab.")
-            gr.Markdown("Out-of-scope questions and flagged requests are recorded privately for app-owner review.")
+            audit_notice = ("Flagged requests are logged as private audit events."
+                            if memory_resolver is not None else
+                            "Out-of-scope questions and flagged requests are recorded privately for app-owner review.")
+            gr.Markdown(audit_notice)
             open_dashboard = gr.Button("View traces and metrics")
         open_dashboard.click(lambda: gr.Tabs(selected="langsmith"),outputs=app_tabs,queue=False,api_visibility="private")
         dashboard_refresh.click(lambda traces: dashboard_view(traces, True),inputs=[trace_history],outputs=dashboard,queue=False,api_visibility="private")

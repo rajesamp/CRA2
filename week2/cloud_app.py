@@ -9,9 +9,8 @@ import uvicorn
 
 from week2.app import build_app
 from week2.abuse import AbuseGate
+from week2.cloud_storage import CloudStores
 from week2.iap import IAPMiddleware, IAPSettings, IAPVerifier, Principal
-from week2.memory import MemoryStore
-from week2.owner_audit import OwnerAuditStore
 
 
 def request_identity(request):
@@ -22,7 +21,7 @@ def request_identity(request):
     return value
 
 
-def create_app(*, settings=None, verifier=None, memory_store=None, abuse_gate=None):
+def create_app(*, settings=None, verifier=None, stores=None):
     settings = settings or IAPSettings(os.environ.get("CRA2_IAP_AUDIENCE", ""),
                                       os.environ.get("CRA2_OWNER_EMAIL", ""))
     verifier = verifier or IAPVerifier(settings)
@@ -34,11 +33,10 @@ def create_app(*, settings=None, verifier=None, memory_store=None, abuse_gate=No
         principal = getattr(request.state, "cra2_principal", None)
         return principal.key if isinstance(principal, Principal) else None
 
-    # Ephemeral storage is explicit for this integration milestone. Durable
-    # storage and audit release gates must pass before deploying the demo.
-    store = memory_store or MemoryStore("/tmp/cra2-state/team-memory.sqlite3")
-    gate = abuse_gate or AbuseGate(store=OwnerAuditStore("/tmp/cra2-owner/audit.sqlite3"))
-    demo = build_app(memory_store=store, abuse_gate=gate, identity_resolver=request_identity)
+    stores = CloudStores.from_env() if stores is None else stores
+    gate = AbuseGate(store=stores.audit)
+    demo = build_app(memory_resolver=stores.memory_for, telemetry_store=stores.telemetry,
+                     abuse_gate=gate, identity_resolver=request_identity)
     blocked = [str(Path(__file__).resolve().parents[1])]
     if os.environ.get("CRA2_ENV_FILE"):
         blocked.append(str(Path(os.environ["CRA2_ENV_FILE"]).expanduser().resolve()))

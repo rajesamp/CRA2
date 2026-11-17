@@ -24,8 +24,9 @@ No UI code or dependency has been changed by this assessment.
 The existing Gradio build has local test and container evidence. Streamlit has
 [documented Cloud Run hosting](https://docs.cloud.google.com/run/docs/quickstarts/build-and-deploy/deploy-python-streamlit-service),
 but CRA2 migration effort and behavior parity have not been measured. The encoder
-mirror blocker is in model provisioning. Changing only the UI would leave that
-blocker, verified identity, persistent user state and owner acceptance unresolved.
+mirror blocker was in model provisioning and has since been resolved by the
+approved build-asset publication. Deployed identity verification, persistent user
+state and owner acceptance remain separate requirements with either UI.
 
 The smallest separating test is one isolated Streamlit chat slice using the same
 guarded workflow, cooldown and trace helpers: normal/refused requests, two
@@ -70,14 +71,79 @@ deployer, not the runtime service account.
 
 | Order | Work | Exit evidence | State |
 |---|---|---|---|
-| 0 | Fix output rail and visible-answer scoring; add Week 2–4 CI | Local tests; 18+4 evals; 7 scorer controls; 9 faults; first GitHub run | Code/tests complete; approved encoder mirror published/configured; GitHub run pending |
+| 0 | Fix output rail and visible-answer scoring; add Week 2–4 CI | GitHub Python 3.10 and 3.13: each 385 tests, 18+4 evals, 7 scorer controls and 9 faults | Passed on both versions using the approved encoder mirror |
 | 1 | Container/startup contract | Explicit `0.0.0.0:$PORT`, local loopback default, invalid-port rejection; nonroot Linux/amd64 image; 6/6 real local RAG/MCP/NeMo intents; HTTP 200 and blocked file read | Automated local verification passed; owner acceptance pending |
-| 2 | Supply-chain release | Distroless nonroot digest; Syft SBOM; Grype scan policy; signature verification; cosign signature and SLSA provenance for immutable output digest | SBOM/scan gate implemented; actual scan blocks release; output signing/provenance pending |
+| 2 | Supply-chain release | Hardened nonroot digest, Syft SBOM, Grype scan and detection control, input signatures, Cosign signature and SLSA provenance for the output digest | Debian reconciliation complete. Publisher-signed Wolfi base passed the local and hosted scans with zero blocking matches. Final output signing/provenance pending. |
 | 3 | IAP and trusted identity | Owner-controlled allowlisted test account succeeds; unlisted/signed-out account denied; no alternate ingress bypass; signed assertions verified; chat queue/stream endpoints covered | Signed-assertion middleware and owner-only Gradio mount implemented/tested; real Google/IAP deployment proof pending |
-| 4 | Identity-scoped application state | No cross-user overwrite or trace disclosure; explicit team-write authority; restart and two-instance persistence; bounded retention without the current 2,000-row terminal stop | Pending |
+| 4 | Identity-scoped application state | No cross-user overwrite or trace disclosure; explicit team-write authority; restart and two-instance persistence; metadata retention | Durable adapters implemented and exercised locally. Cloud IAM, locked retention and deployed restart proof pending. |
 | 5 | Runtime security and capacity | Dedicated least-privilege SA; controlled secrets; default-deny egress with explicit destinations; durable privileged-action audit; request/concurrency/instance budgets | Pending |
 | 6 | Deploy and rehearse | Immutable signed revision, IAP negative tests, real browser walkthrough, fault/rollback drill, measured latency/cost/load report | Pending |
 | 7 | Invite users only after owner approval | Recorded owner acceptance and explicit approval; then apply the reviewed invitee bindings and separately authorized communications | On hold |
+
+## First release for owner testing
+
+The deliverable is a verified `run.app` URL for the owner's Google account in
+the configured project and region. Use [draft PR #28](https://github.com/rajesamp/CRA2/pull/28)
+as the review baseline. Its [Week 2–4 tests and evaluations](https://github.com/rajesamp/CRA2/actions/runs/43965011400)
+passed, and its [original container scan](https://github.com/rajesamp/CRA2/actions/runs/43965011390)
+blocked the Debian image. The first milestone ends when the owner can sign in and complete
+the walkthrough below. Share the verified URL privately with the owner.
+
+1. **Triage the 40 advisory IDs.** Map the 104 matches across 20 Debian binaries
+   to source packages. Record the installed version, vendor applicability,
+   backported fix version where available, and source for each determination.
+   The current Linux amd64 Distroless builder and runtime tags both resolve to
+   the existing pins. Rebuilding with only those two tag resolutions supplies
+   no updated base. Use the [Debian Security Tracker](https://security-tracker.debian.org/tracker/)
+   and retain [the original scan summary](evidence/gcp-owner-2026-11-16/scan-comparison.json).
+   The [completed reconciliation](evidence/debian-image-remediation-2026-11-16/debian-triage.json)
+   confirms all 40 pairs are open and records no Debian 13 fixed versions.
+2. **Qualify the base image candidate.** Build the candidate with Podman on Linux amd64
+   and verify pinned build inputs. The current `Containerfile` starts the local
+   entrypoint. Set the Cloud Run container command and arguments explicitly to
+   run `week2.cloud_app`; test those same arguments in CI. Repeat six offline
+   workflows, the IAP route checks and the SBOM/scan with its detection control.
+   The pinned Wolfi candidate passed locally and the committed recipe passed
+   [hosted verification](https://github.com/rajesamp/CRA2/actions/runs/43996182031).
+3. **Prepare the runtime configuration.** Supply durable, access-scoped memory
+   and audit adapters and bound telemetry retention. Verify writes survive a
+   restart, authorized state is visible across two instances in a test, and
+   unlisted identities cannot read or write it. Prepare a dedicated runtime
+   service account, verified IAP public-key and storage egress allowlists, and
+   write-once retention for privileged actions. Keep project identifiers,
+   OAuth credentials and the owner email in private configuration. Review the
+   resource and IAM changes together with their cost estimate before applying.
+   See the [durable storage configuration and live checks](cloud-durable-storage.md).
+4. **Sign and deploy the final image with owner access.** Rebuild with the runtime
+   changes and repeat the checks from step 2. Publish the passing image to
+   Artifact Registry, sign it, and attach SLSA build provenance. Verify the
+   signatures and attestations for the exact registry digest Cloud Run will use.
+   Enable direct IAP with the
+   invoker IAM check enabled, grant the IAP service agent service-level invoke
+   access, and grant IAP access to the owner. Verify effective inherited IAM as
+   well as service bindings. Confirm the required OAuth audience and exact
+   signed-header audience in the target project. Begin with local evidence mode,
+   provider calls disabled, request-based billing, zero minimum instances and
+   one maximum instance for owner testing. Validate resource sizing and bounded
+   chat admission, request timeouts, and the spend stop procedure against the
+   $10/month planning target. [IAP setup](https://docs.cloud.google.com/run/docs/securing/identity-aware-proxy-cloud-run)
+5. **Verify and hand off the URL.** Check revision readiness, owner sign-in,
+   signed-out and unlisted-account denial, the direct URL, queue and reconnect
+   behavior, six demo intents, and restart persistence. Record the digest,
+   revision, owner walkthrough results, duration and billed usage estimate.
+   Stop on an authentication, data access, or persistence failure, or when the
+   test spend limit is reached. For the first revision, verify a stop procedure
+   that cuts off access while preserving evidence and state. Once a known-good
+   revision exists, verify traffic rollback and state compatibility.
+   [Cloud Run rollback](https://docs.cloud.google.com/run/docs/rollouts-rollbacks-traffic-migration)
+
+The signed Wolfi candidate advanced to hosted CI after the local scan and
+startup checks passed. The [evidence](evidence/debian-image-remediation-2026-11-16/README.md),
+[updated manifest](../intent/guardrails-ci-cloud-run/release-base-v2.pinned.json)
+and [validated CI selection](../intent/guardrails-ci-cloud-run/release-base-v2.record.json)
+record the comparison with the exact Debian image.
+
+⟦ verdict · sha256=1a890720e11c970f75a39da0f77c8e8be897e682f812e3153858d8f873b6c73f · level=preferred · delta=evidence ⟧
 
 IAP login does not by itself establish team-write permission. The cloud entrypoint
 now derives a stable opaque abuse identity from the verified issuer/subject, and
@@ -88,10 +154,11 @@ loopback behavior and refuses to start when `K_SERVICE` is present.
 [Signed IAP identity](https://docs.cloud.google.com/iap/docs/signed-headers-howto)
 
 `python -m week2.cloud_app` is the separate cloud entrypoint. It requires a single
-`CRA2_OWNER_EMAIL` and the exact service `CRA2_IAP_AUDIENCE`. It intentionally does
-not consume prospective invitees. Only content-free `GET /healthz` bypasses
-authentication; HTTP and WebSocket application routes are covered. Ephemeral
-state remains a deployment blocker even for this owner-only milestone.
+`CRA2_OWNER_EMAIL`, the exact service `CRA2_IAP_AUDIENCE`, and dedicated state and
+audit buckets. Only content-free `GET /healthz` bypasses authentication. HTTP
+and WebSocket application routes require the verified owner identity. The cloud
+entrypoint uses durable preferences and audit adapters and awaits live proof of
+IAM, retention and restart behavior.
 
 Cloud Run's writable filesystem is ephemeral. The container's `/tmp` SQLite
 paths support build/smoke verification only; neither single-instance settings nor
