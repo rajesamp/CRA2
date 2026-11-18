@@ -1,5 +1,17 @@
 # Owner-only cloud storage
 
+Live verification on 2026-11-17 confirmed the owner-approved permanent 30-day
+audit lock. A new audit record rejected early overwrite and deletion with
+`retentionPolicyNotMet` and remained readable by the operator. The runtime keeps
+create-only audit access. Two fresh Cloud Run executions using the signed
+release and dedicated runtime identity wrote and recalled a synthetic preference
+through the actual application adapter. They also verified both bucket policies
+and allowed/denied HTTPS egress. See the
+[bounded evidence](../intent/cloud-durable-storage/live-owner-rollout.json).
+Age-based lifecycle deletion has not yet been observed. Owner browser acceptance
+is pending the ingress route and external-account OAuth setup; invitations stay
+on hold.
+
 The Cloud Run entrypoint requires `CRA2_STATE_BUCKET` and `CRA2_AUDIT_BUCKET`,
 alongside the existing owner and IAP audience configuration. The runtime uses
 its attached service identity. It checks bucket policy when the owner first
@@ -12,7 +24,8 @@ incompatible policy blocks the request. `/healthz` reports process liveness.
 | State | `telemetry/v1/<request-id>.json` | Delete after seven days of object age. Contains the compact request metrics already used locally. |
 | Audit | `audit/v1/<event-id>.json` | Lock retention for 30 days and set lifecycle deletion at 30 days. Each event is create-only and omits question text, notes, tokens and raw outputs. |
 
-The seven- and 30-day periods are proposed defaults for owner acceptance. Both
+The seven- and 30-day periods are configured; the owner approved and applied the
+irreversible 30-day audit retention lock. Both
 buckets require uniform access, enforced public access prevention, disabled
 object versioning, and disabled soft delete. Review the loss of recovery for
 accidentally deleted state before adopting these settings in the demo project.

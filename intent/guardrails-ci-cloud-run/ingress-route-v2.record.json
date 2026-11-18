@@ -1,0 +1,23 @@
+{
+  "sha256": "8e054e7ccb605a6b4df632256f152611c92209b08c98870944b27ff002679f2b",
+  "previous": "caee7356c80bd7cca1b1e4bf3caf3d6f1e23fc804c1a4a063cf882dfd6224e48",
+  "delta": "evidence",
+  "delta_basis": "Read-only live checks establish missing policy-write permissions and absent custom OAuth configuration. Option set unchanged; fresh judge did not see prior verdict.",
+  "verdict": {
+    "option_id": "project-exception",
+    "level": "possible",
+    "evidence_ids": [
+      "E1",
+      "E2",
+      "E3",
+      "E5",
+      "E6",
+      "E7"
+    ],
+    "rationale": "winner not established. The project-exception option is assessed only as a possible candidate, not as a recommendation or authorization. Its direct-IAP architecture has capability support and avoids the incremental forwarding-rule charge, but E3 compares cost only, not the top-priority owner-only protection. No COMPARATIVE evidence establishes a P1 advantage, and owner OAuth and browser acceptance remain unknown. Policy-administrator execution and explicit approval are also outstanding. The external-lb rival preserves inherited ingress policy but adds a forwarding-rule charge above the assumed USD 10 planning target before other charges and also lacks approval and browser acceptance.",
+    "winner_established": false,
+    "separating_test": "Obtain approval for a route and its required policy or cost change, complete external-owner OAuth setup, then verify signed-out login, owner login, non-owner and forged-header denial, endpoint restrictions, Gradio queue/stream behavior, and persistence. Assess both routes against the same P1 checks and compare actual incremental cost and policy scope before establishing a preference."
+  },
+  "detection_control": "unsupported preferred rejected",
+  "footer": "\u27e6 verdict \u00b7 sha256=8e054e7ccb605a6b4df632256f152611c92209b08c98870944b27ff002679f2b \u00b7 level=possible \u00b7 delta=evidence \u27e7"
+}
