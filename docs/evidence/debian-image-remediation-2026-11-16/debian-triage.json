@@ -1,0 +1,1060 @@
+{
+  "checked_at": "2026-11-16",
+  "image_id": "sha256:3b231fe1a00f1b2b256c4f140a036843bcf613f1717f5f220b27aae76f925be0",
+  "image_scan_sha256": "07312b42a47fbc421e1e385a743dd0c3e96235d2803af4185bd71dbac8fc2233",
+  "debian_tracker_url": "https://security-tracker.debian.org/tracker/data/json",
+  "debian_tracker_sha256": "1e437e6e317bc0ff7433b5ecf88ea21a0bd413ebab4be76b5bbf2952283c40d3",
+  "debian_source_packages_in_feed": 4195,
+  "scanned_matches": 104,
+  "unique_advisory_ids": 40,
+  "advisory_source_package_pairs": 40,
+  "unique_source_packages": 9,
+  "tracker_status_counts": {
+    "open": 40
+  },
+  "trixie_fixed_versions_found": 0,
+  "rows": [
+    {
+      "id": "CVE-2025-69720",
+      "source_package": "ncurses",
+      "installed_source_version": "6.5+20250216-2",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "6.5+20250216-2"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2025-69720",
+      "binaries": [
+        {
+          "package": "libncursesw6",
+          "installed_version": "6.5+20250216-2"
+        },
+        {
+          "package": "libtinfo6",
+          "installed_version": "6.5+20250216-2"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-102010",
+      "source_package": "gcc-14",
+      "installed_source_version": "14.2.0-19",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "14.2.0-19"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-102010",
+      "binaries": [
+        {
+          "package": "gcc-14-base",
+          "installed_version": "14.2.0-19"
+        },
+        {
+          "package": "libgcc-s1",
+          "installed_version": "14.2.0-19"
+        },
+        {
+          "package": "libgomp1",
+          "installed_version": "14.2.0-19"
+        },
+        {
+          "package": "libstdc++6",
+          "installed_version": "14.2.0-19"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-107364",
+      "source_package": "krb5",
+      "installed_source_version": "1.21.3-5+deb13u1",
+      "severity": "Unknown",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "1.21.3-5+deb13u1",
+        "trixie-security": "1.21.3-5+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-107364",
+      "binaries": [
+        {
+          "package": "libgssapi-krb5-2",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libk5crypto3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5-3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5support0",
+          "installed_version": "1.21.3-5+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-107496",
+      "source_package": "openssl",
+      "installed_source_version": "3.5.7-1~deb13u3",
+      "severity": "Unknown",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "3.5.7-1~deb13u2",
+        "trixie-security": "3.5.7-1~deb13u3"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-107496",
+      "binaries": [
+        {
+          "package": "libssl3t64",
+          "installed_version": "3.5.7-1~deb13u3"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-107778",
+      "source_package": "krb5",
+      "installed_source_version": "1.21.3-5+deb13u1",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "1.21.3-5+deb13u1",
+        "trixie-security": "1.21.3-5+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-107778",
+      "binaries": [
+        {
+          "package": "libgssapi-krb5-2",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libk5crypto3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5-3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5support0",
+          "installed_version": "1.21.3-5+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-107884",
+      "source_package": "krb5",
+      "installed_source_version": "1.21.3-5+deb13u1",
+      "severity": "Unknown",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "1.21.3-5+deb13u1",
+        "trixie-security": "1.21.3-5+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-107884",
+      "binaries": [
+        {
+          "package": "libgssapi-krb5-2",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libk5crypto3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5-3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5support0",
+          "installed_version": "1.21.3-5+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-111423",
+      "source_package": "krb5",
+      "installed_source_version": "1.21.3-5+deb13u1",
+      "severity": "Unknown",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "1.21.3-5+deb13u1",
+        "trixie-security": "1.21.3-5+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-111423",
+      "binaries": [
+        {
+          "package": "libgssapi-krb5-2",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libk5crypto3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5-3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5support0",
+          "installed_version": "1.21.3-5+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-112314",
+      "source_package": "krb5",
+      "installed_source_version": "1.21.3-5+deb13u1",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "1.21.3-5+deb13u1",
+        "trixie-security": "1.21.3-5+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-112314",
+      "binaries": [
+        {
+          "package": "libgssapi-krb5-2",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libk5crypto3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5-3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5support0",
+          "installed_version": "1.21.3-5+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-112320",
+      "source_package": "krb5",
+      "installed_source_version": "1.21.3-5+deb13u1",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "1.21.3-5+deb13u1",
+        "trixie-security": "1.21.3-5+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-112320",
+      "binaries": [
+        {
+          "package": "libgssapi-krb5-2",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libk5crypto3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5-3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5support0",
+          "installed_version": "1.21.3-5+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-112321",
+      "source_package": "krb5",
+      "installed_source_version": "1.21.3-5+deb13u1",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "1.21.3-5+deb13u1",
+        "trixie-security": "1.21.3-5+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-112321",
+      "binaries": [
+        {
+          "package": "libgssapi-krb5-2",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libk5crypto3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5-3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5support0",
+          "installed_version": "1.21.3-5+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-112322",
+      "source_package": "krb5",
+      "installed_source_version": "1.21.3-5+deb13u1",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "1.21.3-5+deb13u1",
+        "trixie-security": "1.21.3-5+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-112322",
+      "binaries": [
+        {
+          "package": "libgssapi-krb5-2",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libk5crypto3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5-3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5support0",
+          "installed_version": "1.21.3-5+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-112323",
+      "source_package": "krb5",
+      "installed_source_version": "1.21.3-5+deb13u1",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "1.21.3-5+deb13u1",
+        "trixie-security": "1.21.3-5+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-112323",
+      "binaries": [
+        {
+          "package": "libgssapi-krb5-2",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libk5crypto3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5-3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5support0",
+          "installed_version": "1.21.3-5+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-113351",
+      "source_package": "expat",
+      "installed_source_version": "2.9.0-1~deb13u1",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "2.8.3-1~deb13u1",
+        "trixie-security": "2.9.0-1~deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-113351",
+      "binaries": [
+        {
+          "package": "libexpat1",
+          "installed_version": "2.9.0-1~deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-115506",
+      "source_package": "expat",
+      "installed_source_version": "2.9.0-1~deb13u1",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "2.8.3-1~deb13u1",
+        "trixie-security": "2.9.0-1~deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-115506",
+      "binaries": [
+        {
+          "package": "libexpat1",
+          "installed_version": "2.9.0-1~deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-117610",
+      "source_package": "expat",
+      "installed_source_version": "2.9.0-1~deb13u1",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "2.8.3-1~deb13u1",
+        "trixie-security": "2.9.0-1~deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-117610",
+      "binaries": [
+        {
+          "package": "libexpat1",
+          "installed_version": "2.9.0-1~deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-118370",
+      "source_package": "expat",
+      "installed_source_version": "2.9.0-1~deb13u1",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "2.8.3-1~deb13u1",
+        "trixie-security": "2.9.0-1~deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-118370",
+      "binaries": [
+        {
+          "package": "libexpat1",
+          "installed_version": "2.9.0-1~deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-118380",
+      "source_package": "krb5",
+      "installed_source_version": "1.21.3-5+deb13u1",
+      "severity": "Unknown",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "1.21.3-5+deb13u1",
+        "trixie-security": "1.21.3-5+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-118380",
+      "binaries": [
+        {
+          "package": "libgssapi-krb5-2",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libk5crypto3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5-3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5support0",
+          "installed_version": "1.21.3-5+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-119079",
+      "source_package": "krb5",
+      "installed_source_version": "1.21.3-5+deb13u1",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "1.21.3-5+deb13u1",
+        "trixie-security": "1.21.3-5+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-119079",
+      "binaries": [
+        {
+          "package": "libgssapi-krb5-2",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libk5crypto3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5-3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5support0",
+          "installed_version": "1.21.3-5+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-119373",
+      "source_package": "sqlite3",
+      "installed_source_version": "3.46.1-7+deb13u2",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "3.46.1-7+deb13u2"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-119373",
+      "binaries": [
+        {
+          "package": "libsqlite3-0",
+          "installed_version": "3.46.1-7+deb13u2"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-119374",
+      "source_package": "sqlite3",
+      "installed_source_version": "3.46.1-7+deb13u2",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "3.46.1-7+deb13u2"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-119374",
+      "binaries": [
+        {
+          "package": "libsqlite3-0",
+          "installed_version": "3.46.1-7+deb13u2"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-119379",
+      "source_package": "sqlite3",
+      "installed_source_version": "3.46.1-7+deb13u2",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "3.46.1-7+deb13u2"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-119379",
+      "binaries": [
+        {
+          "package": "libsqlite3-0",
+          "installed_version": "3.46.1-7+deb13u2"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-15308",
+      "source_package": "python3.13",
+      "installed_source_version": "3.13.5-2+deb13u5",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "3.13.5-2+deb13u5"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-15308",
+      "binaries": [
+        {
+          "package": "libpython3.13-minimal",
+          "installed_version": "3.13.5-2+deb13u5"
+        },
+        {
+          "package": "libpython3.13-stdlib",
+          "installed_version": "3.13.5-2+deb13u5"
+        },
+        {
+          "package": "python3.13-minimal",
+          "installed_version": "3.13.5-2+deb13u5"
+        },
+        {
+          "package": "python3.13-venv",
+          "installed_version": "3.13.5-2+deb13u5"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-19445",
+      "source_package": "python3.13",
+      "installed_source_version": "3.13.5-2+deb13u5",
+      "severity": "Critical",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "3.13.5-2+deb13u5"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-19445",
+      "binaries": [
+        {
+          "package": "libpython3.13-minimal",
+          "installed_version": "3.13.5-2+deb13u5"
+        },
+        {
+          "package": "libpython3.13-stdlib",
+          "installed_version": "3.13.5-2+deb13u5"
+        },
+        {
+          "package": "python3.13-minimal",
+          "installed_version": "3.13.5-2+deb13u5"
+        },
+        {
+          "package": "python3.13-venv",
+          "installed_version": "3.13.5-2+deb13u5"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-19499",
+      "source_package": "glibc",
+      "installed_source_version": "2.41-12+deb13u4",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "2.41-12+deb13u4"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-19499",
+      "binaries": [
+        {
+          "package": "libc-bin",
+          "installed_version": "2.41-12+deb13u4"
+        },
+        {
+          "package": "libc6",
+          "installed_version": "2.41-12+deb13u4"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-19553",
+      "source_package": "python3.13",
+      "installed_source_version": "3.13.5-2+deb13u5",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "3.13.5-2+deb13u5"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-19553",
+      "binaries": [
+        {
+          "package": "libpython3.13-minimal",
+          "installed_version": "3.13.5-2+deb13u5"
+        },
+        {
+          "package": "libpython3.13-stdlib",
+          "installed_version": "3.13.5-2+deb13u5"
+        },
+        {
+          "package": "python3.13-minimal",
+          "installed_version": "3.13.5-2+deb13u5"
+        },
+        {
+          "package": "python3.13-venv",
+          "installed_version": "3.13.5-2+deb13u5"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-5435",
+      "source_package": "glibc",
+      "installed_source_version": "2.41-12+deb13u4",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "2.41-12+deb13u4"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-5435",
+      "binaries": [
+        {
+          "package": "libc-bin",
+          "installed_version": "2.41-12+deb13u4"
+        },
+        {
+          "package": "libc6",
+          "installed_version": "2.41-12+deb13u4"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-71199",
+      "source_package": "krb5",
+      "installed_source_version": "1.21.3-5+deb13u1",
+      "severity": "Unknown",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "1.21.3-5+deb13u1",
+        "trixie-security": "1.21.3-5+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-71199",
+      "binaries": [
+        {
+          "package": "libgssapi-krb5-2",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libk5crypto3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5-3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5support0",
+          "installed_version": "1.21.3-5+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-71200",
+      "source_package": "krb5",
+      "installed_source_version": "1.21.3-5+deb13u1",
+      "severity": "Unknown",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "1.21.3-5+deb13u1",
+        "trixie-security": "1.21.3-5+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-71200",
+      "binaries": [
+        {
+          "package": "libgssapi-krb5-2",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libk5crypto3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5-3",
+          "installed_version": "1.21.3-5+deb13u1"
+        },
+        {
+          "package": "libkrb5support0",
+          "installed_version": "1.21.3-5+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-7210",
+      "source_package": "python3.13",
+      "installed_source_version": "3.13.5-2+deb13u5",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "3.13.5-2+deb13u5"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-7210",
+      "binaries": [
+        {
+          "package": "libpython3.13-minimal",
+          "installed_version": "3.13.5-2+deb13u5"
+        },
+        {
+          "package": "libpython3.13-stdlib",
+          "installed_version": "3.13.5-2+deb13u5"
+        },
+        {
+          "package": "python3.13-minimal",
+          "installed_version": "3.13.5-2+deb13u5"
+        },
+        {
+          "package": "python3.13-venv",
+          "installed_version": "3.13.5-2+deb13u5"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-76642",
+      "source_package": "util-linux",
+      "installed_source_version": "2.41.5-0+deb13u1",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "2.41.5-0+deb13u1",
+        "trixie-security": "2.41.5-0+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+      "binaries": [
+        {
+          "package": "libuuid1",
+          "installed_version": "2.41.5-0+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-78408",
+      "source_package": "util-linux",
+      "installed_source_version": "2.41.5-0+deb13u1",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "2.41.5-0+deb13u1",
+        "trixie-security": "2.41.5-0+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+      "binaries": [
+        {
+          "package": "libuuid1",
+          "installed_version": "2.41.5-0+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-78409",
+      "source_package": "util-linux",
+      "installed_source_version": "2.41.5-0+deb13u1",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "2.41.5-0+deb13u1",
+        "trixie-security": "2.41.5-0+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+      "binaries": [
+        {
+          "package": "libuuid1",
+          "installed_version": "2.41.5-0+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-78410",
+      "source_package": "util-linux",
+      "installed_source_version": "2.41.5-0+deb13u1",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "2.41.5-0+deb13u1",
+        "trixie-security": "2.41.5-0+deb13u1"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+      "binaries": [
+        {
+          "package": "libuuid1",
+          "installed_version": "2.41.5-0+deb13u1"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-82049",
+      "source_package": "python3.13",
+      "installed_source_version": "3.13.5-2+deb13u5",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "3.13.5-2+deb13u5"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-82049",
+      "binaries": [
+        {
+          "package": "libpython3.13-minimal",
+          "installed_version": "3.13.5-2+deb13u5"
+        },
+        {
+          "package": "libpython3.13-stdlib",
+          "installed_version": "3.13.5-2+deb13u5"
+        },
+        {
+          "package": "python3.13-minimal",
+          "installed_version": "3.13.5-2+deb13u5"
+        },
+        {
+          "package": "python3.13-venv",
+          "installed_version": "3.13.5-2+deb13u5"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-84243",
+      "source_package": "glibc",
+      "installed_source_version": "2.41-12+deb13u4",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "2.41-12+deb13u4"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-84243",
+      "binaries": [
+        {
+          "package": "libc-bin",
+          "installed_version": "2.41-12+deb13u4"
+        },
+        {
+          "package": "libc6",
+          "installed_version": "2.41-12+deb13u4"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-88822",
+      "source_package": "openssl",
+      "installed_source_version": "3.5.7-1~deb13u3",
+      "severity": "Unknown",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "3.5.7-1~deb13u2",
+        "trixie-security": "3.5.7-1~deb13u3"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-88822",
+      "binaries": [
+        {
+          "package": "libssl3t64",
+          "installed_version": "3.5.7-1~deb13u3"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-88823",
+      "source_package": "openssl",
+      "installed_source_version": "3.5.7-1~deb13u3",
+      "severity": "Unknown",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "3.5.7-1~deb13u2",
+        "trixie-security": "3.5.7-1~deb13u3"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-88823",
+      "binaries": [
+        {
+          "package": "libssl3t64",
+          "installed_version": "3.5.7-1~deb13u3"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-95619",
+      "source_package": "gcc-14",
+      "installed_source_version": "14.2.0-19",
+      "severity": "High",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "14.2.0-19"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-95619",
+      "binaries": [
+        {
+          "package": "gcc-14-base",
+          "installed_version": "14.2.0-19"
+        },
+        {
+          "package": "libgcc-s1",
+          "installed_version": "14.2.0-19"
+        },
+        {
+          "package": "libgomp1",
+          "installed_version": "14.2.0-19"
+        },
+        {
+          "package": "libstdc++6",
+          "installed_version": "14.2.0-19"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-95691",
+      "source_package": "openssl",
+      "installed_source_version": "3.5.7-1~deb13u3",
+      "severity": "Unknown",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "3.5.7-1~deb13u2",
+        "trixie-security": "3.5.7-1~deb13u3"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-95691",
+      "binaries": [
+        {
+          "package": "libssl3t64",
+          "installed_version": "3.5.7-1~deb13u3"
+        }
+      ]
+    },
+    {
+      "id": "CVE-2026-95692",
+      "source_package": "openssl",
+      "installed_source_version": "3.5.7-1~deb13u3",
+      "severity": "Unknown",
+      "trixie_status": "open",
+      "trixie_fixed_version": null,
+      "trixie_repository_versions": {
+        "trixie": "3.5.7-1~deb13u2",
+        "trixie-security": "3.5.7-1~deb13u3"
+      },
+      "trixie_urgency": "not yet assigned",
+      "tracker": "https://security-tracker.debian.org/tracker/CVE-2026-95692",
+      "binaries": [
+        {
+          "package": "libssl3t64",
+          "installed_version": "3.5.7-1~deb13u3"
+        }
+      ]
+    }
+  ]
+}

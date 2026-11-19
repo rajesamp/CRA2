@@ -1,0 +1,82 @@
+name: container-security
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  image-evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      GRADIO_ANALYTICS_ENABLED: "False"
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      CRA2_LANGSMITH_ENABLED: "false"
+      LANGSMITH_TRACING: "false"
+      LANGCHAIN_TRACING_V2: "false"
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: "3.13"
+      - name: Install checksum-pinned tools and verify publisher signatures
+        run: |
+          mkdir -p "$RUNNER_TEMP/container-evidence"
+          python scripts/install_supply_chain_tools.py --dest "$RUNNER_TEMP/security-tools" > "$RUNNER_TEMP/container-evidence/tool-install.json"
+      - name: Verify pinned Wolfi base signature
+        run: |
+          python - <<'PY'
+          import os, pathlib, re, subprocess
+          root = pathlib.Path(os.environ['RUNNER_TEMP'])
+          recipe = pathlib.Path('Containerfile').read_text()
+          images = re.findall(r'^FROM (cgr\.dev/chainguard/wolfi-base@sha256:[a-f0-9]{64}) AS os$', recipe, re.M)
+          if len(images) != 1:
+              raise SystemExit('Expected one pinned Wolfi base used by the builder and runtime')
+          identity = 'https://github.com/chainguard-images/images/.github/workflows/release.yaml@refs/heads/main'
+          with (root / 'container-evidence' / 'wolfi-base-signature.json').open('w') as output:
+              subprocess.run([str(root / 'security-tools' / 'cosign'), 'verify',
+                  '--certificate-identity', identity,
+                  '--certificate-oidc-issuer', 'https://token.actions.githubusercontent.com',
+                  images[0]], stdout=output, check=True)
+          PY
+      - name: Fetch the reviewed encoder build input
+        env:
+          CRA2_MODEL_ARCHIVE_URL: ${{ vars.CRA2_MODEL_ARCHIVE_URL }}
+        run: |
+          if [ -z "$CRA2_MODEL_ARCHIVE_URL" ]; then
+            echo "::error::The reviewed encoder mirror is required; the original public source returns HTTP 403."
+            exit 1
+          fi
+          mkdir -p week1/.cache/models
+          curl --fail --location --proto '=https' --proto-redir '=https' --max-time 300 --max-filesize 76692531 \
+            --output week1/.cache/models/fast-bge-small-en-v1.5.tar.gz "$CRA2_MODEL_ARCHIVE_URL"
+          # The build verifies the archive and every extracted file before use.
+      - name: Build and verify the nonroot image without runtime networking
+        run: |
+          podman build --platform linux/amd64 -f Containerfile -t localhost/cra2:ci .
+          python scripts/check_container.py localhost/cra2:ci --out "$RUNNER_TEMP/container-evidence/container.json"
+          image_id=$(python -c 'import json,os; print(json.load(open(os.environ["RUNNER_TEMP"]+"/container-evidence/container.json"))["image_id"])')
+          podman save --format oci-archive --output "$RUNNER_TEMP/cra2.oci" "$image_id"
+      - name: Inventory packages, scan vulnerabilities and prove detection
+        run: |
+          python scripts/scan_container.py --archive "$RUNNER_TEMP/cra2.oci" \
+            --container-report "$RUNNER_TEMP/container-evidence/container.json" \
+            --tools "$RUNNER_TEMP/security-tools" --db-cache "$RUNNER_TEMP/grype-db" \
+            --out "$RUNNER_TEMP/container-evidence/scan"
+      - name: Preserve scan evidence including failures
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: container-security-evidence
+          path: ${{ runner.temp }}/container-evidence/
+          if-no-files-found: error
+          retention-days: 14
+
+# This workflow neither publishes nor deploys. A passing scan alone is not
+# release authorization: output signing/provenance and deployment gates remain.

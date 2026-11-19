@@ -1,0 +1,24 @@
+{
+  "archive_modified": false,
+  "artifact": "fast-bge-small-en-v1.5.tar.gz",
+  "license": "MIT",
+  "license_sha256": "587a673933425dbc36ec61268d3b954051b2d3ef3c9b322ede357976055ffdd5",
+  "license_text_source": "https://github.com/FlagOpen/FlagEmbedding/blob/master/LICENSE",
+  "mirror_reason": "Original public endpoint returned HTTP 403; republish the existing checksum-verified archive without modifications.",
+  "model": "BAAI/bge-small-en-v1.5",
+  "model_license_source": "https://huggingface.co/BAAI/bge-small-en-v1.5",
+  "original_file_sha256": {
+    "config.json": "cf423cc7d3c3202d0fecc4ca622fd996678c0b5a8abd56ba014413b8b4265639",
+    "model_optimized.onnx": "20e3bd678b8e67a722f151f3ee1e3827fc3f230839c0d57c025a3753cefa6b2e",
+    "ort_config.json": "97e78d1d21c2eb719e865b018f17915df6a12ed987446eb7f3f3a783a5afb1e1",
+    "special_tokens_map.json": "b6d346be366a7d1d48332dbc9fdf3bf8960b5d879522b7799ddba59e76237ee3",
+    "tokenizer.json": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
+    "tokenizer_config.json": "e1790949631401af1bfb6c9c7aeec7fcf612e274d73579d99f704faea40c8ba7",
+    "vocab.txt": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+  },
+  "original_source": "https://storage.googleapis.com/qdrant-fastembed/fast-bge-small-en-v1.5.tar.gz",
+  "scope": "Build dependency only; not an application release or deployment.",
+  "sha256": "3858004b3822f64f940280874b8f2d2dc25b34a4f3eb3cdf617bdceeb21ed9ed",
+  "size_bytes": 76692531,
+  "verification_date": "2026-11-16"
+}

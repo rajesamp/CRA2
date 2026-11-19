@@ -1,0 +1,16 @@
+{
+  "source_revision": "9f2e8e9a0f7e2fbd8308327ba6b1ca0a25b02c43",
+  "suite": "week1/tests/test_retrieval.py week2/tests week3/tests week4/tests -m not live",
+  "result": "430 passed, 160 warnings",
+  "duration_seconds": 120.81,
+  "python": "3.13.15",
+  "environment": "TMPDIR=/tmp; CRA2_ENV_FILE unset; model providers and tracing disabled",
+  "log_sha256": "200415d2ba9572f29dd44b60cf6eb866388318192480b59cf097bfdc8248d4d4",
+  "red_release_evidence_test": "ModuleNotFoundError before scripts.scan_container was implemented",
+  "focused_release_evidence_tests_passed": 11,
+  "retest_notes": [
+    "Default macOS TMPDIR correctly rejected by private-store path policy; corrected to documented /tmp.",
+    "Old synthetic index correctly rejected after FastEmbed version changed; rebuilt using verified original model artifacts."
+  ],
+  "scope_limit": "No live provider, browser Google sign-in, deployed IAP, persistence, capacity or cost measurements."
+}

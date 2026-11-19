@@ -1,9 +1,52 @@
 """Task 18: same guarded workflow, projected trace and host-owned identities."""
 
 from uuid import uuid4
+from types import SimpleNamespace
+import os
+from pathlib import Path
+import subprocess
+import sys
+import pytest
 
 from week2 import app
 from week2.memory import MemoryStore
+
+
+def test_import_respects_deployment_temp_directory(tmp_path):
+    cache = tmp_path / "gradio"
+    result = subprocess.run(
+        [sys.executable, "-c", "from week2 import app; import os, sys; "
+         "assert os.environ['GRADIO_TEMP_DIR'] == sys.argv[1]", str(cache)],
+        cwd=Path(__file__).resolve().parents[2],
+        env={**os.environ, "GRADIO_TEMP_DIR": str(cache)},
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.parametrize('args,environment,host,port', [
+    ([],None,'127.0.0.1',7862),
+    (['--host','0.0.0.0'],'8080','0.0.0.0',8080),
+    (['--port','8123'],'invalid','127.0.0.1',8123),
+])
+def test_startup_binding_contract(monkeypatch,args,environment,host,port):
+    calls=[]
+    monkeypatch.delenv('PORT',raising=False)
+    if environment is not None:monkeypatch.setenv('PORT',environment)
+    monkeypatch.setattr(app,'build_app',lambda **kwargs:SimpleNamespace(launch=lambda **kw:calls.append(kw)))
+    app.main(args)
+    assert len(calls)==1 and calls[0]['server_name']==host and calls[0]['server_port']==port
+    assert calls[0]['share'] is False and calls[0]['mcp_server'] is False
+    assert calls[0]['enable_monitoring'] is False and calls[0]['show_error'] is False
+    assert app.os.environ['FORWARDED_ALLOW_IPS']==''
+
+
+@pytest.mark.parametrize('value',['0','-1','65536','text',''])
+def test_invalid_runtime_port_exits_before_launch(monkeypatch,value):
+    monkeypatch.setenv('PORT',value)
+    monkeypatch.setattr(app,'build_app',lambda **kw:pytest.fail('invalid configuration reached the server'))
+    with pytest.raises(SystemExit) as error:app.main([])
+    assert error.value.code==2
 
 
 def test_memory_write_callback_and_distinct_session_recall(tmp_path):
@@ -30,6 +73,9 @@ def test_build_has_langsmith_trace_view_and_no_team_selector(tmp_path):
     assert any(c["props"].get("elem_id") == "langsmith-trace" for c in components)
     assert not any(c["type"] == "json" and c["props"].get("visible", True) for c in components)
     assert not any(c["props"].get("label") in {"Team", "Database path"} for c in components)
+    assert not any("Groq assessment" in str(c["props"].get("choices", [])) for c in components)
+    assert any("Local evidence only" in str(c["props"].get("value", ""))
+               and c["type"] == "markdown" for c in components)
     assert any(c["type"] == "state" for c in components)
     assert demo.analytics_enabled is False
     demo.close()

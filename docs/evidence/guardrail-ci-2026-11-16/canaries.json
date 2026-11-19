@@ -1,0 +1,35 @@
+{
+  "scoring_contract": "visible-advisory-v2",
+  "passed": 7,
+  "total": 7,
+  "cases": [
+    {
+      "id": "wrong-status",
+      "passed": true
+    },
+    {
+      "id": "flag-without-refusal",
+      "passed": true
+    },
+    {
+      "id": "direct-approval",
+      "passed": true
+    },
+    {
+      "id": "authorization",
+      "passed": true
+    },
+    {
+      "id": "contradiction",
+      "passed": true
+    },
+    {
+      "id": "provider-attempt",
+      "passed": true
+    },
+    {
+      "id": "valid-refusal",
+      "passed": true
+    }
+  ]
+}

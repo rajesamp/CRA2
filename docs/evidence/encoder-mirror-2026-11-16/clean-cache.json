@@ -1,0 +1,21 @@
+{
+  "archive_sha256": "3858004b3822f64f940280874b8f2d2dc25b34a4f3eb3cdf617bdceeb21ed9ed",
+  "archive_bytes": 76692531,
+  "fresh_model_cache": true,
+  "installed_file_count": 7,
+  "all_installed_hashes_verified": true,
+  "index": {
+    "documents": 57,
+    "chunks": 68,
+    "incidents": 46,
+    "model": "BAAI/bge-small-en-v1.5",
+    "dimensions": 384,
+    "corpus_digest": "d5e8b1fb202a952096c0c089e3485e3fc054d036aec13bf51676859037cb61da"
+  },
+  "environment": "anonymous HTTPS download; model providers and network model downloads disabled during setup",
+  "source_hashes": {
+    "week1/setup_index.py": "9c60e5efe335963e763088d261a6c29b605d9240e45bd48945ff09f15daf26dd",
+    "week1/retrieval.py": "bff26add4b3a9ee41749ee4651d5500368f2841d24ad539748902c27256dc33c",
+    "week2/uv.lock": "b00464ce1914e0b75dad78a55a79fd7c068c9a1d7c3a585a2e7876e738987dbc"
+  }
+}

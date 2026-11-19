@@ -1,0 +1,38 @@
+{
+  "id": 447664060,
+  "url": "https://github.com/rajesamp/CRA2/releases/tag/build-deps-bge-small-en-v1.5-3858004b3822",
+  "tag": "build-deps-bge-small-en-v1.5-3858004b3822",
+  "published_at": "2026-11-16T21:51:58Z",
+  "assets": [
+    {
+      "id": 756584261,
+      "name": "encoder-provenance.json",
+      "size_bytes": 1528,
+      "digest": "sha256:8ec0c408653eae8a18d61ebf3edaa49c85dd6919739378722abad47e30b83ff6",
+      "url": "https://github.com/rajesamp/CRA2/releases/download/build-deps-bge-small-en-v1.5-3858004b3822/encoder-provenance.json"
+    },
+    {
+      "id": 756584256,
+      "name": "fast-bge-small-en-v1.5.tar.gz",
+      "size_bytes": 76692531,
+      "digest": "sha256:3858004b3822f64f940280874b8f2d2dc25b34a4f3eb3cdf617bdceeb21ed9ed",
+      "url": "https://github.com/rajesamp/CRA2/releases/download/build-deps-bge-small-en-v1.5-3858004b3822/fast-bge-small-en-v1.5.tar.gz"
+    },
+    {
+      "id": 756584255,
+      "name": "LICENSE.FlagEmbedding.txt",
+      "size_bytes": 1065,
+      "digest": "sha256:587a673933425dbc36ec61268d3b954051b2d3ef3c9b322ede357976055ffdd5",
+      "url": "https://github.com/rajesamp/CRA2/releases/download/build-deps-bge-small-en-v1.5-3858004b3822/LICENSE.FlagEmbedding.txt"
+    },
+    {
+      "id": 756584254,
+      "name": "SHA256SUMS",
+      "size_bytes": 278,
+      "digest": "sha256:33773825237a0f5068f9ff27f71a97cde278de2095acd5f36b2f3e6f47776173",
+      "url": "https://github.com/rajesamp/CRA2/releases/download/build-deps-bge-small-en-v1.5-3858004b3822/SHA256SUMS"
+    }
+  ],
+  "approval": "User explicitly approved publishing the verified build asset on 2026-11-16.",
+  "scope": "Build dependency only. Owner acceptance, deployment and invitation gates remain separate."
+}

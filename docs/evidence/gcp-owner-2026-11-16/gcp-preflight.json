@@ -1,0 +1,11 @@
+{
+  "gcloud_auth_read": true,
+  "project_read": true,
+  "billing_enabled": true,
+  "mutation": "Enabled Cloud Billing API on target project to inspect billing; explicit target quota project required.",
+  "cloud_run_service_created": false,
+  "image_published": false,
+  "prospective_user_iam_grants": 0,
+  "invitations_sent": 0,
+  "private_configuration": "Ignored local configuration only; identifiers intentionally omitted."
+}

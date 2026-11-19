@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "before": "0.8.1",
+  "after": "0.9.1",
+  "before_fingerprint": "fastembed-artifacts-sha256:6df0bb4a5b7e0d3b1524076116a802509249de2cea5c8b1be7a443d66b7d4338",
+  "after_fingerprint": "fastembed-artifacts-sha256:dbfeb9161233d9d25c37b15a85a4bba7107f9bf18abb161d6abd1093caf0e71c",
+  "fingerprint_note": "Includes FastEmbed version; regenerate synthetic index after library update. Model artifacts pass the original checksum pins.",
+  "passages": 11,
+  "queries": 6,
+  "maximum_absolute_error": {
+    "passages": 0.0,
+    "queries": 0.0
+  },
+  "tolerance": 1e-06
+}

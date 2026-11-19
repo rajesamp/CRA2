@@ -1,0 +1,12 @@
+{
+  "option_id": "debian-triage",
+  "level": "suitable",
+  "evidence_ids": [
+    "E1",
+    "E2",
+    "E4"
+  ],
+  "rationale": "The scan ties all 104 blocking matches to 20 Debian packages. Debian vendor records provide a way to check applicability and supported fixes before building a candidate. This makes Debian triage suitable as the first investigation. The top priority remains unresolved for both options, and the winner not established.",
+  "winner_established": false,
+  "separating_test": "Reconcile the 40 advisory IDs against exact Debian source-package versions. For any viable patched Debian image and a signed Wolfi candidate, compare the same locked app on Linux amd64 with fresh Syft and the same Grype database and policy. Boot the cloud entrypoint and run offline smoke tests. Require a clean image scan and a passing detection control."
+}

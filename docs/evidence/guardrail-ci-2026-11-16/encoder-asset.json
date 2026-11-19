@@ -1,0 +1,13 @@
+{
+  "artifact": "fast-bge-small-en-v1.5.tar.gz",
+  "size_bytes": 76692531,
+  "sha256": "3858004b3822f64f940280874b8f2d2dc25b34a4f3eb3cdf617bdceeb21ed9ed",
+  "original_source": "https://storage.googleapis.com/qdrant-fastembed/fast-bge-small-en-v1.5.tar.gz",
+  "upstream_observation": "2026-11-16: anonymous read denied with HTTP 403 AccessDenied",
+  "model": "BAAI/bge-small-en-v1.5",
+  "model_license": "MIT",
+  "license_source": "https://huggingface.co/BAAI/bge-small-en-v1.5",
+  "publication_status": "approved and published; anonymous fresh-cache verification passed",
+  "release_url": "https://github.com/rajesamp/CRA2/releases/tag/build-deps-bge-small-en-v1.5-3858004b3822",
+  "publication_evidence": "docs/evidence/encoder-mirror-2026-11-16/release.json"
+}

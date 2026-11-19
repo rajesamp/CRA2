@@ -1,0 +1,22 @@
+{
+  "sha256": "caee7356c80bd7cca1b1e4bf3caf3d6f1e23fc804c1a4a063cf882dfd6224e48",
+  "previous": "4e20e9428947d367adb01e42f09793939eccdea4d6fc83a1fd33eafd5b21d827",
+  "delta": "option added",
+  "delta_basis": "Live inherited ingress restriction was not known in earlier access comparison; project-level exception is a newly added option, so earlier comparison was incomplete.",
+  "verdict": {
+    "evidence_ids": [
+      "E1",
+      "E2",
+      "E3",
+      "E4",
+      "E5",
+      "E6"
+    ],
+    "level": "possible",
+    "option_id": "external-lb",
+    "rationale": "winner not established. The load-balancer route is technically possible while retaining inherited ingress restrictions and Cloud Run IAP, but its forwarding-rule cost alone exceeds the assumed USD 10 planning target. Increased spending, TLS configuration and owner-browser acceptance remain unresolved. The project-exception rival also lacks approval and permission evidence. Neither option has COMPARATIVE evidence on P1, and owner OAuth acceptance is UNKNOWN, so neither suitability nor preference is established.",
+    "separating_test": "After the user authorizes a route and its prerequisites, verify signed-out login, owner login, non-owner denial, forged-header denial, default endpoint restrictions and Gradio queue/stream behavior. Compare actual incremental cost and policy scope against the rival. Authorization and owner-browser results are required before promoting either option.",
+    "winner_established": false
+  },
+  "detection_control": "unsupported preferred rejected"
+}

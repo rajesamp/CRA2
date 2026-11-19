@@ -1,0 +1,86 @@
+{
+  "observed_utc": "2026-11-18T04:08:35.857417+00:00",
+  "source_commit": "903583849055174f6ffa0243fc503a29fd1a92d7",
+  "audit_retention": {
+    "locked": true,
+    "seconds": 2592000,
+    "early_overwrite_denied_by_locked_retention": true,
+    "early_delete_denied_by_locked_retention": true,
+    "audit_lock_verified": true,
+    "minimum_age_seconds": 2592000,
+    "release_verification_event_survives_denied_mutations": true,
+    "lifecycle_deletion_observed": false
+  },
+  "runtime_executions": [
+    {
+      "actual_application_storage_code": true,
+      "allowlisted_iap_keys_reachable": true,
+      "check": "cra2_owner_runtime",
+      "locked_retention_policy_verified": true,
+      "mode": "read",
+      "preference_survived_fresh_execution": true,
+      "unlisted_https_destination_blocked": true
+    },
+    {
+      "actual_application_storage_code": true,
+      "allowlisted_iap_keys_reachable": true,
+      "check": "cra2_owner_runtime",
+      "locked_retention_policy_verified": true,
+      "mode": "write",
+      "preference_survived_fresh_execution": false,
+      "unlisted_https_destination_blocked": true
+    }
+  ],
+  "runtime_log_entries_examined": 8,
+  "release": {
+    "manifest_digest": "sha256:b221c26835d4e958f455c20f232e77b941ccce0ba72b1cfcab918154ec115e6d",
+    "image_config": "sha256:92d574e3dcedc276e14f52679e727bda6e6a604cc742e3b6f060b4f2d60e928f",
+    "kms_signature_verified": true,
+    "slsa_v1_statement_signature_verified": true,
+    "provenance_builder": "local operator; no SLSA level or transparency-log claim",
+    "scan": {
+      "packages_examined": 159,
+      "matches_examined": 4,
+      "severity_counts": {
+        "Medium": 3,
+        "Low": 1
+      },
+      "blocking_findings": 0,
+      "detection_control_blocking_matches": 27,
+      "database_built": "2026-11-16T06:30:54Z"
+    }
+  },
+  "cloud_run": {
+    "ready": true,
+    "iap_enabled": true,
+    "invoker_iam_check": true,
+    "ingress": "internal-and-cloud-load-balancing",
+    "min_instances": 0,
+    "max_instances": 1,
+    "cpu": 1,
+    "memory": "2Gi",
+    "concurrency": 4,
+    "human_iap_principals": 1,
+    "run_invoker_principals": 1,
+    "dedicated_runtime_identity": true,
+    "external_requests_examined": 3,
+    "external_statuses": [
+      404,
+      404,
+      404
+    ]
+  },
+  "remaining": [
+    "External browser route requires approved cost or project policy change",
+    "Policy changes require an administrator; current operator has only get among four tested policy permissions",
+    "External-account OAuth setup",
+    "Live owner login, denied-user checks and Gradio queue/stream acceptance"
+  ],
+  "invitation_hold": true,
+  "prospective_user_grants_applied": 0,
+  "measurement_limits": [
+    "Two fresh job executions exercise actual application storage code and runtime identity, not browser-session restart",
+    "Lifecycle age eligibility configured; asynchronous aged deletion not yet observed",
+    "Offline demo; no provider calls or live LLM credentials configured"
+  ]
+}

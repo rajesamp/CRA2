@@ -1,0 +1,19 @@
+{
+  "identity": "keyless@distroless.iam.gserviceaccount.com",
+  "issuer": "https://accounts.google.com",
+  "distroless": {
+    "runtime": {
+      "verified": true,
+      "signatures": 1,
+      "report_sha256": "256015c4b5bcc67714773303ba2dd17074263349d64e6e236eaf20f09f794ce2"
+    },
+    "builder": {
+      "verified": true,
+      "signatures": 1,
+      "report_sha256": "93d561f99b5c1f1bb2dca15de17285029e0fae358769bf8d919bb9b7bba7a7bc"
+    }
+  },
+  "uv_build_tool_base_verified": false,
+  "output_image_signed": false,
+  "output_slsa_provenance": false
+}

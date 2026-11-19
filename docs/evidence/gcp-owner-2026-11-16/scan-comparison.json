@@ -1,0 +1,18 @@
+{
+  "before_image": "sha256:3cfc9d4ef06018d3a25b7570f388cc51dd69dbcab9d346c28046db79f94226f6",
+  "after_image": "sha256:3b231fe1a00f1b2b256c4f140a036843bcf613f1717f5f220b27aae76f925be0",
+  "before_blocking_matches": 166,
+  "after_blocking_matches": 104,
+  "after_blocking_packages": 20,
+  "after_distinct_blocking_advisory_ids": 40,
+  "after_blocking_by_package_type": {
+    "deb": 104
+  },
+  "blocking_matches_with_reported_fix": 0,
+  "package_inventory_by_type": {
+    "python": 117,
+    "deb": 38,
+    "npm": 7
+  },
+  "note": "Scanner matches include multiple packages and advisory aliases; not a count of proven exploitable vulnerabilities. No findings were waived or suppressed."
+}

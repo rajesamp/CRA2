@@ -5,9 +5,9 @@ import os
 from pathlib import Path
 from uuid import uuid4
 
-# All generated UI files stay inside the permitted local workspace.
+# Local runs use the workspace; containers provide a writable temporary path.
 os.environ["GRADIO_ANALYTICS_ENABLED"] = "False"
-os.environ["GRADIO_TEMP_DIR"] = str(Path(__file__).with_name(".local") / "gradio")
+os.environ.setdefault("GRADIO_TEMP_DIR", str(Path(__file__).with_name(".local") / "gradio"))
 
 import gradio as gr
 
@@ -129,12 +129,14 @@ def chat_response(answer, trace):
     return text + "\n\n" + ADVISORY
 
 
-def ui_reply(message, history, mode, session_id, *, memory_store=None, transport="browser"):
-    host_store=getattr(memory_store,"store",memory_store)
-    memory_path=Path(getattr(host_store,"path",Path(__file__).with_name(".local")/"team-memory.sqlite3"))
-    telemetry=TelemetryStore(memory_path.parent/"telemetry"/"requests.sqlite3")
+def ui_reply(message, history, mode, session_id, *, memory_store=None, transport="browser",
+             telemetry_store=None):
+    if telemetry_store is None:
+        host_store = getattr(memory_store, "store", memory_store)
+        memory_path = Path(getattr(host_store, "path", Path(__file__).with_name(".local") / "team-memory.sqlite3"))
+        telemetry_store = TelemetryStore(memory_path.parent / "telemetry" / "requests.sqlite3")
     answer, trace = respond(message, history, mode, session_id=session_id, memory_store=memory_store, caches=HOST_CACHES,
-        telemetry_store=telemetry, transport=transport)
+        telemetry_store=telemetry_store, transport=transport)
     turn = 1 + sum(1 for item in (history or []) if isinstance(item, dict) and item.get("role") == "user")
     question = message if trace.get("status") != "unavailable" and isinstance(message, str) and 0 < len(message) <= 4000 else "Input withheld"
     review_mode = mode if mode in ("Local evidence only", "Groq assessment") else "Unavailable"
@@ -208,11 +210,13 @@ def protected_reply(history, mode, session_id, *, transport="browser"):
     return answer, trace_summary(trace), trace
 
 
-def guarded_ui_reply(message, history, mode, session_id, *, gate, client, memory_store=None, transport="browser"):
+def guarded_ui_reply(message, history, mode, session_id, *, gate, client, memory_store=None, transport="browser",
+                     telemetry_store=None):
     admission = gate.admit(message, client)
     if admission["blocked"]:
         return protected_reply(history, mode, session_id,transport=transport)
-    result = ui_reply(message, history, mode, session_id, memory_store=memory_store,transport=transport)
+    result = ui_reply(message, history, mode, session_id, memory_store=memory_store, transport=transport,
+                      telemetry_store=telemetry_store)
     if result[2]["status"] == "out_of_scope":
         if not gate.record_out_of_scope(message, client, admission["verdict"]):
             return protected_reply(history, mode, session_id,transport=transport)
@@ -238,14 +242,20 @@ def request_client(request):
     return host
 
 
-def build_app(*, memory_store=None, abuse_gate=None):
+def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, memory_resolver=None,
+              telemetry_store=None):
     configure_sdk_logging()
-    store = MemoryStore() if memory_store is None else memory_store
+    if memory_resolver is not None and (identity_resolver is None or memory_store is not None or telemetry_store is None):
+        raise ValueError("Cloud storage requires a verified identity and explicit telemetry store")
+    store = MemoryStore() if memory_store is None and memory_resolver is None else memory_store
     gate = AbuseGate() if abuse_gate is None else abuse_gate
+    identity = identity_resolver or request_client
 
     def reply(message, history, mode, session_id, traces, request: gr.Request):
-        client = request_client(request)
-        answer, _, trace = guarded_ui_reply(message, history, mode, session_id, gate=gate, client=client, memory_store=store)
+        client = identity(request)
+        memory = memory_resolver(client) if memory_resolver is not None else store
+        answer, _, trace = guarded_ui_reply(message, history, mode, session_id, gate=gate, client=client,
+                                           memory_store=memory, telemetry_store=telemetry_store)
         updated = retain_trace(traces, trace)
         display, poll = langsmith_view(trace["turn"], updated)
         choices = gr.update(choices=trace_choices(updated), value=trace["turn"], interactive=True)
@@ -253,7 +263,7 @@ def build_app(*, memory_store=None, abuse_gate=None):
 
     def cooldown(request: gr.Request):
         try:
-            return cooldown_view(gate, request_client(request))
+            return cooldown_view(gate, identity(request))
         except (ValueError, AttributeError):
             return gr.update(value="Security check unavailable.", visible=True), gr.update(visible=False), gr.update(active=False)
 
@@ -277,7 +287,8 @@ def build_app(*, memory_store=None, abuse_gate=None):
         with gr.Tabs() as app_tabs:
             with gr.Tab("Change Risk Advisor"):
                 with gr.Column() as conversation:
-                    mode = gr.Radio(["Local evidence only", "Groq assessment"], value="Local evidence only", label="Review mode")
+                    mode = gr.State(value="Local evidence only")
+                    gr.Markdown("**Local evidence only** · Reviews recorded evidence without a generative LLM.")
             with gr.Tab("LangSmith",id="langsmith"):
                 gr.Markdown("## LangSmith traces")
                 turn_selector = gr.Dropdown(label="Trace turn", choices=[], value=None,
@@ -301,7 +312,10 @@ def build_app(*, memory_store=None, abuse_gate=None):
             chatbot.clear(reset_trace, outputs=[trace_display, trace_history, turn_selector, cache_status, dashboard, trace_timer, session_id], queue=False, api_visibility="private")
             chatbot.undo(undo_trace, inputs=[trace_history], outputs=[trace_display, trace_history, turn_selector, cache_status, dashboard, trace_timer], queue=False, api_visibility="private")
             gr.Markdown("Ask **What is this app?**, **What services do you support?**, or **How do I get started?** View execution traces in the **LangSmith** tab.")
-            gr.Markdown("Out-of-scope questions and flagged requests are recorded privately for app-owner review.")
+            audit_notice = ("Flagged requests are logged as private audit events."
+                            if memory_resolver is not None else
+                            "Out-of-scope questions and flagged requests are recorded privately for app-owner review.")
+            gr.Markdown(audit_notice)
             open_dashboard = gr.Button("View traces and metrics")
         open_dashboard.click(lambda: gr.Tabs(selected="langsmith"),outputs=app_tabs,queue=False,api_visibility="private")
         dashboard_refresh.click(lambda traces: dashboard_view(traces, True),inputs=[trace_history],outputs=dashboard,queue=False,api_visibility="private")
@@ -312,13 +326,20 @@ def build_app(*, memory_store=None, abuse_gate=None):
     return demo
 
 
-def main():
+def main(argv=None):
+    if os.environ.get("K_SERVICE"):
+        raise RuntimeError("Cloud Run requires the authenticated week2.cloud_app entrypoint")
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--port", type=int, default=7862)
+    parser.add_argument("--host", choices=("127.0.0.1", "0.0.0.0"), default="127.0.0.1",
+        help="Use 0.0.0.0 explicitly when running behind the deployment's authentication gateway")
+    parser.add_argument("--port", type=int, default=os.environ.get("PORT", "7862"))
     parser.add_argument("--memory-file", type=Path, help="Trusted host configuration; must be inside CRA2 or /tmp")
     parser.add_argument("--audit-file", type=Path, help="Trusted owner-only audit path inside CRA2 or /tmp")
-    args = parser.parse_args()
-    # Direct loopback app: forwarded headers must not spoof cooldown identity.
+    args = parser.parse_args(argv)
+    if not 1 <= args.port <= 65535:
+        parser.error("port must be between 1 and 65535")
+    # Forwarded headers must not spoof cooldown identity. Cloud authentication
+    # and verified principal identity are separate deployment requirements.
     os.environ["FORWARDED_ALLOW_IPS"] = ""
     store = MemoryStore() if args.memory_file is None else MemoryStore(args.memory_file)
     root = Path(__file__).resolve().parents[1]
@@ -327,7 +348,7 @@ def main():
     if selected:
         blocked.append(str(Path(selected).expanduser().resolve()))
     gate = AbuseGate(store=OwnerAuditStore(args.audit_file)) if args.audit_file is not None else None
-    build_app(memory_store=store, abuse_gate=gate).launch(server_name="127.0.0.1", server_port=args.port,
+    build_app(memory_store=store, abuse_gate=gate).launch(server_name=args.host, server_port=args.port,
         share=False, inbrowser=False, blocked_paths=blocked, show_error=False,
         enable_monitoring=False, run_history=False, mcp_server=False,
         footer_links=[], max_file_size="1mb")

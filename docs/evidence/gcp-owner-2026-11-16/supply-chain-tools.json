@@ -1,0 +1,27 @@
+{
+  "lock_sha256": "f05b18b09214ef0bcf496702f78ee3e11157d9a7754b731d1204b71a52d1a6f0",
+  "installed": {
+    "syft": {
+      "version": "v1.57.2",
+      "asset_name": "syft_1.57.2_darwin_amd64.tar.gz",
+      "asset_sha256": "73c6100bc43fbcc1c99aed3428d859c6289c4076be7e296dde7e427324c15908",
+      "binary_sha256": "937b74689e65014b1f5720ded9b3bbf6a464c0e3f50f1c162cbaf3373199bd8e",
+      "publisher_signature_verified": true
+    },
+    "grype": {
+      "version": "v0.122.0",
+      "asset_name": "grype_0.122.0_darwin_amd64.tar.gz",
+      "asset_sha256": "26a121b7264882785464a95452036bb93cb6dd4ddba380592d3169025e1b1501",
+      "binary_sha256": "dee7d97a16baa0f861cd3335348675d4d7ec154e281597890eaf82e38d8a517c",
+      "publisher_signature_verified": true
+    },
+    "cosign": {
+      "version": "v3.1.4",
+      "asset_name": "cosign-darwin-amd64",
+      "asset_sha256": "9d1e4abe2b6be279ed0d2ff706fde1ccd738747c834e3e6d44039c238867334f",
+      "binary_sha256": "9d1e4abe2b6be279ed0d2ff706fde1ccd738747c834e3e6d44039c238867334f",
+      "publisher_signature_verified": true
+    }
+  },
+  "signature_status": "Publisher signatures and binary archive checksums verified"
+}

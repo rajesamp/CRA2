@@ -1,0 +1,19 @@
+{
+  "sha256": "ac844d1140a6e38c3f20f34110dd5eace66ae6060fdcc6556da56019854a9fe7",
+  "delta": "initial",
+  "decision_scope": "New permission-remedy assessment; does not reopen the owner-approved ingress route.",
+  "verdict": {
+    "evidence_ids": [
+      "E2",
+      "E3",
+      "E4"
+    ],
+    "level": "possible",
+    "option_id": "existing-policy-admin",
+    "rationale": "An existing authorized organization-policy administrator is a possible route to the approved project override without adding organization-level privilege. Administrator availability and execution are UNKNOWN, and the manifest contains no COMPARATIVE evidence on the highest priority, P1; winner not established. The temporary-role candidate does not authorize an organization-level grant: explicit authorization is UNKNOWN. The project-custom-role option is unsupported by E4.",
+    "separating_test": "First identify whether an existing authorized organization-policy administrator is available to apply the reviewed project policy. If none is available, obtain explicit authorization for the temporary organization-level grant before testing that route; then verify effective project policy and exact grant removal as specified in the manifest.",
+    "winner_established": false
+  },
+  "footer": "\u27e6 verdict \u00b7 sha256=ac844d1140a6e38c3f20f34110dd5eace66ae6060fdcc6556da56019854a9fe7 \u00b7 level=possible \u00b7 delta=initial \u27e7",
+  "detection_control": "Unsupported preferred rejected"
+}

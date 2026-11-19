@@ -1,0 +1,11 @@
+{
+  "option_id": "wolfi-build",
+  "level": "preferred",
+  "evidence_ids": [
+    "E7",
+    "E8"
+  ],
+  "rationale": "In the controlled local comparison, Wolfi had zero blocking matches and Debian had 104. Both passed the vulnerability detection control. The Wolfi base signature was verified, and the candidate passed six offline intent checks, nonroot HTTP startup, and four unsigned IAP route denials. The hosted CI result remains unknown under P3.",
+  "winner_established": true,
+  "separating_test": null
+}

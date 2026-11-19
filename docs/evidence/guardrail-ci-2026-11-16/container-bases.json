@@ -1,0 +1,27 @@
+{
+  "runtime": {
+    "index_digest": "sha256:6c4cb3bfa4b555429dd19541796a6ba6b30c84675b460bd0bd5072f7d5bdae71",
+    "linux_amd64": [
+      "sha256:973adebb0daedf75c0542081edea2d45bd60ba413a9522011b478523f76b0d80"
+    ]
+  },
+  "builder": {
+    "index_digest": "sha256:262eeb1f296981b95af82c62fda0973d62585510ddb6af1eda80f4dfd3e492d5",
+    "linux_amd64": [
+      "sha256:6f42e208295668d74ce8bad281082b6f895cf27cd565b50bf71170d2d5f09ccd"
+    ]
+  },
+  "observed_at": "2026-11-16",
+  "sources": {
+    "runtime": "https://gcr.io/v2/distroless/python3-debian13/manifests/nonroot",
+    "builder": "https://gcr.io/v2/distroless/python3-debian13/manifests/debug",
+    "uv": "https://ghcr.io/v2/astral-sh/uv/manifests/0.12.16"
+  },
+  "signature_verified": false,
+  "uv": {
+    "index_digest": "sha256:adc68cd785ca65ea25c0611043b0a00b4ea3a22e1b54102fc084406d888082ee",
+    "linux_amd64": [
+      "sha256:6ac5600728c2219355bfd63b3d5e127e42d5ed27b7448b950d8a3573189fa250"
+    ]
+  }
+}

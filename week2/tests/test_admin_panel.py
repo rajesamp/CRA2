@@ -32,8 +32,8 @@ def test_tabs_use_langsmith_without_pin_or_browser_execution_details(tmp_path):
         assert not any(c["props"].get("label") in {"Demo PIN", "Execution details", "Agent trace"} for c in components)
         assert not any(c["type"] == "json" and c["props"].get("visible", True) for c in components)
         assert any(c["props"].get("elem_id") == "langsmith-trace" for c in components)
-        assert next(c for c in components if c["type"] == "radio")["props"]["value"] == "Local evidence only"
         reply_fn = next(fn for fn in demo.fns.values() if fn.fn and fn.fn.__name__ == "reply")
+        assert reply_fn.inputs[2].stateful and reply_fn.inputs[2].value == "Local evidence only"
         assert reply_fn.inputs[-1].stateful and reply_fn.inputs[-1].value == []
     finally:
         demo.close()
@@ -73,11 +73,16 @@ def test_gradio_serialization_keeps_snapshots_server_side_and_ignores_forged_sta
     demo = app.build_app(memory_store=MemoryStore(tmp_path / "memory.sqlite3"))
     try:
         record = snapshot()
-        monkeypatch.setattr(app, "guarded_ui_reply", lambda *_a, **_k: ("Short answer", "", record))
+        modes = []
+        def reply(*args, **_kwargs):
+            modes.append(args[2])
+            return "Short answer", "", record
+        monkeypatch.setattr(app, "guarded_ui_reply", reply)
         reply_fn = next(fn for fn in demo.fns.values() if fn.fn and fn.fn.__name__ == "reply")
         state = SessionState(demo)
         request = gr.Request(Request({"type": "http", "client": ("127.0.0.1", 9999)}))
-        result = asyncio.run(demo.process_api(reply_fn, ["Question", [], "Local evidence only", "forged", [record]], state=state, request=request))
+        result = asyncio.run(demo.process_api(reply_fn, ["Question", [], "Groq assessment", "forged", [record]], state=state, request=request))
+        assert modes == ["Local evidence only"]
         assert "Short answer" in str(result["data"])
         assert "canary" not in str(result["data"])
         trace_state = reply_fn.inputs[-1]

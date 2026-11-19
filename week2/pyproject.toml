@@ -10,12 +10,16 @@ dependencies = [
     "anyio>=4,<5",
     "jsonschema>=4,<5",
     "langsmith>=0.4,<1",
-    # Preserve the existing local index's encoder identity.
-    "fastembed==0.8.1",
+    # Preserve the checksum-pinned encoder artifacts across library updates.
+    "fastembed==0.9.1",
     "numpy>=2,<3",
     "gradio>=6,<7",
     "slack-bolt>=1,<2",
     "nemoguardrails==0.24.1",
+    "pyjwt[crypto]>=2.15,<3",
+    "fastapi>=0.143,<1",
+    "uvicorn>=0.54,<1",
+    "httpx>=0.28,<1",
 ]
 
 [dependency-groups]
@@ -24,6 +28,9 @@ dev = ["pytest>=8,<10"]
 [tool.uv]
 package = false
 required-environments = ["sys_platform == 'darwin' and platform_machine == 'x86_64'"]
+# Pillow 13 contains the reported security fixes and requires Python >=3.11.
+# The Cloud Run image uses 3.13; 3.10 remains a local compatibility test only.
+constraint-dependencies = ["pillow>=13; python_version >= '3.11'"]
 
 [tool.uv.sources]
 cra2 = { path = "..", editable = true }
