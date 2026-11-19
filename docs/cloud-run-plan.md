@@ -1,9 +1,9 @@
 # Cloud Run delivery sequence
 
-Updated 2026-11-17. Target: a browser-accessible demo for **an allowlist of invited
+Updated 2026-11-19. Target: a browser-accessible demo for **an allowlist of invited
 Google accounts**. The user refined the earlier public/anonymous assumption.
-A healthy owner-only revision has been deployed; external browser access is
-blocked by the project's inherited ingress restriction. **Owner acceptance comes first.** The
+A healthy owner-only revision is deployed. Owner Google login and local chat
+have been verified in a browser. **Owner product acceptance comes first.** The
 two prospective invitees are held in ignored local configuration. No invitation,
 message or access grant to them is permitted before the owner tests the app and
 explicitly approves inviting users. First deployment is for owner acceptance only.
@@ -13,7 +13,7 @@ See the [cost assumptions and 1,000-user calculation](cloud-run-budget.md).
 The frozen design assessments below predate that amount; they are historical
 and do not establish that a deployed architecture fits this budget.
 
-## Live owner deployment: browser acceptance pending
+## Live owner deployment: owner product acceptance pending
 
 The [bounded rollout evidence](../intent/cloud-durable-storage/live-owner-rollout.json)
 records deployment of source commit `903583849055174f6ffa0243fc503a29fd1a92d7`.
@@ -38,30 +38,47 @@ the permanently locked retention policy, reached the IAP key endpoint and
 failed to reach an unlisted HTTPS destination. This proves storage persistence
 across fresh runtime executions, not browser-session restart acceptance.
 
-The effective `run.allowedIngress` policy permits only
-`internal-and-cloud-load-balancing`. The default external endpoint returned
-404 for all three tested paths; a usable browser URL has not been verified.
-The project has no local override. A permission probe found only policy `get`
-among four tested permissions; `create`, `update` and `delete` require an
-authorized policy administrator. No inherited policy was changed.
+The owner approved a project-local ingress override on 2026-11-18. Effective
+values now permit `all` and `internal-and-cloud-load-balancing`; only the demo
+service was updated to direct ingress. The parent organization policy is
+unchanged. The current account could manage organization IAM but lacked policy
+creation permission. Google marks policy-write permissions unsupported in custom
+roles. After separate explicit approval, an Organization Policy Administrator
+binding with a one-hour expiry was added, the reviewed project override applied,
+and the exact temporary binding removed immediately. Final checks found all
+original organization IAM bindings preserved and policy creation permission
+revoked. No other credential identity was used.
+[Permission support](https://docs.cloud.google.com/iam/docs/custom-roles-permissions-support)
 
-The earlier access comparison was incomplete because this live restriction was
-unknown. The expanded frozen route assessment considers an external HTTPS load
-balancer retaining direct Cloud Run IAP and a project-level ingress exception.
-Neither is approved or established as a winner. A load-balancer forwarding rule
-alone adds USD 18.25 at 730 hours and USD 0.025/hour, before other charges—above
-the USD 10 total planning target. It also needs a TLS hostname/certificate.
-A project exception would allow all ingress to be selected across this project;
-it would preserve IAP and owner-only IAM, but is broader than this one service.
-[Load-balancer pricing](https://cloud.google.com/load-balancing/pricing)
+The owner separately approved Google's API Services User Data Policy and OAuth
+setup. External/testing branding and the IAP client use basic identity/email
+only. The client is applied at project `iap_web` scope. Owner Gmail login now
+reaches the app. Run IAM and IAP remain enabled, with the IAP service agent as
+sole declared invoker and the owner as sole declared human service-level IAP
+accessor. No prospective-user grants or invitations were applied.
 
-External-account OAuth is not configured. After the owner chooses and authorizes
-a browser route, complete that setup and test owner login, denied-user and
-forged-header behavior, alternate endpoints and Gradio queue/stream requests.
-No prospective-user access or invitations are authorized. The deployed image
-is the tested review baseline; unrelated uncommitted UI work is not included.
+The [browser evidence](../intent/cloud-durable-storage/live-owner-browser.json)
+records four synthetic requests: service help, clarification, a retry change
+review and a deployment-approval request. The review exercised retrieval, two
+real tool invocations and the memory-policy read; both tools succeeded. The
+approval request was blocked at admission. Its metadata-only audit event was
+read back by the operator with 30-day retention. Five signed-out or forged-header
+requests across both service URL aliases and `/config` redirected to the correct
+custom OAuth client. Gradio queue/stream responses completed.
 
-The [current pinned manifest](../intent/guardrails-ci-cloud-run/ingress-route-v2.pinned.json)
+Three workflow latency samples measured p50 795.9 ms and p95 3754.8 ms, excluding
+admission screening, IAP, routing and browser rendering. Four requests made zero
+external model attempts. Groq credentials and LangSmith uploads remain
+unconfigured. Owner product acceptance and a separate non-owner Google-account
+browser test remain pending. The image is the tested review baseline; unrelated
+uncommitted UI work is not included.
+
+The earlier ingress comparison was incomplete because the inherited restriction
+was then unknown. The frozen route assessment below predates the owner's route
+authorization and completed browser verification. It does not promote the
+selected route to an architectural preference.
+
+The [historical pinned manifest](../intent/guardrails-ci-cloud-run/ingress-route-v2.pinned.json)
 and [fresh judge result](../intent/guardrails-ci-cloud-run/ingress-route-v2.judge.json)
 rate the project-exception candidate as **possible**, not an authorization or
 preference; **winner not established**. The smallest separating test is the same
@@ -132,10 +149,10 @@ deployer, not the runtime service account.
 | 0 | Fix output rail and visible-answer scoring; add Week 2–4 CI | GitHub Python 3.10 and 3.13: each 391 tests, 18+4 evals, 7 scorer controls and 9 faults | Passed on both versions using the approved encoder mirror |
 | 1 | Container/startup contract | Explicit `0.0.0.0:$PORT`, local loopback default, invalid-port rejection; nonroot Linux/amd64 image; 6/6 real local RAG/MCP/NeMo intents; HTTP 200 and blocked file read | Automated local verification passed; owner acceptance pending |
 | 2 | Supply-chain release | Hardened nonroot digest, Syft SBOM, Grype scan and detection control, input signatures, Cosign signature and SLSA provenance for the output digest | Passed. Exact deployed digest has a verified KMS-backed Cosign signature and local-builder SLSA v1 statement. |
-| 3 | IAP and trusted identity | Owner-controlled allowlisted test account succeeds; unlisted/signed-out account denied; no alternate ingress bypass; signed assertions verified; chat queue/stream endpoints covered | Signed-assertion middleware and owner-only Gradio mount implemented/tested; real Google/IAP deployment proof pending |
+| 3 | IAP and trusted identity | Owner-controlled allowlisted test account succeeds; unlisted/signed-out account denied; no alternate ingress bypass; signed assertions verified; chat queue/stream endpoints covered | Owner Google login and Gradio queue/stream verified. Five signed-out/forged-header checks passed across both URL aliases and config. Separate non-owner Google-account browser test pending |
 | 4 | Identity-scoped application state | No cross-user overwrite or trace disclosure; explicit team-write authority; restart and two-instance persistence; metadata retention | Live least-privilege storage and permanent 30-day audit lock verified. Preference survived two fresh Cloud Run executions; owner browser acceptance and aged lifecycle deletion remain pending. |
 | 5 | Runtime security and capacity | Dedicated least-privilege SA; controlled secrets; default-deny egress with explicit destinations; durable privileged-action audit; request/concurrency/instance budgets | Dedicated identity/network deployed. Allowed and denied HTTPS egress verified. Instance/concurrency limits applied; browser load and cost measurements pending. |
-| 6 | Deploy and rehearse | Immutable signed revision, IAP negative tests, real browser walkthrough, fault/rollback drill, measured latency/cost/load report | Healthy revision deployed. External ingress choice, external-account OAuth and browser acceptance pending. |
+| 6 | Deploy and rehearse | Immutable signed revision, IAP negative tests, real browser walkthrough, fault/rollback drill, measured latency/cost/load report | Healthy signed revision, approved project ingress and external OAuth deployed. Owner local-review smoke and admission block passed; owner product walkthrough, model-backed mode, cost/load measurement and fault drill remain. |
 | 7 | Invite users only after owner approval | Recorded owner acceptance and explicit approval; then apply the reviewed invitee bindings and separately authorized communications | On hold |
 
 ## First release for owner testing

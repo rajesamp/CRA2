@@ -1,0 +1,84 @@
+{
+  "client_date": "2026-11-18",
+  "observed_utc": "2026-11-19T05:58:29.375034+00:00",
+  "source_commit": "903583849055174f6ffa0243fc503a29fd1a92d7",
+  "project_ingress_exception_applied": true,
+  "parent_organization_policy_unchanged": true,
+  "temporary_policy_admin_grant_removed": true,
+  "all_original_org_iam_bindings_preserved": true,
+  "policy_create_permission_revoked_after_cleanup": true,
+  "organization_iam_bindings_examined": 10,
+  "custom_oauth": {
+    "configured": true,
+    "scope": "project/iap_web",
+    "audience": "External/testing",
+    "identity_email_only": true
+  },
+  "owner_browser": {
+    "google_login": true,
+    "help_answer": true,
+    "clarification_answer": true,
+    "local_rag_and_mcp_review": true,
+    "approval_request_blocked_at_admission": true,
+    "queue_and_stream_completed": true,
+    "memory_policy_read": true
+  },
+  "negative_http_checks": [
+    {
+      "path": "/",
+      "forged_identity": false,
+      "status": 302,
+      "correct_custom_oauth_client": true
+    },
+    {
+      "path": "/",
+      "forged_identity": false,
+      "status": 302,
+      "correct_custom_oauth_client": true
+    },
+    {
+      "path": "/config",
+      "forged_identity": false,
+      "status": 302,
+      "correct_custom_oauth_client": true
+    },
+    {
+      "path": "/",
+      "forged_identity": true,
+      "status": 302,
+      "correct_custom_oauth_client": true
+    },
+    {
+      "path": "/",
+      "forged_identity": true,
+      "status": 302,
+      "correct_custom_oauth_client": true
+    }
+  ],
+  "declared_service_human_iap_accessors": 1,
+  "declared_service_run_invokers": 1,
+  "live_admission_audit": {
+    "kind": "suspected_adversarial",
+    "verdict": {
+      "action": "BLOCK",
+      "classification": "suspected_adversarial",
+      "severity": "M3"
+    },
+    "metadata_only": true,
+    "minimum_retention_seconds": 2592000
+  },
+  "audit_objects_inventoried": 10,
+  "metrics_table_text": [
+    "\n\n\nMetric\nObserved value\n\n\n\nTool-call failure rate\n0.0% (0/2)\n\n\nActual tool invocations\n2\n\n\nRequests with unavailable tool accounting\n0\n\n\nGuardrail interventions / checks\n0/7\n\n\nAdmission pauses\n1\n\n\nHigh-risk preferences applied / eligible reads\n0.0% (0/1)\n\n\nConfigured high-risk floors observed\n0\n\n\nExternal model-request attempts\n0\n\n\nWorkflow time p50 / p95\n795.9 / 3754.8 ms (n=3)\n\n",
+    "\n\n\nLayer\nHits / eligible lookups\n\n\n\nquery embedding\n0.0% (0/1)\n\n\nretrieval\n0.0% (0/1)\n\n\ntool\n0.0% (0/2)\n\n"
+  ],
+  "limits": [
+    "Four synthetic browser requests; three workflow latency samples; no capacity claim.",
+    "External model calls and LangSmith uploads remain unconfigured.",
+    "No separate non-owner Google account was used for browser login testing.",
+    "Preference restart proof uses two fresh Cloud Run job executions of actual application storage code.",
+    "Aged lifecycle deletion is configured but has not yet been observed."
+  ],
+  "owner_product_acceptance": "pending owner testing",
+  "invitations": "hold"
+}

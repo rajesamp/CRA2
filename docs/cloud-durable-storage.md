@@ -8,9 +8,12 @@ release and dedicated runtime identity wrote and recalled a synthetic preference
 through the actual application adapter. They also verified both bucket policies
 and allowed/denied HTTPS egress. See the
 [bounded evidence](../intent/cloud-durable-storage/live-owner-rollout.json).
-Age-based lifecycle deletion has not yet been observed. Owner browser acceptance
-is pending the ingress route and external-account OAuth setup; invitations stay
-on hold.
+Owner Google login, a tool-backed local review and the memory-policy read now
+succeed through the live browser. A deployment-approval request was blocked at
+admission; its metadata-only audit was read back with 30-day retention. See the
+[browser evidence](../intent/cloud-durable-storage/live-owner-browser.json).
+Age-based lifecycle deletion has not yet been observed. Owner product acceptance
+remains pending; invitations stay on hold.
 
 The Cloud Run entrypoint requires `CRA2_STATE_BUCKET` and `CRA2_AUDIT_BUCKET`,
 alongside the existing owner and IAP audience configuration. The runtime uses

@@ -5,18 +5,20 @@ No GCP budget or spend cap has been applied. The owner-only revision now uses
 zero minimum and one maximum instance, 1 vCPU, 2 GiB and request-based CPU.
 Actual account identifiers remain in ignored local configuration.
 
-Live deployment discovered an inherited ingress restriction that blocks direct
-external browser access. Adding an external HTTPS load balancer would add at
-least USD 18.25 per 730-hour month for its USD 0.025/hour forwarding rule, before
-other charges. This exceeds the total USD 10 planning target by itself. No load
-balancer or budget increase has been approved. A project-level ingress exception
-is a separate policy change requiring owner authorization and an authorized
-administrator. Neither route has passed owner-browser acceptance.
-[Forwarding-rule pricing](https://cloud.google.com/load-balancing/pricing)
+The owner approved and applied a project-local ingress exception, preserving the
+parent policy and owner-only IAP. No load balancer or budget increase was applied.
+The temporary organization-policy administration grant used for that change was
+removed immediately. Owner Google login and local-evidence chat now work.
 
 Dedicated storage, Artifact Registry, KMS signing and a restricted VPC/NAT path
 have been provisioned. Their charges and shared free allowances must be included
 in the total; the Cloud Run subtotals below are not a complete deployment bill.
+
+Four synthetic browser requests produced three workflow latency samples:
+p50 795.9 ms and p95 3754.8 ms, with two successful actual tool invocations and
+zero external model-request attempts. These exclude admission screening, IAP,
+routing and browser rendering; they do not establish billed instance time or
+capacity for 1,000 users. [Live evidence](../intent/cloud-durable-storage/live-owner-browser.json).
 
 ## Back-of-envelope calculation
 
