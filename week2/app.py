@@ -287,7 +287,8 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
         with gr.Tabs() as app_tabs:
             with gr.Tab("Change Risk Advisor"):
                 with gr.Column() as conversation:
-                    mode = gr.Radio(["Local evidence only", "Groq assessment"], value="Local evidence only", label="Review mode")
+                    mode = gr.State(value="Local evidence only")
+                    gr.Markdown("**Local evidence only** · Reviews recorded evidence without a generative LLM.")
             with gr.Tab("LangSmith",id="langsmith"):
                 gr.Markdown("## LangSmith traces")
                 turn_selector = gr.Dropdown(label="Trace turn", choices=[], value=None,

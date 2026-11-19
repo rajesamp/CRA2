@@ -73,6 +73,9 @@ def test_build_has_langsmith_trace_view_and_no_team_selector(tmp_path):
     assert any(c["props"].get("elem_id") == "langsmith-trace" for c in components)
     assert not any(c["type"] == "json" and c["props"].get("visible", True) for c in components)
     assert not any(c["props"].get("label") in {"Team", "Database path"} for c in components)
+    assert not any("Groq assessment" in str(c["props"].get("choices", [])) for c in components)
+    assert any("Local evidence only" in str(c["props"].get("value", ""))
+               and c["type"] == "markdown" for c in components)
     assert any(c["type"] == "state" for c in components)
     assert demo.analytics_enabled is False
     demo.close()

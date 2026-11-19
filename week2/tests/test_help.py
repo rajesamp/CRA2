@@ -48,6 +48,7 @@ def test_app_help_does_not_leave_the_local_help_path(question, topic, mode):
     assert "outside CRA2" not in answer
     assert trace["provider_used"] is False and trace["request_attempted"] is False
     assert not trace["retrieved"]
+    assert "Groq" not in answer and "Choose a review mode" not in answer
 
 
 def test_known_services_come_from_current_catalog(monkeypatch):
@@ -75,10 +76,19 @@ def test_capability_count_and_current_week2_features():
     answer, _ = workflow.respond("What can you do?", retriever=forbidden, reviewer=forbidden, tool_runner=forbidden)
     assert "preferences" in answer and "trace" in answer
     assert "not available in this demo" not in answer
-    answer, trace = workflow.respond("List your top six capabilities.", retriever=forbidden, reviewer=forbidden, tool_runner=forbidden)
-    assert trace["status"] == "help" and len([line for line in answer.splitlines() if line[:1].isdigit()]) == 6
-    answer, trace = workflow.respond("List your top 7 capabilities.", retriever=forbidden, reviewer=forbidden, tool_runner=forbidden)
-    assert trace["status"] == "needs_clarification" and "6" in answer
+    assert "Groq" not in answer
+    answer, trace = workflow.respond("List your top five capabilities.", retriever=forbidden, reviewer=forbidden, tool_runner=forbidden)
+    assert trace["status"] == "help" and len([line for line in answer.splitlines() if line[:1].isdigit()]) == 5
+    answer, trace = workflow.respond("List your top 6 capabilities.", retriever=forbidden, reviewer=forbidden, tool_runner=forbidden)
+    assert trace["status"] == "needs_clarification" and "five" in answer
+
+
+def test_mode_help_explains_local_embedding_inference_without_provider_offer():
+    answer, trace = workflow.respond("Does this app use an LLM?", retriever=forbidden,
+                                     reviewer=forbidden, tool_runner=forbidden)
+    assert trace["status"] == "help" and trace["topic"] == "modes"
+    assert "embedding model" in answer and "no generative LLM" in answer
+    assert "Groq" not in answer and "risk rating" in answer
 
 
 def test_help_does_not_swallow_unrelated_or_mixed_requests():

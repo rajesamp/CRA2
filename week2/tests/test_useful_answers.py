@@ -33,7 +33,7 @@ def test_exact_local_questions_provide_change_facts_and_review_checks(question, 
     assert trace["status"] == "evidence_only"
     assert len([event for event in trace["events"] if event["event"] == "tool_result"]) == 2
     assert all(word in answer.lower() for word in expected)
-    assert "No risk rating" in answer and "Groq assessment" in answer
+    assert "No risk rating" in answer and "Groq assessment" not in answer
     assert not trace["request_attempted"] and not trace["provider_used"]
     assert all(detail not in answer for detail in (HIT["text"], HIT["chunk_id"], "catalog:", "memory:", "Recorded graph", "Turn #"))
     assert len(answer.split()) < 65 and answer.endswith(ADVISORY)
@@ -100,10 +100,11 @@ def test_model_question_cannot_copy_diagnostic_identifiers_into_chat():
     assert "HIGH" in answer and "catalog:" not in answer
 
 
-def test_browser_keeps_local_evidence_as_default(tmp_path):
+def test_browser_uses_only_local_evidence(tmp_path):
     demo = app.build_app(memory_store=MemoryStore(tmp_path / "memory.sqlite3"))
     try:
-        mode = next(c for c in demo.config["components"] if c["type"] == "radio" and c["props"].get("label") == "Review mode")
-        assert mode["props"]["value"] == "Local evidence only"
+        assert not any(c["type"] == "radio" for c in demo.config["components"])
+        reply_fn = next(fn for fn in demo.fns.values() if fn.fn and fn.fn.__name__ == "reply")
+        assert reply_fn.inputs[2].stateful and reply_fn.inputs[2].value == "Local evidence only"
     finally:
         demo.close()
