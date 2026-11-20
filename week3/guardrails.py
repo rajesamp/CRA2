@@ -63,7 +63,6 @@ class LocalRails:
     async def check(self, stage, payload):
         if stage not in {"input", "context", "output"}:
             raise RailUnavailable("invalid_stage")
-        guard(payload)
         verdict = []
         started = perf_counter()
 
@@ -91,9 +90,10 @@ class LocalRails:
             return allowed
 
         # No model-dependent rail is configured. check_async avoids generation.
-        self.engine.register_action(validate, name="cra_validate")
         role = "assistant" if stage == "output" else "user"
         try:
+            guard(payload)
+            self.engine.register_action(validate, name="cra_validate")
             raw = json.dumps(payload, ensure_ascii=False, allow_nan=False)
             result = await self.engine.check_async([{"role": role, "content": raw}])
             if len(verdict) != 1 or result.status not in {RailStatus.PASSED, RailStatus.BLOCKED}:

@@ -142,7 +142,7 @@ class AbuseGate:
     def admit(self, question, client):
         with self.lock:
             if self.remaining(client)[0]:
-                return {"blocked": True, "reason": self.remaining(client)[1]}
+                return {"blocked": True, "reason": self.remaining(client)[1], "cooldown": True}
             try:
                 self.store.ensure()
                 try:
@@ -176,7 +176,7 @@ class AbuseGate:
                     raise ValueError("Invalid classifier verdict")
                 if verdict["action"] == "BLOCK":
                     self.store.append(question, self._key(client), "suspected_adversarial", verdict)
-                    return self.pause(client, "adversarial")
+                    return {**self.pause(client, "adversarial"), "verdict": verdict}
                 return {"blocked": False, "verdict": verdict}
             except Exception:
                 # No exception body, question or owner metadata crosses this boundary.

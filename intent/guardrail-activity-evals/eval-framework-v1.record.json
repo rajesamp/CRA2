@@ -1,0 +1,20 @@
+{
+  "sha256": "04c51a2c3a0b5fb18fb281ef26ef5c0f6dea9999c22ad386583dfa22b05f9642",
+  "level": "suitable",
+  "delta": "requirement",
+  "prior_verdict": null,
+  "delta_basis": "User requested adding Ragas or TruLens evaluation to existing contract tests.",
+  "verdict": {
+    "option_id": "trulens",
+    "level": "suitable",
+    "winner_established": false,
+    "evidence_ids": [
+      "e2",
+      "e3",
+      "e4",
+      "e5"
+    ],
+    "rationale": "TruLens is suitable for the scoped offline retrieval-ID pilot using the tested forbidden provider and explicit input validation. Both frameworks matched on valid synthetic fixtures and made zero observed network attempts, so winner not established on the highest-priority criterion. TruLens offers practical pilot advantages: its tested methods emitted no deprecation warning, while the Ragas metrics have an explicit removal warning, and its isolated trial environment contained fewer distributions. These findings do not establish retrieval-quality or semantic-evaluation superiority.",
+    "separating_test": "Run both adapters on the same frozen six-query CRA2 corpus set; require identical ID-score semantics, no egress, and correct empty/malformed-score failures. If tied, no retrieval-quality winner is established."
+  }
+}

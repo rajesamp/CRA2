@@ -18,6 +18,8 @@ from week2.memory import MemoryStore
 from week2.workflow import load_copy, respond
 from week2.abuse import AbuseGate
 from week2.owner_audit import OwnerAuditStore
+from week2.guardrail_activity import (SessionActivity, admission_event, record_activity,
+                                     clear_activity, CSS as GUARDRAIL_CSS)
 from week2.presentation import review_summary
 from week2.welcome import INTRO, ROADMAP, CSS, LOCAL_IDENTITY, EXAMPLE
 from week2.incident_rollback import (CHANGE_TYPES, CHECK_VALUES, RECONCILIATION_VALUES,
@@ -35,7 +37,7 @@ TRACE_FIELDS = (
     "retrieved", "provider_used", "request_attempted", "risk_floor",
     "assessment_tool_citations", "source_scope", "model", "tokens", "groq_ms",
     "assessment", "response_details", "turn", "review_mode", "question", "topic",
-    "rails",
+    "rails", "admission",
     "support", "approval_declined",
     "cache",
     "spans", "duration_ms", "transport", "mcp", "telemetry_status",
@@ -218,12 +220,15 @@ def guarded_ui_reply(message, history, mode, session_id, *, gate, client, memory
                      telemetry_store=None):
     admission = gate.admit(message, client)
     if admission["blocked"]:
-        return protected_reply(history, mode, session_id,transport=transport)
-    result = ui_reply(message, history, mode, session_id, memory_store=memory_store, transport=transport,
+        result = protected_reply(history, mode, session_id,transport=transport)
+    else:
+        result = ui_reply(message, history, mode, session_id, memory_store=memory_store, transport=transport,
                       telemetry_store=telemetry_store)
     if result[2]["status"] == "out_of_scope":
         if not gate.record_out_of_scope(message, client, admission["verdict"]):
-            return protected_reply(history, mode, session_id,transport=transport)
+            result = protected_reply(history, mode, session_id,transport=transport)
+            admission = {"blocked": True, "reason": "unavailable"}
+    result[2]["admission"] = admission_event(admission)
     return result
 
 
@@ -255,7 +260,7 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
     gate = AbuseGate() if abuse_gate is None else abuse_gate
     identity = identity_resolver or request_client
 
-    def reply(message, history, mode, session_id, traces, request: gr.Request):
+    def reply(message, history, mode, session_id, traces, request: gr.Request, activity=None):
         client = identity(request)
         memory = memory_resolver(client) if memory_resolver is not None else store
         answer, _, trace = guarded_ui_reply(message, history, mode, session_id, gate=gate, client=client,
@@ -263,7 +268,7 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
         updated = retain_trace(traces, trace)
         display, poll = langsmith_view(trace["turn"], updated)
         choices = gr.update(choices=trace_choices(updated), value=trace["turn"], interactive=True)
-        return answer, display, updated, choices, *cooldown_view(gate, client), cache_badge(trace), dashboard_view(updated,True), poll
+        return answer, display, updated, choices, *cooldown_view(gate, client), cache_badge(trace), dashboard_view(updated,True), poll, *record_activity(activity, "chat", trace)
 
     def cooldown(request: gr.Request):
         try:
@@ -274,13 +279,14 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
     def show_identity(request: gr.Request):
         return identity_view(request) if identity_view is not None else LOCAL_IDENTITY
 
-    def recovery(service, kind, summary, plan, compatibility, rehearsal, reconciliation, request: gr.Request):
+    def recovery(service, kind, summary, plan, compatibility, rehearsal, reconciliation, request: gr.Request, activity=None):
         try:
             client = identity(request)
         except (ValueError, AttributeError):
-            return render_recovery(RECOVERY_EMPTY)
-        return guarded_analyze((service, kind, summary, plan, compatibility, rehearsal, reconciliation),
-                               gate=gate, client=client)[0]
+            return render_recovery(RECOVERY_EMPTY), *record_activity(activity, "recovery", RECOVERY_EMPTY)
+        html, report = guarded_analyze((service, kind, summary, plan, compatibility, rehearsal, reconciliation),
+                                      gate=gate, client=client)
+        return html, *record_activity(activity, "recovery", report)
 
     def reset_trace():
         display, poll = langsmith_view()
@@ -297,6 +303,7 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
         gr.Markdown("### CRA · Change Risk Advisor")
         session_id = gr.State(value=lambda: uuid4().hex)
         trace_history = gr.State(value=[])
+        guardrail_state = gr.State(value=SessionActivity())
         timer = gr.Timer(value=.5, active=False)
         trace_timer = gr.Timer(value=2, active=False)
         with gr.Tabs(selected="welcome") as app_tabs:
@@ -337,6 +344,11 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
                 recovery_run = gr.Button("Analyze recorded evidence", variant="primary")
                 recovery_result = gr.HTML("<p>Run the analysis to inspect incident sources and recovery gaps.</p>",
                                           css_template=RECOVERY_CSS, js_on_load=None, elem_id="recovery-report")
+            with gr.Tab("Guardrail activity", id="guardrails"):
+                guardrail_display = gr.HTML(SessionActivity().html(), css_template=GUARDRAIL_CSS,
+                                            js_on_load=None, elem_id="guardrail-activity")
+                guardrail_clear = gr.Button("Clear session activity", size="sm")
+                gr.Markdown("Clearing this view does not clear security pauses or private audit records.")
             with gr.Tab("LangSmith",id="langsmith"):
                 gr.Markdown("## LangSmith traces")
                 turn_selector = gr.Dropdown(label="Trace turn", choices=[], value=None,
@@ -352,8 +364,8 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
             notice = gr.HTML(visible=False, elem_id="security-notice")
             with gr.Group(elem_id="chat-controls") as controls:
                 chatbot = gr.Chatbot(label="CRA2 conversation", height=490, elem_id="agent-chat")
-                gr.ChatInterface(reply, chatbot=chatbot, additional_inputs=[mode, session_id, trace_history],
-                    additional_outputs=[trace_display, trace_history, turn_selector, notice, controls, timer, cache_status, dashboard, trace_timer], save_history=False, cache_examples=False,
+                gr.ChatInterface(reply, chatbot=chatbot, additional_inputs=[mode, session_id, trace_history, guardrail_state],
+                    additional_outputs=[trace_display, trace_history, turn_selector, notice, controls, timer, cache_status, dashboard, trace_timer, guardrail_state, guardrail_display], save_history=False, cache_examples=False,
                     flagging_mode="never", api_visibility="private", api_name="ui_response",
                     description="Name the service and describe the proposed change. Never enter credentials.",
                     analytics_enabled=False)
@@ -369,8 +381,10 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
         start_review.click(lambda: gr.Tabs(selected="review"), outputs=app_tabs, queue=False, api_visibility="private")
         identity_refresh.click(show_identity, outputs=identity_display, queue=False, api_visibility="private")
         recovery_run.click(recovery, inputs=[recovery_service, recovery_kind, recovery_summary, recovery_plan,
-            recovery_compatibility, recovery_rehearsal, recovery_reconciliation],
-            outputs=recovery_result, api_visibility="private", concurrency_limit=1)
+            recovery_compatibility, recovery_rehearsal, recovery_reconciliation, guardrail_state],
+            outputs=[recovery_result, guardrail_state, guardrail_display], api_visibility="private", concurrency_limit=1)
+        guardrail_clear.click(clear_activity, inputs=guardrail_state, outputs=[guardrail_state, guardrail_display],
+                              queue=False, api_visibility="private")
         demo.load(show_identity, outputs=identity_display, queue=False, api_visibility="private")
         dashboard_refresh.click(lambda traces: dashboard_view(traces, True),inputs=[trace_history],outputs=dashboard,queue=False,api_visibility="private")
         for event in (trace_refresh.click, turn_selector.input, trace_timer.tick):

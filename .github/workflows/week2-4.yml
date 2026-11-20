@@ -65,6 +65,24 @@ jobs:
         run: week2/.venv/bin/python -m week4.evaluate --split reserved --cases week4/reserved-cases-v2.json --out "$RUNNER_TEMP/week2-4-evidence/reserved.json"
       - name: Inject required-check, capacity and dependency faults
         run: week2/.venv/bin/python -m week4.faults --out "$RUNNER_TEMP/week2-4-evidence/faults.json"
+      - name: Install isolated locked TruLens evaluator
+        if: matrix.python-version == '3.13'
+        run: uv sync --locked --project evaluation --python "${{ matrix.python-version }}"
+      - name: Check evaluation decision and fail-closed metric controls
+        if: matrix.python-version == '3.13'
+        env:
+          OTEL_SDK_DISABLED: "true"
+          RAGAS_DO_NOT_TRACK: "true"
+        run: |
+          evaluation/.venv/bin/python intent/guardrail-activity-evals/validate_decision.py
+          evaluation/.venv/bin/python -m pytest evaluation/test_score.py -q --junitxml="$RUNNER_TEMP/week2-4-evidence/evaluation-tests.xml"
+      - name: Collect actual offline retrieval and evaluate with TruLens
+        if: matrix.python-version == '3.13'
+        env:
+          OTEL_SDK_DISABLED: "true"
+        run: |
+          week2/.venv/bin/python -m evaluation.collect --out "$RUNNER_TEMP/week2-4-evidence/retrieval-ids.json"
+          evaluation/.venv/bin/python -m evaluation.score --input "$RUNNER_TEMP/week2-4-evidence/retrieval-ids.json" --out "$RUNNER_TEMP/week2-4-evidence/trulens.json"
       - name: Preserve bounded synthetic test evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

@@ -1,0 +1,51 @@
+{
+  "framework": "ragas",
+  "version": "0.4.4",
+  "network_and_provider_attempts": [],
+  "cases": [
+    {
+      "case": "perfect",
+      "precision_recall": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "case": "partial",
+      "precision_recall": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "case": "miss",
+      "precision_recall": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "case": "empty_retrieval",
+      "precision_recall": [
+        null,
+        0.0
+      ]
+    },
+    {
+      "case": "duplicate",
+      "precision_recall": [
+        1.0,
+        0.5
+      ]
+    },
+    {
+      "case": "empty_reference",
+      "precision_recall": [
+        0.0,
+        null
+      ]
+    }
+  ],
+  "environment_distributions": 92,
+  "limitations": "Synthetic ID equality only; no answer-quality or robustness comparison."
+}

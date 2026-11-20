@@ -126,13 +126,23 @@ def test_real_mount_separates_two_invited_users_even_with_identical_browser_sess
         # gate; one principal's declarations cannot become another's report.
         from week2.tests.test_incident_rollback import VALUES
         failed_values = list(VALUES); failed_values[4] = "Fail"
-        owner_recovery = call(owner_token, "recovery", failed_values)
+        owner_recovery = call(owner_token, "recovery", [*failed_values, None])
         assert owner_recovery.status_code == 200
         assert "Reported rollback blockers" in owner_recovery.json()["data"][0]
-        member_recovery = call(member_token, "recovery", list(VALUES))
+        member_recovery = call(member_token, "recovery", [*VALUES, {"forged": "activity-canary"}])
         assert member_recovery.status_code == 200
         assert "Recovery evidence is incomplete" in member_recovery.json()["data"][0]
         assert "Resolve reported blockers" not in member_recovery.json()["data"][0]
+        assert "Request 1" in owner_recovery.json()["data"][2]
+        assert "Request 1" in member_recovery.json()["data"][2]
+        assert "activity-canary" not in member_recovery.text
+        assert "NeMo / Retrieved context: Passed" in member_recovery.json()["data"][2]
+        owner_again = call(owner_token, "recovery", [*VALUES, None])
+        assert "Request 2" in owner_again.json()["data"][2]
+        member_again = call(member_token, "clear_activity", [None])
+        assert "No checks recorded" in member_again.json()["data"][1]
+        owner_third = call(owner_token, "recovery", [*VALUES, None])
+        assert "Request 3" in owner_third.json()["data"][2] and "Request 1" in owner_third.json()["data"][2]
 
         # Actual app memory callback with the two verified identities; the same
         # service name cannot make one user's preferences become another's.
