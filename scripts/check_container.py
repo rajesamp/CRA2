@@ -52,6 +52,29 @@ with urllib.request.urlopen('http://127.0.0.1:8087/healthz', timeout=2) as respo
 print(json.dumps({'health_status': 200, 'unsigned_identity_routes': results,
                   'live_google_identity_tested': False}))
 """
+LANDING_HTTP = """import json, urllib.request, urllib.error
+base='http://127.0.0.1:8087'
+with urllib.request.urlopen(base+'/',timeout=2) as response:
+    page=response.read().decode()
+    assert response.status==200 and 'Sign in with Google' in page
+    assert 'Logged in users' not in page and '@' not in page
+    assert 'set-cookie' not in response.headers
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self,*args,**kwargs): return None
+try:
+    urllib.request.build_opener(NoRedirect).open(base+'/signin?next=https://attacker.example.test',timeout=2)
+except urllib.error.HTTPError as response:
+    assert response.code==303 and response.headers['Location']=='https://protected-synthetic.a.run.app/'
+else: raise AssertionError('Sign-in redirect missing')
+denied={}
+for path in ('/users','/config','/upload','/gradio_api/queue/join','/gradio_api/file=/app/data/team_settings.json'):
+    try: urllib.request.urlopen(base+path,timeout=2)
+    except urllib.error.HTTPError as response:
+        assert response.code==404
+        denied[path]=response.code
+    else: raise AssertionError('Private route exposed')
+print(json.dumps({'anonymous_intro_status':200,'fixed_signin_redirect':True,'identity_content_exposed':False,'private_routes':denied}))
+"""
 
 
 def main():
@@ -105,10 +128,15 @@ def main():
         "-e", "CRA2_STATE_BUCKET=state-synthetic", "-e", "CRA2_AUDIT_BUCKET=audit-synthetic",
         "--entrypoint", PYTHON, image, "-m", "week2.cloud_app",
     ], READY.replace("/config", "/healthz"), CLOUD_HTTP)
+    report["public_intro"] = verify_http([
+        "-e", "CRA2_APP_URL=https://protected-synthetic.a.run.app/",
+        "--entrypoint", PYTHON, image, "-m", "week2.landing",
+    ], READY.replace("/config", "/healthz"), LANDING_HTTP)
     report["source_hashes"] = {
         name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
         for name in ("Containerfile", ".dockerignore", "week2/app.py", "week3/guardrails.py",
                      "week2/iap.py", "week2/cloud_app.py", "week2/cloud_storage.py", "week2/uv.lock",
+                     "week2/landing.py", "week2/presence.py", "week2/welcome.py",
                      "scripts/check_container.py")
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
