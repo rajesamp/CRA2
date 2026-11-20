@@ -122,6 +122,18 @@ def test_real_mount_separates_two_invited_users_even_with_identical_browser_sess
         assert session_key(owner, "reused-session") in built[0].state_holder.session_data
         assert session_key(member, "reused-session") in built[0].state_holder.session_data
 
+        # The new recovery callback runs through the real mount and admission
+        # gate; one principal's declarations cannot become another's report.
+        from week2.tests.test_incident_rollback import VALUES
+        failed_values = list(VALUES); failed_values[4] = "Fail"
+        owner_recovery = call(owner_token, "recovery", failed_values)
+        assert owner_recovery.status_code == 200
+        assert "Reported rollback blockers" in owner_recovery.json()["data"][0]
+        member_recovery = call(member_token, "recovery", list(VALUES))
+        assert member_recovery.status_code == 200
+        assert "Recovery evidence is incomplete" in member_recovery.json()["data"][0]
+        assert "Resolve reported blockers" not in member_recovery.json()["data"][0]
+
         # Actual app memory callback with the two verified identities; the same
         # service name cannot make one user's preferences become another's.
         from inspect import unwrap

@@ -75,6 +75,19 @@ for path in ('/users','/config','/upload','/gradio_api/queue/join','/gradio_api/
     else: raise AssertionError('Private route exposed')
 print(json.dumps({'anonymous_intro_status':200,'fixed_signin_redirect':True,'identity_content_exposed':False,'private_routes':denied}))
 """
+RECOVERY_PROBE = """import json
+from datetime import date
+from week2.incident_rollback import analyze
+values=('inventory-service','Schema migration','Rename the stock column and update order-service readers.','')
+report=analyze(*values,'Unknown','Unknown','Unknown',as_of=date(2026,11,20))
+assert report['status']=='ok' and report['readiness']=='evidence_incomplete'
+assert report['history']['records_examined']==46
+assert report['impact']['potential_callers']['direct']==['checkout-service','order-service']
+assert not report['provider_used'] and not report['execution_authorized']
+blocked=analyze(*values,'Fail','Fail','Untested')
+assert len(blocked['blockers'])==3 and blocked['readiness']=='reported_blockers'
+print(json.dumps({'records_examined':46,'unknowns_preserved':True,'reported_blockers':3,'provider_used':False,'execution_authorized':False}))
+"""
 
 
 def main():
@@ -103,6 +116,9 @@ def main():
         "run", "--rm", "--network", "none", "--entrypoint", PYTHON, image, "-c", probe,
     ]).stdout)
     assert report["offline_six_intents"]["passed"] == report["offline_six_intents"]["total"] == 6
+    report["incident_rollback"] = json.loads(command([
+        "run", "--rm", "--network", "none", "--entrypoint", PYTHON, image, "-c", RECOVERY_PROBE,
+    ]).stdout)
     def verify_http(arguments, ready_probe, http_probe):
         container = command(["run", "-d", "--network", "none", "-e", "PORT=8087", *arguments]).stdout.strip()
         try:
@@ -137,6 +153,7 @@ def main():
         for name in ("Containerfile", ".dockerignore", "week2/app.py", "week3/guardrails.py",
                      "week2/iap.py", "week2/cloud_app.py", "week2/cloud_storage.py", "week2/uv.lock",
                      "week2/landing.py", "week2/presence.py", "week2/welcome.py",
+                     "week2/incident_rollback.py",
                      "scripts/check_container.py")
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

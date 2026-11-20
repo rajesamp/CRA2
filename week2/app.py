@@ -12,7 +12,7 @@ os.environ.setdefault("GRADIO_TEMP_DIR", str(Path(__file__).with_name(".local") 
 import gradio as gr
 
 from cra2.secrets import configure_sdk_logging
-from cra2.advisor import ADVISORY, LEVELS, _inline
+from cra2.advisor import ADVISORY, LEVELS, _inline, CATALOG
 from week1.responses import guard
 from week2.memory import MemoryStore
 from week2.workflow import load_copy, respond
@@ -20,6 +20,9 @@ from week2.abuse import AbuseGate
 from week2.owner_audit import OwnerAuditStore
 from week2.presentation import review_summary
 from week2.welcome import INTRO, ROADMAP, CSS, LOCAL_IDENTITY, EXAMPLE
+from week2.incident_rollback import (CHANGE_TYPES, CHECK_VALUES, RECONCILIATION_VALUES,
+                                    guarded_analyze, render as render_recovery, EMPTY as RECOVERY_EMPTY,
+                                    CSS as RECOVERY_CSS)
 from week3.cache import WorkflowCaches
 from week4.telemetry import TelemetryStore
 from week4.dashboard import dashboard_view
@@ -271,6 +274,14 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
     def show_identity(request: gr.Request):
         return identity_view(request) if identity_view is not None else LOCAL_IDENTITY
 
+    def recovery(service, kind, summary, plan, compatibility, rehearsal, reconciliation, request: gr.Request):
+        try:
+            client = identity(request)
+        except (ValueError, AttributeError):
+            return render_recovery(RECOVERY_EMPTY)
+        return guarded_analyze((service, kind, summary, plan, compatibility, rehearsal, reconciliation),
+                               gate=gate, client=client)[0]
+
     def reset_trace():
         display, poll = langsmith_view()
         return display, [], gr.update(choices=[], value=None, interactive=False), "**Last request cache:** no lookup yet", "", poll, uuid4().hex
@@ -306,6 +317,26 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
                 with gr.Column() as conversation:
                     mode = gr.State(value="Local evidence only")
                     gr.Markdown("**Local evidence only** · Reviews recorded evidence without a generative LLM.")
+            with gr.Tab("Incidents & rollback", id="recovery"):
+                gr.Markdown("## Incident history & rollback analysis\n\n"
+                            "**Prototype · bundled records only.** Find related incidents, inspect potential caller exposure "
+                            "and identify recovery evidence gaps. All form answers are unverified declarations. "
+                            "This workspace cannot execute a rollback or approve a deployment.")
+                with gr.Row():
+                    recovery_service = gr.Dropdown(choices=sorted(CATALOG),
+                                                  value="inventory-service", label="Service")
+                    recovery_kind = gr.Dropdown(choices=list(CHANGE_TYPES), value="Schema migration", label="Change type")
+                recovery_summary = gr.Textbox(label="Proposed change", lines=2, max_length=2000,
+                    value="Rename the stock column and update order-service readers.")
+                recovery_plan = gr.Textbox(label="Proposed rollback plan", lines=2, max_length=1500,
+                    placeholder="Prior artifact/configuration, recovery trigger, responsible owner and stop conditions")
+                with gr.Row():
+                    recovery_compatibility = gr.Dropdown(choices=list(CHECK_VALUES), value="Unknown", label="Previous version compatibility")
+                    recovery_rehearsal = gr.Dropdown(choices=list(CHECK_VALUES), value="Unknown", label="Recovery rehearsal")
+                    recovery_reconciliation = gr.Dropdown(choices=list(RECONCILIATION_VALUES), value="Unknown", label="State and side-effect reconciliation")
+                recovery_run = gr.Button("Analyze recorded evidence", variant="primary")
+                recovery_result = gr.HTML("<p>Run the analysis to inspect incident sources and recovery gaps.</p>",
+                                          css_template=RECOVERY_CSS, js_on_load=None, elem_id="recovery-report")
             with gr.Tab("LangSmith",id="langsmith"):
                 gr.Markdown("## LangSmith traces")
                 turn_selector = gr.Dropdown(label="Trace turn", choices=[], value=None,
@@ -337,6 +368,9 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
         open_dashboard.click(lambda: gr.Tabs(selected="langsmith"),outputs=app_tabs,queue=False,api_visibility="private")
         start_review.click(lambda: gr.Tabs(selected="review"), outputs=app_tabs, queue=False, api_visibility="private")
         identity_refresh.click(show_identity, outputs=identity_display, queue=False, api_visibility="private")
+        recovery_run.click(recovery, inputs=[recovery_service, recovery_kind, recovery_summary, recovery_plan,
+            recovery_compatibility, recovery_rehearsal, recovery_reconciliation],
+            outputs=recovery_result, api_visibility="private", concurrency_limit=1)
         demo.load(show_identity, outputs=identity_display, queue=False, api_visibility="private")
         dashboard_refresh.click(lambda traces: dashboard_view(traces, True),inputs=[trace_history],outputs=dashboard,queue=False,api_visibility="private")
         for event in (trace_refresh.click, turn_selector.input, trace_timer.tick):
