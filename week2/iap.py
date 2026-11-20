@@ -1,4 +1,4 @@
-"""Signed Google IAP identity for the owner acceptance deployment only."""
+"""Signed Google IAP identity with an explicit, owner-only by default allowlist."""
 from dataclasses import dataclass
 import hashlib
 import json
@@ -15,6 +15,19 @@ from starlette.responses import JSONResponse
 ISSUER = "https://cloud.google.com/iap"
 KEYS_URL = "https://www.gstatic.com/iap/verify/public_key-jwk"
 KID = re.compile(r"[A-Za-z0-9_.-]{1,128}\Z")
+EMAIL = re.compile(r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\Z")
+
+
+def valid_email(value):
+    return isinstance(value, str) and len(value) <= 254 and EMAIL.fullmatch(value)
+
+
+def mask_email(email):
+    if not valid_email(email):
+        raise ValueError("Invalid email")
+    local, domain = email.casefold().rsplit("@", 1)
+    masked = local[:2] + "**" + local[-2:] if len(local) >= 5 else local[:1] + "**"
+    return masked + "@" + domain
 
 
 class InvalidIdentity(ValueError):
@@ -33,19 +46,23 @@ class KeysUnavailable(ValueError):
 class IAPSettings:
     audience: str
     owner_email: str
+    allowed_emails: tuple[str, ...] = ()
 
     def __post_init__(self):
         if not re.fullmatch(r"/projects/[0-9]+/locations/[a-z0-9-]+/services/[a-z][a-z0-9-]{0,62}", self.audience):
             raise ValueError("An exact Cloud Run IAP audience is required")
-        if not re.fullmatch(r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", self.owner_email):
+        if not valid_email(self.owner_email):
             raise ValueError("One owner email is required")
-        if len(self.owner_email) > 254:
-            raise ValueError("One owner email is required")
+        if (not isinstance(self.allowed_emails, tuple) or len(self.allowed_emails) > 1000
+                or any(not valid_email(value) for value in self.allowed_emails)):
+            raise ValueError("An explicit email allowlist is required")
 
 
 @dataclass(frozen=True)
 class Principal:
     key: str
+    masked_email: str
+    is_owner: bool
 
 
 class IAPKeys:
@@ -131,9 +148,11 @@ class IAPVerifier:
                 raise InvalidIdentity("Invalid identity")
         except (jwt.PyJWTError, TypeError, KeyError, OverflowError):
             raise InvalidIdentity("Invalid identity") from None
-        if email.casefold() != self.settings.owner_email.casefold():
-            raise OwnerOnly("Owner acceptance only")
-        return Principal("iap:" + hashlib.sha256((ISSUER + "\0" + subject).encode()).hexdigest())
+        owner = email.casefold() == self.settings.owner_email.casefold()
+        if not owner and email.casefold() not in {value.casefold() for value in self.settings.allowed_emails}:
+            raise OwnerOnly("Account not invited")
+        return Principal("iap:" + hashlib.sha256((ISSUER + "\0" + subject).encode()).hexdigest(),
+                         mask_email(email), owner)
 
 
 class IAPMiddleware:

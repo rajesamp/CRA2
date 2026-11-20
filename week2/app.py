@@ -19,6 +19,7 @@ from week2.workflow import load_copy, respond
 from week2.abuse import AbuseGate
 from week2.owner_audit import OwnerAuditStore
 from week2.presentation import review_summary
+from week2.welcome import INTRO, ROADMAP, CSS, LOCAL_IDENTITY, EXAMPLE
 from week3.cache import WorkflowCaches
 from week4.telemetry import TelemetryStore
 from week4.dashboard import dashboard_view
@@ -243,7 +244,7 @@ def request_client(request):
 
 
 def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, memory_resolver=None,
-              telemetry_store=None):
+              telemetry_store=None, identity_view=None):
     configure_sdk_logging()
     if memory_resolver is not None and (identity_resolver is None or memory_store is not None or telemetry_store is None):
         raise ValueError("Cloud storage requires a verified identity and explicit telemetry store")
@@ -267,6 +268,9 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
         except (ValueError, AttributeError):
             return gr.update(value="Security check unavailable.", visible=True), gr.update(visible=False), gr.update(active=False)
 
+    def show_identity(request: gr.Request):
+        return identity_view(request) if identity_view is not None else LOCAL_IDENTITY
+
     def reset_trace():
         display, poll = langsmith_view()
         return display, [], gr.update(choices=[], value=None, interactive=False), "**Last request cache:** no lookup yet", "", poll, uuid4().hex
@@ -279,13 +283,26 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
         return display, updated, choices, cache_badge(updated[-1]) if updated else "**Last request cache:** no lookup yet", dashboard_view(updated,True), poll
 
     with gr.Blocks(title="CRA2 · Change risk advisor", analytics_enabled=False) as demo:
-        gr.Markdown("# Change risk advisor\n**Advisory only · Synthetic evidence · A human makes the decision.**")
+        gr.Markdown("### CRA · Change Risk Advisor")
         session_id = gr.State(value=lambda: uuid4().hex)
         trace_history = gr.State(value=[])
         timer = gr.Timer(value=.5, active=False)
         trace_timer = gr.Timer(value=2, active=False)
-        with gr.Tabs() as app_tabs:
-            with gr.Tab("Change Risk Advisor"):
+        with gr.Tabs(selected="welcome") as app_tabs:
+            with gr.Tab("Welcome", id="welcome"):
+                with gr.Row(equal_height=False):
+                    with gr.Column(scale=3, min_width=300):
+                        gr.HTML(INTRO, css_template=CSS, js_on_load=None)
+                        start_review = gr.Button("Start a change review →", variant="primary", size="lg")
+                    with gr.Column(scale=1, min_width=240):
+                        identity_display = gr.HTML(LOCAL_IDENTITY if identity_view is None else
+                            '<section class="cra-presence"><h2>Logged in users</h2><p>Loading verified identity…</p></section>',
+                            css_template=CSS, js_on_load=None, elem_id="logged-in-users")
+                        identity_refresh = gr.Button("Refresh users", size="sm")
+                        gr.Markdown(f"**Try a review**\n\n“{EXAMPLE}”\n\n"
+                                    "Keep credentials and sensitive production data out of this demo.")
+                gr.HTML(ROADMAP, css_template=CSS, js_on_load=None)
+            with gr.Tab("Change Risk Advisor", id="review"):
                 with gr.Column() as conversation:
                     mode = gr.State(value="Local evidence only")
                     gr.Markdown("**Local evidence only** · Reviews recorded evidence without a generative LLM.")
@@ -318,6 +335,9 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
             gr.Markdown(audit_notice)
             open_dashboard = gr.Button("View traces and metrics")
         open_dashboard.click(lambda: gr.Tabs(selected="langsmith"),outputs=app_tabs,queue=False,api_visibility="private")
+        start_review.click(lambda: gr.Tabs(selected="review"), outputs=app_tabs, queue=False, api_visibility="private")
+        identity_refresh.click(show_identity, outputs=identity_display, queue=False, api_visibility="private")
+        demo.load(show_identity, outputs=identity_display, queue=False, api_visibility="private")
         dashboard_refresh.click(lambda traces: dashboard_view(traces, True),inputs=[trace_history],outputs=dashboard,queue=False,api_visibility="private")
         for event in (trace_refresh.click, turn_selector.input, trace_timer.tick):
             event(langsmith_view, inputs=[turn_selector, trace_history], outputs=[trace_display, trace_timer], queue=False, api_visibility="private")
@@ -349,6 +369,7 @@ def main(argv=None):
         blocked.append(str(Path(selected).expanduser().resolve()))
     gate = AbuseGate(store=OwnerAuditStore(args.audit_file)) if args.audit_file is not None else None
     build_app(memory_store=store, abuse_gate=gate).launch(server_name=args.host, server_port=args.port,
+        theme=gr.themes.Soft(primary_hue="teal", neutral_hue="slate"),
         share=False, inbrowser=False, blocked_paths=blocked, show_error=False,
         enable_monitoring=False, run_history=False, mcp_server=False,
         footer_links=[], max_file_size="1mb")

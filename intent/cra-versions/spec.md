@@ -7,9 +7,11 @@
   deployment remains owner-only. No account access grants or invitations in this slice.
 - Preferences and sessions are isolated by verified identity, including requests
   that reuse another user's browser session identifier.
-- Visibility of the intro before/after sign-in and of other active users is pending
-  the owner's answer. Shared presence must be clearly bounded by a recent-activity
-  interval; it must not claim knowledge of Google-wide login/logout status.
+- Default pending owner preference: the introduction is inside IAP. Visitors see
+  only themselves; the owner sees masked users active in the last five minutes
+  on this instance. Activity expires and resets on restart. This does not claim
+  knowledge of Google-wide login/logout status. A public intro would be separate
+  from the protected application and requires the owner's visibility decision.
 
 # Later versions
 
