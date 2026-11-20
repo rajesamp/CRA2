@@ -1,4 +1,4 @@
-"""Verified identity, private presence and real Gradio state isolation."""
+"""Verified identity, authenticated shared presence and real Gradio state isolation."""
 import json
 from types import SimpleNamespace
 
@@ -40,7 +40,7 @@ def test_email_masking_does_not_reveal_the_complete_local_part(email, masked):
     assert email.casefold() != masked
 
 
-def test_presence_is_private_bounded_expires_and_escapes_html():
+def test_presence_is_shared_bounded_expires_and_escapes_html():
     now = [100.]
     registry = Presence(clock=lambda: now[0], capacity=2)
     owner = Principal("iap:" + "a" * 64, "ow**er@example.test", True)
@@ -48,7 +48,7 @@ def test_presence_is_private_bounded_expires_and_escapes_html():
     third = Principal("iap:" + "c" * 64, "th**rd@example.test", False)
     registry.touch(owner)
     member_view = registry.view(member)
-    assert "ow**er" not in member_view and "&lt;b&gt;" in member_view and "<b>" not in member_view
+    assert "ow**er" in member_view and "&lt;b&gt;" in member_view and "<b>" not in member_view
     assert "&lt;b&gt;" in registry.view(owner)
     registry.touch(third)
     assert len(registry.users) == 2
@@ -117,7 +117,7 @@ def test_real_mount_separates_two_invited_users_even_with_identical_browser_sess
         own_view = call(owner_token, "show_identity", []).text
         member_view = call(member_token, "show_identity", []).text
         assert "ow**er@example.test" in own_view and "me**er@example.test" in own_view
-        assert "ow**er@example.test" not in member_view and "me**er@example.test" in member_view
+        assert "ow**er@example.test" in member_view and "me**er@example.test" in member_view
         assert OWNER not in own_view and "member@example.test" not in own_view
         assert session_key(owner, "reused-session") in built[0].state_holder.session_data
         assert session_key(member, "reused-session") in built[0].state_holder.session_data

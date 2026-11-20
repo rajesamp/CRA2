@@ -7,11 +7,11 @@
   deployment remains owner-only. No account access grants or invitations in this slice.
 - Preferences and sessions are isolated by verified identity, including requests
   that reuse another user's browser session identifier.
-- Default pending owner preference: the introduction is inside IAP. Visitors see
-  only themselves; the owner sees masked users active in the last five minutes
-  on this instance. Activity expires and resets on restart. This does not claim
-  knowledge of Google-wide login/logout status. A public intro would be separate
-  from the protected application and requires the owner's visibility decision.
+- Owner clarification: the introduction is public before sign-in, on a separate
+  service. Its fixed sign-in redirect reaches the existing IAP-protected app.
+  Every signed-in visitor sees all masked users active in the last five minutes
+  on that app instance. Activity expires and resets on restart. This does not
+  claim knowledge of Google-wide login/logout status. No identities are public.
 
 # Later versions
 

@@ -24,13 +24,11 @@ class Presence:
     def view(self, principal):
         self.touch(principal)
         with self.lock:
-            users = (sorted((row[0], key == principal.key) for key, row in self.users.items())
-                     if principal.is_owner else [(principal.masked_email, True)])
+            users = sorted((row[0], key == principal.key) for key, row in self.users.items())
         rows = "".join('<li><span class="cra-status-dot" aria-hidden="true"></span>'
                        + escape(email) + (' <span class="cra-you">you</span>' if own else '')
                        + '</li>' for email, own in users)
-        detail = ("Owner view · active in the last 5 minutes on this app instance."
-                  if principal.is_owner else "Your verified Google account. Only you and the owner can see this activity.")
+        detail = "Visible to signed-in visitors · active in the last 5 minutes on this app instance."
         return '<section class="cra-presence"><h2>Logged in users</h2><ul>' + rows + '</ul><p>' + detail + '</p></section>'
 
 
