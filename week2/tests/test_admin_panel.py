@@ -28,13 +28,14 @@ def test_tabs_use_langsmith_without_pin_or_browser_execution_details(tmp_path):
     try:
         components = demo.config["components"]
         tabs = [c["props"]["label"] for c in components if c["type"] == "tabitem"]
-        assert tabs == ["Welcome", "Change Risk Advisor", "Incidents & rollback", "LangSmith"]
+        assert tabs == ["Welcome", "Change Risk Advisor", "Incidents & rollback", "Guardrail activity", "LangSmith"]
         assert not any(c["props"].get("label") in {"Demo PIN", "Execution details", "Agent trace"} for c in components)
         assert not any(c["type"] == "json" and c["props"].get("visible", True) for c in components)
         assert any(c["props"].get("elem_id") == "langsmith-trace" for c in components)
         reply_fn = next(fn for fn in demo.fns.values() if fn.fn and fn.fn.__name__ == "reply")
         assert reply_fn.inputs[2].stateful and reply_fn.inputs[2].value == "Local evidence only"
-        assert reply_fn.inputs[-1].stateful and reply_fn.inputs[-1].value == []
+        assert reply_fn.inputs[-2].stateful and reply_fn.inputs[-2].value == []
+        assert reply_fn.inputs[-1].stateful and isinstance(reply_fn.inputs[-1].value, app.SessionActivity)
     finally:
         demo.close()
 
@@ -81,12 +82,16 @@ def test_gradio_serialization_keeps_snapshots_server_side_and_ignores_forged_sta
         reply_fn = next(fn for fn in demo.fns.values() if fn.fn and fn.fn.__name__ == "reply")
         state = SessionState(demo)
         request = gr.Request(Request({"type": "http", "client": ("127.0.0.1", 9999)}))
-        result = asyncio.run(demo.process_api(reply_fn, ["Question", [], "Groq assessment", "forged", [record]], state=state, request=request))
+        result = asyncio.run(demo.process_api(reply_fn, ["Question", [], "Groq assessment", "forged", [record], {"forged": "private-activity-canary"}], state=state, request=request))
         assert modes == ["Local evidence only"]
         assert "Short answer" in str(result["data"])
         assert "canary" not in str(result["data"])
-        trace_state = reply_fn.inputs[-1]
+        trace_state = reply_fn.inputs[-2]
         assert trace_state.stateful and state[trace_state._id] == [record]
         assert result["data"][reply_fn.outputs.index(trace_state)] is None
+        activity_state = reply_fn.inputs[-1]
+        assert isinstance(state[activity_state._id], app.SessionActivity)
+        assert result["data"][reply_fn.outputs.index(activity_state)] is None
+        assert "private-activity-canary" not in str(result["data"])
     finally:
         demo.close()

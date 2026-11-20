@@ -2,10 +2,13 @@
 from datetime import date
 from html import escape
 import json
+import anyio
 
 from cra2 import config
 from cra2.incidents import load_incidents, select_incidents
 from week2.tools import _context, _direction, _guard
+from week3.guardrails import LocalRails, RailUnavailable
+from week2.guardrail_activity import admission_event
 
 CHANGE_TYPES = tuple(json.loads((config.PKG_DIR / "rules.json").read_text())["system1"]["change_type"])
 CHECK_VALUES = ("Unknown", "Pass", "Fail")
@@ -149,19 +152,48 @@ def render(report):
 
 
 def guarded_analyze(values, *, gate, client):
-    """Use the same server-owned abuse admission as chat; never echo failures."""
+    """Admission followed by actual NeMo checks; never echo rejected evidence."""
+    admission = {"engine": "admission", "stage": "admission", "outcome": "unavailable",
+                 "code": "admission_unavailable", "executed": False}
+    rails = None
+    stage = "input"
     try:
         if len(values) != len(FIELDS) or any(not isinstance(v, str) for v in values) or sum(map(len, values)) > 3900:
             raise ValueError("Invalid input")
         # Preserve field boundaries when the existing text screen normalizes
         # newlines; a service prefix must not conceal an action in another field.
-        admission = gate.admit(".\n".join(values), client)
-        if admission["blocked"]:
+        decision = gate.admit(".\n".join(values), client)
+        admission = admission_event(decision)
+        if decision["blocked"]:
             result = {"status": "security_blocked", "message": "Request blocked. Wait for the temporary pause before trying again."}
         else:
-            result = analyze(*values)
+            rails = LocalRails()
+            async def assess():
+                nonlocal stage
+                if not await rails.check("input", ".\n".join(values)):
+                    raise RailUnavailable("blocked")
+                report = analyze(*values)
+                if report["status"] == "ok":
+                    stage = "context"
+                    # Host-context check covers every value selected for display,
+                    # including incident prose, catalog recovery and graph names.
+                    context = [{"chunk_id": "recovery-report", "text": json.dumps(report, ensure_ascii=False)}]
+                    if not await rails.check("context", context):
+                        raise RailUnavailable("blocked")
+                stage = "output"
+                if not await rails.check("output", {"answer": render(report), "trace": {"status": "evidence_only"}}):
+                    raise RailUnavailable("blocked")
+                return report
+            result = anyio.run(assess)
     except Exception:
         result = dict(EMPTY)
+        if rails is not None and any(e["outcome"] == "block" for e in rails.events):
+            result = {"status": "guardrail_blocked", "message": "A guardrail blocked this report. No readiness conclusion is available."}
+    events = list(rails.events) if rails is not None else []
+    if admission["outcome"] == "allow" and not events:
+        events = [{"engine": "nemoguardrails", "stage": stage, "outcome": "unavailable",
+                   "code": "rail_unavailable", "executed": False}]
+    result = {**result, "admission": admission, "rails": events}
     return render(result), result
 
 

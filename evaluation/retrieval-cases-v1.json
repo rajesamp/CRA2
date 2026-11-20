@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "split": "development_regression",
+  "label_basis": "Same-author source-grounded mechanism labels, frozen before this evaluation run. Not independent human gold or a held-out benchmark. Reference IDs identify the exact fictional incident and its derived postmortem. Other general runbooks are not credited as this specific incident evidence.",
+  "unit": "distinct document IDs among the first three retrieved chunks; stable deduplication before metric scoring",
+  "k_chunks": 3,
+  "gates": {
+    "expected_cases": 6,
+    "min_each_recall": 0.5,
+    "min_mean_recall": 0.5,
+    "min_mean_precision": 0.3333333333333333
+  },
+  "gate_basis": "Minimum regression floor: at least one of the two specific incident sources for every case, and on average at least one relevant distinct document per three returned chunks. These floors are not production quality targets.",
+  "cases": [
+    {
+      "id": "checkout-timeout",
+      "service": "checkout-service",
+      "query": "Cut checkout-service payment timeout from 4 seconds to 400 milliseconds.",
+      "reference_ids": [
+        "CX-101",
+        "pm-cx101-checkout-timeout"
+      ],
+      "label_sources": [
+        "data/incidents.json#CX-101",
+        "week1/corpus/pm-cx101-checkout-timeout.md"
+      ]
+    },
+    {
+      "id": "checkout-retries",
+      "service": "checkout-service",
+      "query": "Raise checkout-service retry count from 1 to 5 in production while staging remains at 1.",
+      "reference_ids": [
+        "CX-102",
+        "pm-cx102-checkout-retries"
+      ],
+      "label_sources": [
+        "data/incidents.json#CX-102",
+        "week1/corpus/pm-cx102-checkout-retries.md"
+      ]
+    },
+    {
+      "id": "payment-tls",
+      "service": "payment-gateway",
+      "query": "Upgrade payment-gateway TLS library and remove the cipher required by the card processor.",
+      "reference_ids": [
+        "CX-104",
+        "pm-cx104-payment-tls"
+      ],
+      "label_sources": [
+        "data/incidents.json#CX-104",
+        "week1/corpus/pm-cx104-payment-tls.md"
+      ]
+    },
+    {
+      "id": "order-index",
+      "service": "order-service",
+      "query": "Create an index on the orders table without the online option during peak writes.",
+      "reference_ids": [
+        "CX-107",
+        "pm-cx107-order-index"
+      ],
+      "label_sources": [
+        "data/incidents.json#CX-107",
+        "week1/corpus/pm-cx107-order-index.md"
+      ]
+    },
+    {
+      "id": "inventory-column",
+      "service": "inventory-service",
+      "query": "Rename the inventory stock column while order-service still uses the old column name.",
+      "reference_ids": [
+        "CX-109",
+        "pm-cx109-inventory-column"
+      ],
+      "label_sources": [
+        "data/incidents.json#CX-109",
+        "week1/corpus/pm-cx109-inventory-column.md"
+      ]
+    },
+    {
+      "id": "auth-sessions",
+      "service": "auth-service",
+      "query": "Move auth-service session storage to a new cluster without copying live sessions.",
+      "reference_ids": [
+        "CX-115",
+        "pm-cx115-auth-sessions"
+      ],
+      "label_sources": [
+        "data/incidents.json#CX-115",
+        "week1/corpus/pm-cx115-auth-sessions.md"
+      ]
+    }
+  ],
+  "source_sha256": {
+    "data/incidents.json": "1e62a6aa696a9de88c85b3f1f0b4a55262b43ad2ec3838ec0e8ea33302971b2e",
+    "week1/corpus/pm-cx101-checkout-timeout.md": "513f0e41accda636f4103aaaf6b4e5f79eb2797fdc581ae3992f774610099b6c",
+    "week1/corpus/pm-cx102-checkout-retries.md": "6665e83d2b799a86a803709911945365c20c42ef711c7f64a67206832fee0f4d",
+    "week1/corpus/pm-cx104-payment-tls.md": "3a02bd723a64e3dfa2ffdf5d6e3d74a8bdd980cd8501bbf4300bd2e2e2512ac7",
+    "week1/corpus/pm-cx107-order-index.md": "83ff68b7f3e20527247df1140e5254cb26b16605ddf6d91639c42d35233212eb",
+    "week1/corpus/pm-cx109-inventory-column.md": "feaf27d74307de33706f0fd4524f2776e687441a90bbab3b0c4fe999496f33f0",
+    "week1/corpus/pm-cx115-auth-sessions.md": "e47151c40271105f0333e300d06d6272b9e205b4d2839f20217bfe7e1cb108e7"
+  }
+}
