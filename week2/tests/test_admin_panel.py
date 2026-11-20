@@ -28,7 +28,7 @@ def test_tabs_use_langsmith_without_pin_or_browser_execution_details(tmp_path):
     try:
         components = demo.config["components"]
         tabs = [c["props"]["label"] for c in components if c["type"] == "tabitem"]
-        assert tabs == ["Welcome", "Change Risk Advisor", "LangSmith"]
+        assert tabs == ["Welcome", "Change Risk Advisor", "Incidents & rollback", "LangSmith"]
         assert not any(c["props"].get("label") in {"Demo PIN", "Execution details", "Agent trace"} for c in components)
         assert not any(c["type"] == "json" and c["props"].get("visible", True) for c in components)
         assert any(c["props"].get("elem_id") == "langsmith-trace" for c in components)
