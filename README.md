@@ -231,3 +231,7 @@ repository root with `week2/.venv/bin/python -m week2.app`, then open
 `http://127.0.0.1:7862`. [Launch and learning walkthrough](week2/README.md) ·
 [Actual expanded-panel screenshot and browser evidence](docs/evidence/week2-task-18.md).
 Week 1 human confirmations and Weeks 3–4 retain their separate acceptance.
+
+The Week 2 app also has a [guided change intake](week2/README.md#guided-change-intake)
+wizard for collecting a structured review packet before sending a change description
+to the existing advisory chat.

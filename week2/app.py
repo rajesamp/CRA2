@@ -22,6 +22,7 @@ from week2.workflow import load_copy, respond
 from week2.abuse import AbuseGate
 from week2.owner_audit import OwnerAuditStore
 from week2.presentation import review_summary, project_execution
+from week2 import intake
 
 TRACE_FIELDS = (
     "status", "request_id", "session_id", "orchestration", "memory", "events",
@@ -271,10 +272,63 @@ def request_client(request):
     return host
 
 
+def intake_view(draft, fields, feedback=""):
+    """Project a single validated step and the session's review packet."""
+    step = draft["step"]
+    complete = step == len(fields)
+    if complete:
+        prompt = "**Intake complete.** Review the packet and place the assessment question in chat."
+        gaps = intake.open_items(draft)
+        if gaps:
+            prompt += "\n\n**Explicitly unresolved:** " + ", ".join(gaps) + ". Confirm with the human reviewer."
+        options, value = [], None
+    else:
+        field = fields[step]
+        prompt = f"**Step {step + 1} of {len(fields)}** · {field['question']}"
+        options = intake.choices(field)
+        value = draft["values"].get(field["key"])
+    question = intake.review_question(draft, fields) if complete else ""
+    return (draft, prompt, gr.update(choices=options, value=value if options else None, visible=bool(options)),
+            gr.update(value=(value or "") if not options and not complete else "", visible=not options and not complete),
+            draft["values"], gr.update(value=question, visible=complete),
+            gr.update(interactive=not complete), gr.update(interactive=step > 0),
+            gr.update(interactive=complete), feedback)
+
+
+def advance_intake(draft, selection, answer, fields, gate, client):
+    """Screen before saving. No raw failed input is returned or added to chat."""
+    step = draft["step"]
+    if step >= len(fields):
+        return intake_view(draft, fields, "Use Previous to revise the completed packet.")
+    field = fields[step]
+    value = selection if intake.choices(field) else answer
+    admission = gate.admit(value, client)
+    if admission["blocked"]:
+        return intake_view(draft, fields, "Input withheld. Retry after the security pause.")
+    try:
+        updated = intake.advance(draft, value, fields)
+    except ValueError:
+        return intake_view(draft, fields, "Please provide a valid, specific answer for this step.")
+    return intake_view(updated, fields, "Answer saved to this session.")
+
+
 def build_app(*, memory_store=None, abuse_gate=None):
     configure_sdk_logging()
     store = MemoryStore() if memory_store is None else memory_store
     gate = AbuseGate() if abuse_gate is None else abuse_gate
+    fields = intake.load_schema()
+
+    def intake_next(draft, selection, answer, request: gr.Request):
+        client = request_client(request)
+        return (*advance_intake(draft, selection, answer, fields, gate, client), *cooldown_view(gate, client))
+
+    def intake_to_chat(draft, request: gr.Request):
+        if gate.remaining(request_client(request))[0]:
+            return gr.update(), "Wait until the security pause ends."
+        try:
+            return intake.review_question(draft, fields), "Question placed in chat. Edit it if needed, then send to run the selected review mode."
+        except ValueError:
+            return gr.update(), "Finish the intake before preparing a review."
 
     def reply(message, history, mode, session_id, traces, admin_unlocked, request: gr.Request):
         client = request_client(request)
@@ -332,12 +386,38 @@ def build_app(*, memory_store=None, abuse_gate=None):
         with conversation:
             notice = gr.HTML(visible=False, elem_id="security-notice")
             with gr.Group(elem_id="chat-controls") as controls:
+                with gr.Accordion("Guided change intake", open=False):
+                    gr.Markdown("Answer one question at a time to build a change-review packet. "
+                                "Your draft stays in this browser session; it is not saved as team memory. "
+                                "Plans and the proposed window are **human-review notes**, not verified facts or chat assessment inputs. Never enter credentials.")
+                    draft = gr.State(value=intake.new_draft)
+                    first = fields[0]
+                    intake_prompt = gr.Markdown(f"**Step 1 of {len(fields)}** · {first['question']}")
+                    intake_selection = gr.Dropdown(choices=intake.choices(first), label="Select answer", allow_custom_value=False,
+                                                   visible=bool(intake.choices(first)))
+                    intake_answer = gr.Textbox(label="Your answer", visible=not intake.choices(first), lines=3)
+                    with gr.Row():
+                        intake_previous = gr.Button("Previous", interactive=False)
+                        intake_next_button = gr.Button("Save & next", variant="primary")
+                        intake_reset = gr.Button("Start over")
+                    intake_feedback = gr.Markdown()
+                    intake_packet = gr.JSON(value={}, label="Collected review packet")
+                    intake_question = gr.Textbox(label="Prepared assessment question", interactive=False, visible=False)
+                    intake_handoff = gr.Button("Use question in chat", interactive=False)
                 chatbot = gr.Chatbot(label="CRA2 conversation", height=490, elem_id="agent-chat")
-                gr.ChatInterface(reply, chatbot=chatbot, additional_inputs=[mode, session_id, trace_history, admin_unlocked],
+                chat_interface = gr.ChatInterface(reply, chatbot=chatbot, additional_inputs=[mode, session_id, trace_history, admin_unlocked],
                     additional_outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector, notice, controls, timer], save_history=False, cache_examples=False,
                     flagging_mode="never", api_visibility="private", api_name="ui_response",
                     description="Name the service and describe the proposed change. Never enter credentials.",
                     analytics_enabled=False)
+                intake_outputs = [draft, intake_prompt, intake_selection, intake_answer, intake_packet, intake_question,
+                                  intake_next_button, intake_previous, intake_handoff, intake_feedback]
+                intake_next_button.click(intake_next, inputs=[draft, intake_selection, intake_answer],
+                    outputs=[*intake_outputs, notice, controls, timer], api_visibility="private")
+                intake_previous.click(lambda d: intake_view(intake.previous(d), fields), inputs=[draft],
+                    outputs=intake_outputs, api_visibility="private")
+                intake_reset.click(lambda: intake_view(intake.new_draft(), fields), outputs=intake_outputs, api_visibility="private")
+                intake_handoff.click(intake_to_chat, inputs=[draft], outputs=[chat_interface.textbox, intake_feedback], api_visibility="private")
             chatbot.clear(reset_trace, inputs=[admin_unlocked], outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector], queue=False, api_visibility="private")
             chatbot.undo(undo_trace, inputs=[trace_history, admin_unlocked], outputs=[summary, details, supporting, trace_panel, trace_history, turn_selector], queue=False, api_visibility="private")
             gr.Markdown("Ask **What is this app?**, **What services do you support?**, or **How do I get started?** Supporting evidence is available in **Admin → Agent trace**.")

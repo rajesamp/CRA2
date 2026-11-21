@@ -38,6 +38,35 @@ recalled settings, provenance and protected failures. Team identity is trusted
 host configuration; it is not a user-editable field. The app binds to loopback,
 uses no public tunnel, disables analytics and does not restore conversations.
 
+### Guided change intake
+
+Open **Guided change intake** above the chat to prepare a change-review packet.
+The wizard asks for one field at a time: catalog service, change type, concrete
+before/after description, planned window, rollout, rollback and monitoring plan.
+Choose **Previous** to revise an answer or **Start over** to discard the draft.
+For an unknown window or plan, explicitly record `Not yet decided` or
+`Not yet defined`; completion means the fields were collected, not that the
+change is safe or ready. Explicitly unresolved notes are highlighted at the end;
+the wizard does not verify whether the other plans are sufficient. The structured
+packet remains session-scoped.
+
+For example, Raj Sam can select `checkout-service` and `Config change`, describe
+the timeout change from 4 seconds to 400 milliseconds, and record his rollout,
+rollback and monitoring notes. **Use question in chat** inserts the service and
+concrete description into the normal chat input. Edit it if desired and send
+explicitly to run the selected review mode. The wizard never calls the model,
+retrieval, MCP or team-memory writes; each answer is screened by the existing
+abuse gate and the chat submission is screened again. The extra plans and
+window are human-review notes, not verified policy, facts, or model inputs.
+
+The reviewed field order, questions and bounds are configured in
+[`intake_schema.json`](intake_schema.json); choice lists come from the existing
+service catalog and risk-rule change types. The design is inspired by the
+[AI Ticket Assistant](https://github.com/lanchuhuong/ai-ticket-assistant)'s
+incremental structured collection and completion check. CRA2 deliberately
+keeps ephemeral local state rather than adding a database, API, or LLM for
+intake. The existing risk assessment and human decision boundaries are unchanged.
+
 App help is local in either mode. Ask **What is this app?**, **What services do
 you support?**, **What can you do?**, **How do I get started?**, **How do I save a
 preference?**, or ask about modes, tools, memory, trace history and limitations.
