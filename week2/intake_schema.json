@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "fields": [
+    {"key": "service", "question": "Which catalog service is changing?", "kind": "service", "max_length": 100},
+    {"key": "change_type", "question": "What type of change is planned?", "kind": "change_type", "max_length": 100},
+    {"key": "summary", "question": "What specifically changes? Include the affected setting or behavior and the before/after state.", "kind": "text", "max_length": 600},
+    {"key": "change_window", "question": "When is the change planned? Include the time zone, or say Not yet decided.", "kind": "text", "max_length": 200},
+    {"key": "deploy_plan", "question": "How will the change be rolled out? Describe the steps or say Not yet defined.", "kind": "text", "max_length": 500},
+    {"key": "rollback_plan", "question": "What is the rollback plan and when would you use it? Say Not yet defined if missing.", "kind": "text", "max_length": 500},
+    {"key": "monitoring_plan", "question": "How will you validate success, monitor regressions and identify a rollback trigger? Say Not yet defined if missing.", "kind": "text", "max_length": 500}
+  ]
+}
