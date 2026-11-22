@@ -14,7 +14,7 @@ from urllib.parse import parse_qs, urlencode
 from anyio import to_thread
 from starlette.responses import JSONResponse
 
-from week2.capacity import Busy, CapacityUnavailable, REVIEW_GROUP
+from week2.capacity import Busy, CapacityUnavailable, ExistingReview, QueuedReview, REVIEW_GROUP, work_budget
 from week2.iap import Principal
 
 SESSION = re.compile(r"[A-Za-z0-9_-]{1,128}\Z")
@@ -43,7 +43,8 @@ class SessionBoundary:
             return await self.reject(scope, receive, send, 401)
         path, method = scope["path"].rstrip("/"), scope["method"]
         api_path = path.removeprefix("/gradio_api")
-        direct_review = None
+        review = None
+        delivery = None
         if path.startswith("/gradio_api"):
             try:
                 if method == "GET" and api_path in {"/info", "/user", "/login_check", "/theme.css"}:
@@ -82,19 +83,34 @@ class SessionBoundary:
                         event = self.demo._queue.event_ids_to_events.get(event_id)
                         if event is None or event.username != principal.key or event.session_hash != data["session_hash"]:
                             return await self.reject(scope, receive, send, 403)
+                        if self.capacity is not None:
+                            handoff = getattr(event.request.state, "cra2_queued_review", None)
+                            if isinstance(handoff, QueuedReview):
+                                await to_thread.run_sync(self.capacity.cancel, handoff.receipt)
                     elif data.get("event_id") is not None:
                         raise ValueError("Browser cannot select an event")
-                    if self.capacity is not None and api_path.startswith(("/run/", "/api/")):
-                        name = api_path.rsplit("/", 1)[-1]
+                    if self.capacity is not None and api_path != "/cancel":
+                        name = None if api_path == "/queue/join" else api_path.rsplit("/", 1)[-1]
                         index = data.get("fn_index")
-                        if index is None:
+                        if index is None and name is not None:
                             binding = next((fn for fn in self.demo.fns.values() if fn.api_name == name), None)
                         else:
                             binding = self.demo.fns.get(index) if type(index) is int else None
-                        if binding is None or binding.api_name != name or not isinstance(data.get("data"), list):
+                        if (binding is None or (name is not None and binding.api_name != name)
+                                or not isinstance(data.get("data"), list)):
                             raise ValueError("Invalid callback")
                         if binding.concurrency_id == REVIEW_GROUP:
-                            direct_review = ("recovery" if name == "recovery" else "chat", data["session_hash"])
+                            review = ("recovery" if binding.api_name == "recovery" else "chat", data["session_hash"])
+                            keys = [v.decode("ascii") for k, v in scope["headers"] if k == b"idempotency-key"]
+                            first = data["data"][0] if data["data"] else None
+                            if isinstance(first, dict) and set(first) == {"cra2_delivery", "value"}:
+                                keys.append(first["cra2_delivery"])
+                                data["data"][0] = first["value"]
+                            if keys:
+                                if (len(keys) != 1 or not isinstance(keys[0], str)
+                                        or not re.fullmatch(r"[0-9a-f]{32}", keys[0])):
+                                    raise ValueError("Invalid delivery ID")
+                                delivery = keys[0]
                     encoded = json.dumps(data).encode()
                     original_receive = receive
                     delivered = False
@@ -114,6 +130,8 @@ class SessionBoundary:
                     return await self.reject(scope, receive, send, 403)
             except (ValueError, UnicodeError, TypeError, RecursionError):
                 return await self.reject(scope, receive, send, 400)
+            except CapacityUnavailable as error:
+                return await self.capacity_response(scope, receive, send, error)
         elif method not in {"GET", "HEAD"}:
             return await self.reject(scope, receive, send, 403)
         if path in {"", "/config"}:
@@ -125,10 +143,19 @@ class SessionBoundary:
                 message["headers"] = [(k, v) for k, v in message.get("headers", []) if k.lower() != b"cache-control"]
                 message["headers"].append((b"cache-control", b"private, no-store"))
             await send(message)
-        if direct_review is None:
+        if review is None:
             return await self.app(scope, receive, private_send)
         try:
-            await self.run_direct(principal.key, *direct_review, scope, receive, private_send)
+            handle = self.join_review if api_path == "/queue/join" else self.run_direct
+            await handle(principal.key, *review, delivery, scope, receive, private_send)
+        except ExistingReview as prior:
+            if api_path == "/queue/join":
+                if prior.event_id is None:
+                    return await self.capacity_response(scope, receive, private_send,
+                        Busy(503, 1, "This submission is being accepted. Retry with the same delivery ID."))
+                return await JSONResponse({"event_id": prior.event_id})(scope, receive, private_send)
+            await JSONResponse({"receipt": prior.receipt, "state": prior.state}, status_code=202)(
+                scope, receive, private_send)
         except (Busy, CapacityUnavailable) as error:
             await self.capacity_response(scope, receive, private_send, error)
 
@@ -140,9 +167,38 @@ class SessionBoundary:
                            headers={"Retry-After": str(error.retry_after), "Cache-Control": "no-store"})(
                                scope, receive, send)
 
-    async def run_direct(self, client, operation, session, scope, receive, send):
+    async def join_review(self, client, operation, session, delivery, scope, receive, send):
         capacity = self.capacity
-        receipt = await to_thread.run_sync(capacity.reserve, client, session, operation)
+        receipt = await to_thread.run_sync(capacity.reserve, client, session, operation, delivery)
+        handoff = QueuedReview(capacity, receipt, client, session, operation)
+        scope["state"]["cra2_queued_review"] = handoff
+        messages = []
+        async def capture(message):
+            messages.append(message)
+        try:
+            await self.app(scope, receive, capture)
+            status = messages[0]["status"]
+            if status == 200:
+                payload = json.loads(b"".join(m.get("body", b"") for m in messages))
+                event = self.demo._queue.event_ids_to_events.get(payload.get("event_id"))
+                if event is None or event.username != client or event.session_hash != session:
+                    raise CapacityUnavailable
+                await to_thread.run_sync(capacity.accept, receipt, payload["event_id"])
+            else:
+                await to_thread.run_sync(capacity.cancel, receipt)
+                if status == 503:
+                    raise Busy(503, 1, "The review queue is full. Try again shortly.")
+        except BaseException:
+            await to_thread.run_sync(capacity.cancel, receipt)
+            raise
+        finally:
+            handoff.ready.set()
+        for message in messages:
+            await send(message)
+
+    async def run_direct(self, client, operation, session, delivery, scope, receive, send):
+        capacity = self.capacity
+        receipt = await to_thread.run_sync(capacity.reserve, client, session, operation, delivery)
         try:
             await to_thread.run_sync(capacity.accept, receipt)
             while (worker := await to_thread.run_sync(capacity.try_start, receipt)) is None:
@@ -157,7 +213,9 @@ class SessionBoundary:
                 messages.append(message)
             outcome = "failed"
             try:
-                await self.app(scope, receive, capture)
+                scope["state"]["cra2_direct_review"] = operation
+                with work_budget(capacity.monotonic, worker.deadline):
+                    await self.app(scope, receive, capture)
                 if messages and 200 <= messages[0].get("status", 0) < 300:
                     outcome = "completed"
             finally:
@@ -182,6 +240,9 @@ class SessionBoundary:
             if terminal in {"expired", "cancelled"}:
                 raise Busy(503, 1, "The review ended before its result was available.")
             for message in messages:
+                if message["type"] == "http.response.start":
+                    message = {**message, "headers": [*message.get("headers", []),
+                                                     (b"x-review-receipt", receipt.encode("ascii"))]}
                 await send(message)
         except asyncio.CancelledError:
             await to_thread.run_sync(capacity.cancel, receipt)

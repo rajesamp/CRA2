@@ -42,7 +42,7 @@ def create_app(*, settings=None, verifier=None, stores=None, local_capacity_path
     gate = AbuseGate(store=stores.audit, cooldowns=capacity)
     presence = Presence()
     demo = build_app(memory_resolver=stores.memory_for, telemetry_store=stores.telemetry,
-                     abuse_gate=gate, identity_resolver=request_identity,
+                     abuse_gate=gate, identity_resolver=request_identity, local_capacity=capacity,
                      identity_view=lambda request: presence.view(principal_from_request(request)))
     blocked = [str(Path(__file__).resolve().parents[1])]
     if os.environ.get("CRA2_ENV_FILE"):

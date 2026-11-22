@@ -9,6 +9,7 @@ from cra2.incidents import load_incidents, select_incidents
 from week2.tools import _context, _direction, _guard
 from week3.guardrails import LocalRails, RailUnavailable, check_context
 from week2.guardrail_activity import admission_event
+from week2.capacity import remaining_budget
 
 CHANGE_TYPES = tuple(json.loads((config.PKG_DIR / "rules.json").read_text())["system1"]["change_type"])
 CHECK_VALUES = ("Unknown", "Pass", "Fail")
@@ -163,6 +164,7 @@ def guarded_analyze(values, *, gate, client):
             raise ValueError("Invalid input")
         # Preserve field boundaries when the existing text screen normalizes
         # newlines; a service prefix must not conceal an action in another field.
+        remaining_budget()
         decision = gate.admit(".\n".join(values), client)
         admission = admission_event(decision)
         if decision["blocked"]:
@@ -171,17 +173,21 @@ def guarded_analyze(values, *, gate, client):
             rails = LocalRails()
             async def assess():
                 nonlocal stage
+                remaining_budget()
                 if not await rails.check("input", ".\n".join(values)):
                     raise RailUnavailable("blocked")
+                remaining_budget()
                 report = analyze(*values)
                 if report["status"] == "ok":
                     stage = "context"
                     # Host-context check covers every value selected for display,
                     # including incident prose, catalog recovery and graph names.
                     context = [{"chunk_id": "recovery-report", "text": "", "report": report}]
+                    remaining_budget()
                     if not await check_context(rails, context):
                         raise RailUnavailable("blocked")
                 stage = "output"
+                remaining_budget()
                 html = render(report)
                 if not await rails.check("output", {"answer": html, "trace": {"status": "evidence_only"}}):
                     raise RailUnavailable("blocked")

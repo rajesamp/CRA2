@@ -128,6 +128,15 @@ running slot in a child process and observes when the operating system releases
 the file lock. The browser event chain and load rehearsal have their own
 acceptance checks below.
 
+In that fixture a submit, retry or suggestion is one Gradio callback. This
+keeps the user's draft and previous answer in place until the admitted callback
+returns, and removes the gap between Gradio clearing the draft and scheduling
+the review. A browser gesture carries an opaque delivery ID. A retransmission
+gets the same event handle. Direct clients may send a 32-character lowercase
+hexadecimal `Idempotency-Key` and receive the existing receipt on replay.
+All five work-bearing callbacks use the same ledger. The original published
+interface remains available outside the local fixture.
+
 | Scenario | Passing evidence |
 |---|---|
 | Admission and FIFO | Hold one worker, queue two eligible reviews and refuse the next otherwise eligible submission with 503. Separately hit 2 outstanding and 4 admissions in 60 seconds across tabs and direct calls and verify a 429 response. Check the rolling-window boundary and retry hint. Force a ledger failure (503) and a failed pre-acceptance handoff (no charge or orphan). Refusals leave classifier, retrieval, tools and reviewer call counts at zero. Oldest eligible work starts next. |

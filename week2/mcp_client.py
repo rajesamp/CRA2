@@ -12,6 +12,7 @@ import anyio
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
+from week2.capacity import remaining_budget
 from week2.contracts import (
     ContractError, NAMES, decode_json, validate_arguments, validate_inventory,
     validate_result,
@@ -82,7 +83,8 @@ async def call_tools(calls, *, timeout=12.0):
             if name in seen:
                 raise ContractError("invalid_input")
             seen.add(name)
-        with anyio.fail_after(timeout):
+        budget = remaining_budget()
+        with anyio.fail_after(timeout if budget is None else min(timeout, budget)):
             async with stdio_client(server_parameters(), errlog=subprocess.DEVNULL) as streams:
                 async with ClientSession(*streams) as session:
                     await session.initialize()

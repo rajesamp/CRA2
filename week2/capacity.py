@@ -1,5 +1,6 @@
 """Private same-host accounting for the C2 local test profile."""
 from contextlib import closing, contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 import fcntl
 import hashlib
@@ -9,6 +10,7 @@ import os
 from pathlib import Path
 import sqlite3
 import stat
+import threading
 import time
 from uuid import uuid4
 
@@ -19,6 +21,27 @@ WINDOW_SECONDS = 60
 WINDOW_ADMISSIONS = 4
 WAIT_SECONDS = 15
 RUN_SECONDS = 45
+_work_clock = ContextVar("cra2_work_clock", default=None)
+
+
+def remaining_budget():
+    active = _work_clock.get()
+    if active is None:
+        return None
+    clock, deadline = active
+    remaining = deadline - clock()
+    if remaining <= 0:
+        raise TimeoutError("Review execution time expired")
+    return remaining
+
+
+@contextmanager
+def work_budget(clock, deadline):
+    token = _work_clock.set((clock, deadline))
+    try:
+        yield
+    finally:
+        _work_clock.reset(token)
 
 
 class Busy(Exception):
@@ -28,11 +51,44 @@ class Busy(Exception):
         self.retry_after = max(1, min(WINDOW_SECONDS, math.ceil(retry_after)))
 
 
+class ExistingReview(Exception):
+    def __init__(self, receipt, state, event_id):
+        self.receipt, self.state, self.event_id = receipt, state, event_id
+
+
 @dataclass(frozen=True)
 class Worker:
     receipt: str
     lock: FileIO
     deadline: float
+
+
+class QueuedReview:
+    """Handoff between Gradio's queue response and the real synchronous worker."""
+
+    def __init__(self, store, receipt, client, session, operation):
+        self.store, self.receipt = store, receipt
+        self.client, self.session, self.operation = client, session, operation
+        self.ready = threading.Event()
+
+    def run(self, operation, request, invoke):
+        if (operation != self.operation or request.username != self.client
+                or request.session_hash != self.session):
+            raise CapacityUnavailable
+        if not self.ready.wait(WAIT_SECONDS):
+            raise Busy(503, 1, "The review reservation expired.")
+        while (worker := self.store.try_start(self.receipt)) is None:
+            time.sleep(0.05)
+        outcome = "failed"
+        try:
+            with work_budget(self.store.monotonic, worker.deadline):
+                result = invoke()
+                outcome = "completed"
+        finally:
+            terminal = self.store.finish(worker, outcome)
+        if terminal != "completed":
+            raise Busy(503, 1, "The review ended before a result was available.")
+        return result
 
 
 class CapacityUnavailable(Exception):
@@ -87,7 +143,13 @@ class LocalCapacity:
                         state TEXT NOT NULL, ended REAL, stop_reason TEXT)""")
                     db.execute("CREATE INDEX reviews_quota ON reviews(principal, admitted)")
                     db.execute("PRAGMA user_version=2")
-                elif version != 2:
+                    version = 2
+                if version == 2:
+                    db.execute("ALTER TABLE reviews ADD COLUMN delivery TEXT")
+                    db.execute("ALTER TABLE reviews ADD COLUMN event_id TEXT")
+                    db.execute("CREATE UNIQUE INDEX review_delivery ON reviews(principal,session,operation,delivery)")
+                    db.execute("PRAGMA user_version=3")
+                elif version != 3:
                     raise CapacityUnavailable
                 try:
                     yield db
@@ -152,7 +214,7 @@ class LocalCapacity:
                     db.execute("""UPDATE reviews SET state=COALESCE(stop_reason,'failed'), ended=?
                                   WHERE state='running'""", (now,))
 
-    def reserve(self, client, session, operation):
+    def reserve(self, client, session, operation, delivery=None):
         """Reserve a handoff before a callback can consume work or a rate token."""
         if operation not in {"chat", "recovery"}:
             raise ValueError("Unexpected review operation")
@@ -161,6 +223,12 @@ class LocalCapacity:
         with self.transaction() as db:
             now = self.clock()
             self._expire(db, now)
+            if delivery is not None:
+                row = db.execute("""SELECT receipt, state, event_id FROM reviews
+                    WHERE principal=? AND session=? AND operation=? AND delivery=?""",
+                    (principal, session_key, operation, delivery)).fetchone()
+                if row:
+                    raise ExistingReview(*row)
             outstanding, = db.execute("""SELECT COUNT(*) FROM reviews
                 WHERE principal=? AND ended IS NULL""", (principal,)).fetchone()
             if outstanding >= MAX_OUTSTANDING:
@@ -174,23 +242,24 @@ class LocalCapacity:
             if waiting >= MAX_WAITING:
                 raise Busy(503, 1, "The review queue is full. Try again shortly.")
             receipt = uuid4().hex
-            db.execute("""INSERT INTO reviews(receipt, principal, session, operation, created, state)
-                          VALUES (?, ?, ?, ?, ?, 'reserved')""", (receipt, principal, session_key, operation, now))
+            db.execute("""INSERT INTO reviews(receipt,principal,session,operation,created,state,delivery)
+                          VALUES (?, ?, ?, ?, ?, 'reserved', ?)""", (receipt, principal, session_key, operation, now, delivery))
             return receipt
 
-    def accept(self, receipt):
+    def accept(self, receipt, event_id=None):
         with self.transaction() as db:
             now = self.clock()
             self._expire(db, now)
-            if not db.execute("""UPDATE reviews SET state='waiting', admitted=?
-                                 WHERE receipt=? AND state='reserved'""", (now, receipt)).rowcount:
+            if not db.execute("""UPDATE reviews SET state='waiting', admitted=?, event_id=?
+                                 WHERE receipt=? AND state='reserved'""", (now, event_id, receipt)).rowcount:
                 raise Busy(503, 1, "The review reservation has expired.")
 
     def cancel(self, receipt):
         with self.transaction() as db:
             now = self.clock()
+            db.execute("DELETE FROM reviews WHERE receipt=? AND state='reserved'", (receipt,))
             db.execute("""UPDATE reviews SET state='cancelled', ended=?
-                          WHERE receipt=? AND state IN ('reserved','waiting')""", (now, receipt))
+                          WHERE receipt=? AND state='waiting'""", (now, receipt))
             db.execute("""UPDATE reviews SET stop_reason=COALESCE(stop_reason,'cancelled')
                           WHERE receipt=? AND state='running'""", (receipt,))
 

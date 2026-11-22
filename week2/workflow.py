@@ -28,6 +28,7 @@ from week1 import chat, provider, responses, routing
 from week1.answers import SelectedEvidence
 from week2.contracts import ContractError, NAMES, checked, decode_json, validate_result
 from week2.mcp_client import call_tools
+from week2.capacity import remaining_budget
 from week2.memory import MemoryStore, MemoryUnavailable
 from week2.preferences import parse_command, effective_policy
 from week2.help import capability_lines, help_answer, help_topic
@@ -154,6 +155,7 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
             began=perf_counter();outcome="error"
             started_at = datetime.now(timezone.utc).isoformat()
             try:
+                remaining_budget()
                 result=node(state)
                 if inspect.isawaitable(result):result=await result
                 outcome="completed"

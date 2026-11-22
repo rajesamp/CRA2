@@ -1,5 +1,6 @@
 """Queue contract for the actual CRA2 Gradio callback inventory."""
 from inspect import unwrap
+from uuid import uuid4
 
 import httpx
 import pytest
@@ -7,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from week2 import app, cloud_app
 from week2.app import build_app
+from week2.capacity import LocalCapacity
 from week2.iap import IAPKeys, IAPSettings, IAPVerifier
 from week2.tests.test_cloud_storage import ObjectFixture
 from week2.tests.test_iap import AUDIENCE, OWNER, identity, token
@@ -67,3 +69,32 @@ def test_direct_recovery_quota_shared_across_tabs_at_the_authenticated_mount(own
     assert len(calls) == 4
     assert client.post("/gradio_api/run/show_identity", headers=headers,
                        json={"data": [], "session_hash": "a"}).status_code == 200
+
+
+def test_queued_chat_and_recovery_share_the_direct_call_budget(owner_mount):
+    client, headers, path = owner_mount
+    config = client.get("/config", headers=headers).json()
+    ids = {fn["api_name"]: fn["id"] for fn in config["dependencies"]}
+    assert {"submit_review", "retry_review", "choose_review", "ui_response", "recovery"} <= ids.keys()
+    ledger = LocalCapacity(path)
+    chat = ["What is this app?", [], None, None, None, None]
+    for number, (name, inputs) in enumerate((("submit_review", chat), ("recovery", [*VALUES, None]))):
+        session = "queue" + str(number)
+        wrapped = [{"cra2_delivery": uuid4().hex, "value": inputs[0]}, *inputs[1:]]
+        submission = {"session_hash": session, "fn_index": ids[name], "data": wrapped}
+        response = client.post("/gradio_api/queue/join", headers=headers, json=submission)
+        assert response.status_code == 200, response.text
+        replay = client.post("/gradio_api/queue/join", headers=headers, json=submission)
+        assert replay.status_code == 200 and response.json() == replay.json()
+        stream = client.get("/gradio_api/queue/data", headers=headers, params={"session_hash": session})
+        assert response.json()["event_id"] in stream.text
+        assert "process_completed" in stream.text and '"success":true' in stream.text.replace(" ", "")
+    with ledger.transaction() as db:
+        assert list(db.execute("SELECT operation, state FROM reviews ORDER BY rowid")) == [
+            ("chat", "completed"), ("recovery", "completed")]
+    for _ in range(2):
+        assert client.post("/gradio_api/run/recovery", headers=headers,
+                           json={"session_hash": "direct", "data": [*VALUES, None]}).status_code == 200
+    busy = client.post("/gradio_api/queue/join", headers=headers,
+                       json={"session_hash": "retry", "fn_index": ids["retry_review"], "data": [[], None, None, None, None]})
+    assert busy.status_code == 429 and "Retry-After" in busy.headers
