@@ -5,13 +5,16 @@ prevents a second invited user from reading or changing the first user's state.
 Non-UI APIs (uploads, deep links, component server and event streams) stay closed.
 Recheck this protocol boundary when upgrading Gradio.
 """
+import asyncio
 import hashlib
 import json
 import re
 from urllib.parse import parse_qs, urlencode
 
+from anyio import to_thread
 from starlette.responses import JSONResponse
 
+from week2.capacity import Busy, CapacityUnavailable, REVIEW_GROUP
 from week2.iap import Principal
 
 SESSION = re.compile(r"[A-Za-z0-9_-]{1,128}\Z")
@@ -25,8 +28,10 @@ def session_key(principal, browser_session):
 
 
 class SessionBoundary:
-    def __init__(self, app, demo, presence):
+    def __init__(self, app, demo, presence, capacity=None):
         self.app, self.demo, self.presence = app, demo, presence
+        self.capacity = capacity
+        self.draining = set()
 
     async def __call__(self, scope, receive, send):
         if scope["type"] not in {"http", "websocket"}:
@@ -38,6 +43,7 @@ class SessionBoundary:
             return await self.reject(scope, receive, send, 401)
         path, method = scope["path"].rstrip("/"), scope["method"]
         api_path = path.removeprefix("/gradio_api")
+        direct_review = None
         if path.startswith("/gradio_api"):
             try:
                 if method == "GET" and api_path in {"/info", "/user", "/login_check", "/theme.css"}:
@@ -78,6 +84,17 @@ class SessionBoundary:
                             return await self.reject(scope, receive, send, 403)
                     elif data.get("event_id") is not None:
                         raise ValueError("Browser cannot select an event")
+                    if self.capacity is not None and api_path.startswith(("/run/", "/api/")):
+                        name = api_path.rsplit("/", 1)[-1]
+                        index = data.get("fn_index")
+                        if index is None:
+                            binding = next((fn for fn in self.demo.fns.values() if fn.api_name == name), None)
+                        else:
+                            binding = self.demo.fns.get(index) if type(index) is int else None
+                        if binding is None or binding.api_name != name or not isinstance(data.get("data"), list):
+                            raise ValueError("Invalid callback")
+                        if binding.concurrency_id == REVIEW_GROUP:
+                            direct_review = ("recovery" if name == "recovery" else "chat", data["session_hash"])
                     encoded = json.dumps(data).encode()
                     original_receive = receive
                     delivered = False
@@ -108,7 +125,67 @@ class SessionBoundary:
                 message["headers"] = [(k, v) for k, v in message.get("headers", []) if k.lower() != b"cache-control"]
                 message["headers"].append((b"cache-control", b"private, no-store"))
             await send(message)
-        await self.app(scope, receive, private_send)
+        if direct_review is None:
+            return await self.app(scope, receive, private_send)
+        try:
+            await self.run_direct(principal.key, *direct_review, scope, receive, private_send)
+        except (Busy, CapacityUnavailable) as error:
+            await self.capacity_response(scope, receive, private_send, error)
+
+    @staticmethod
+    async def capacity_response(scope, receive, send, error):
+        if not isinstance(error, Busy):
+            error = Busy(503, 1, "Review capacity is temporarily unavailable.")
+        await JSONResponse({"detail": str(error)}, status_code=error.status,
+                           headers={"Retry-After": str(error.retry_after), "Cache-Control": "no-store"})(
+                               scope, receive, send)
+
+    async def run_direct(self, client, operation, session, scope, receive, send):
+        capacity = self.capacity
+        receipt = await to_thread.run_sync(capacity.reserve, client, session, operation)
+        try:
+            await to_thread.run_sync(capacity.accept, receipt)
+            while (worker := await to_thread.run_sync(capacity.try_start, receipt)) is None:
+                await asyncio.sleep(0.05)
+        except BaseException:
+            await to_thread.run_sync(capacity.cancel, receipt)
+            raise
+
+        async def execute():
+            messages = []
+            async def capture(message):
+                messages.append(message)
+            outcome = "failed"
+            try:
+                await self.app(scope, receive, capture)
+                if messages and 200 <= messages[0].get("status", 0) < 300:
+                    outcome = "completed"
+            finally:
+                terminal = await to_thread.run_sync(capacity.finish, worker, outcome)
+            return terminal, messages
+
+        # A disconnected HTTP caller does not terminate a synchronous Gradio worker.
+        # Keep the task and its slot until the callback really returns.
+        task = asyncio.create_task(execute())
+        self.draining.add(task)
+        def forget(done):
+            self.draining.discard(done)
+            if not done.cancelled():
+                done.exception()
+        task.add_done_callback(forget)
+        try:
+            timeout = max(0.0, worker.deadline - capacity.monotonic())
+            done, _ = await asyncio.wait({task}, timeout=timeout)
+            if not done:
+                raise Busy(503, 1, "Review time expired. Check your change and try again.")
+            terminal, messages = task.result()
+            if terminal in {"expired", "cancelled"}:
+                raise Busy(503, 1, "The review ended before its result was available.")
+            for message in messages:
+                await send(message)
+        except asyncio.CancelledError:
+            await to_thread.run_sync(capacity.cancel, receipt)
+            raise
 
     @staticmethod
     async def reject(scope, receive, send, status):

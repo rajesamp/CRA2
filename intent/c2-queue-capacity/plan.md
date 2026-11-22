@@ -121,6 +121,13 @@ separate execution groups. Suggested-option selection, retry and textbox
 submission share a chat wrapper. The named chat API and recovery each have a
 separate wrapper. Inspect the callback registrations when updating Gradio.
 
+The local protected mount accepts a private database path as a test fixture.
+Direct chat and recovery requests share its reservation ledger. The restart
+test opens the same file in a second process. A separate crash test holds the
+running slot in a child process and observes when the operating system releases
+the file lock. The browser event chain and load rehearsal have their own
+acceptance checks below.
+
 | Scenario | Passing evidence |
 |---|---|
 | Admission and FIFO | Hold one worker, queue two eligible reviews and refuse the next otherwise eligible submission with 503. Separately hit 2 outstanding and 4 admissions in 60 seconds across tabs and direct calls and verify a 429 response. Check the rolling-window boundary and retry hint. Force a ledger failure (503) and a failed pre-acceptance handoff (no charge or orphan). Refusals leave classifier, retrieval, tools and reviewer call counts at zero. Oldest eligible work starts next. |

@@ -52,7 +52,7 @@ def create_app(*, settings=None, verifier=None, stores=None, local_capacity_path
         blocked_paths=blocked, show_error=False, enable_monitoring=False, mcp_server=False,
         run_history=False, footer_links=[], max_file_size="1mb", ssr_mode=False,
         app_kwargs={"docs_url": None, "redoc_url": None, "openapi_url": None})
-    return IAPMiddleware(SessionBoundary(api, demo, presence), verifier)
+    return IAPMiddleware(SessionBoundary(api, demo, presence, capacity), verifier)
 
 
 def main():

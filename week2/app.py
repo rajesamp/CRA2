@@ -18,6 +18,7 @@ from week1.responses import guard
 from week2.memory import MemoryStore
 from week2.workflow import load_copy, respond
 from week2.abuse import AbuseGate
+from week2.capacity import MAX_WAITING, REVIEW_GROUP
 from week2.owner_audit import OwnerAuditStore
 from week2.guardrail_activity import (SessionActivity, admission_event, record_activity,
                                      clear_activity, CSS as GUARDRAIL_CSS)
@@ -397,8 +398,8 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
     # the same execution group as recovery, independent of their function IDs.
     for binding in demo.fns.values():
         if binding.fn and unwrap(binding.fn) in (reply, recovery):
-            binding.concurrency_id = "cra2-review"
-    return demo.queue(max_size=2)
+            binding.concurrency_id = REVIEW_GROUP
+    return demo.queue(max_size=MAX_WAITING)
 
 
 def main(argv=None):
