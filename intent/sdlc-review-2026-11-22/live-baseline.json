@@ -1,0 +1,12 @@
+{
+  "observed_date": "2026-11-22",
+  "ready": true,
+  "iap_enabled": true,
+  "current_image_matches_v1_record": true,
+  "max_instances": 1,
+  "container_concurrency": 4,
+  "app_allowlist_extra_accounts": 0,
+  "owner_configured": true,
+  "raw_identifiers_omitted": true,
+  "scope": "Read-only service configuration; browser acceptance and inherited IAM not re-tested in this audit."
+}

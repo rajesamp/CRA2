@@ -144,6 +144,24 @@ def test_real_mount_separates_two_invited_users_even_with_identical_browser_sess
         owner_third = call(owner_token, "recovery", [*VALUES, None])
         assert "Request 3" in owner_third.json()["data"][2] and "Request 1" in owner_third.json()["data"][2]
 
+        from week2 import incident_rollback as recovery
+        from week3 import guardrails
+        import re
+        marker = "Retired fixture handbook"
+        report = recovery.analyze(*VALUES)
+        report["recorded_rollback"]["text"] = marker
+        with monkeypatch.context() as local:
+            local.setattr(recovery, "analyze", lambda *_: report)
+            local.setattr(guardrails, "INJECTION", re.compile(marker))
+            blocked = call(owner_token, "recovery", [*VALUES, None])
+        condition = "Retrieved context: Blocked"
+        assert condition in blocked.json()["data"][2] and marker not in blocked.text
+        for signed, label in ((owner_token, "separate-session"), (member_token, "reused-session")):
+            separate = call(signed, "recovery", [*VALUES, None], session=label)
+            activity = separate.json()["data"][2]
+            assert "Retrieved context: Passed" in activity and condition not in activity
+            assert marker not in separate.text
+
         # Actual app memory callback with the two verified identities; the same
         # service name cannot make one user's preferences become another's.
         from inspect import unwrap

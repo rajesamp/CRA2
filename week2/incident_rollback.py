@@ -7,7 +7,7 @@ import anyio
 from cra2 import config
 from cra2.incidents import load_incidents, select_incidents
 from week2.tools import _context, _direction, _guard
-from week3.guardrails import LocalRails, RailUnavailable
+from week3.guardrails import LocalRails, RailUnavailable, check_context
 from week2.guardrail_activity import admission_event
 
 CHANGE_TYPES = tuple(json.loads((config.PKG_DIR / "rules.json").read_text())["system1"]["change_type"])
@@ -157,6 +157,7 @@ def guarded_analyze(values, *, gate, client):
                  "code": "admission_unavailable", "executed": False}
     rails = None
     stage = "input"
+    checked_html = None
     try:
         if len(values) != len(FIELDS) or any(not isinstance(v, str) for v in values) or sum(map(len, values)) > 3900:
             raise ValueError("Invalid input")
@@ -177,14 +178,15 @@ def guarded_analyze(values, *, gate, client):
                     stage = "context"
                     # Host-context check covers every value selected for display,
                     # including incident prose, catalog recovery and graph names.
-                    context = [{"chunk_id": "recovery-report", "text": json.dumps(report, ensure_ascii=False)}]
-                    if not await rails.check("context", context):
+                    context = [{"chunk_id": "recovery-report", "text": "", "report": report}]
+                    if not await check_context(rails, context):
                         raise RailUnavailable("blocked")
                 stage = "output"
-                if not await rails.check("output", {"answer": render(report), "trace": {"status": "evidence_only"}}):
+                html = render(report)
+                if not await rails.check("output", {"answer": html, "trace": {"status": "evidence_only"}}):
                     raise RailUnavailable("blocked")
-                return report
-            result = anyio.run(assess)
+                return report, html
+            result, checked_html = anyio.run(assess)
     except Exception:
         result = dict(EMPTY)
         if rails is not None and any(e["outcome"] == "block" for e in rails.events):
@@ -194,7 +196,7 @@ def guarded_analyze(values, *, gate, client):
         events = [{"engine": "nemoguardrails", "stage": stage, "outcome": "unavailable",
                    "code": "rail_unavailable", "executed": False}]
     result = {**result, "admission": admission, "rails": events}
-    return render(result), result
+    return checked_html if checked_html is not None else render(result), result
 
 
 CSS = """

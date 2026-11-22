@@ -1,0 +1,8 @@
+{
+  "option_id": "corrections_then_recovery",
+  "level": "suitable",
+  "winner_established": false,
+  "evidence_ids": ["E1", "E2", "E3", "E4", "E5", "E7"],
+  "rationale": "The proposed sequence addresses documented evidence and operational gaps, follows the requested Version 1 then incident/rollback sequence, and permits bounded implementation slices after accepted design and planning. This establishes suitability only: winner not established. The manifest contains no COMPARATIVE evidence on the top priority, trustworthy_evidence, and does not establish superiority over features_first or platform_first. This judgment grants no implementation or invitation approval.",
+  "separating_test": "Apply the same four context probes and a small blinded set of reviewer tasks, including irreversible rollback and stale graph evidence, to thin prototypes of the candidate paths. Compare critical misses, false blocks, supported findings and time-to-useful-review under identical access and cost boundaries. The platform-first path must also demonstrate an existing task that requires its proposed platform change."
+}

@@ -3,7 +3,10 @@
 import hashlib
 import json
 import re
+from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
+from typing import Callable
 
 from cra2 import config
 from cra2.advisor import CATALOG, _inline
@@ -58,9 +61,24 @@ def _evidence_list(hits, catalog=None):
     return responses.message(catalog, "evidence_heading") + "\n\n" + "\n".join(bullets)
 
 
+@dataclass(frozen=True)
+class SelectedEvidence:
+    """Request-local candidates and the renderer that consumes the checked batch."""
+
+    hits: list
+    compose: Callable[[list], tuple[str, dict]]
+
+
 def _dataset_titles(
     question, decision=None, catalog=None, *, records_loader=load_incidents
 ):
+    selected = select_dataset(question, decision, catalog, records_loader=records_loader)
+    if isinstance(selected, SelectedEvidence):
+        return selected.compose(selected.hits)
+    return selected
+
+
+def select_dataset(question, decision, catalog, *, records_loader):
     # Curated labels are bound to the canonical facts; reject stale mappings.
     catalog = catalog if catalog is not None else responses.load()
     records = records_loader(config.DATA_DIR)
@@ -102,22 +120,27 @@ def _dataset_titles(
     selected = [
         record for record in records if not requested or record["service"] in requested
     ]
-    scenarios = {}
+    hits = []
     for record in selected:
-        title = titles[record["incident_id"]]["title"]
-        filename = (
-            "incidents.json"
-            if record["source_dataset"] == "synthetic"
-            else "sample_incidents.json"
-        )
-        scenarios.setdefault(title, []).append(
-            {
-                "incident_id": record["incident_id"],
-                "service": record["service"],
-                "source_dataset": record["source_dataset"],
-                "source": "data/" + filename + "#" + record["incident_id"],
-            }
-        )
+        filename = "incidents.json" if record["source_dataset"] == "synthetic" else "sample_incidents.json"
+        hits.append({
+            "chunk_id": record["incident_id"],
+            "text": titles[record["incident_id"]]["title"],
+            "service": record["service"],
+            "source_dataset": record["source_dataset"],
+            "source": "data/" + filename + "#" + record["incident_id"],
+            "fields": {key: record[key] for key in decision["fields"] if key != "title"},
+        })
+    return SelectedEvidence(hits, partial(_render_dataset, decision, catalog, requested))
+
+
+def _render_dataset(decision, catalog, requested, selected):
+    scenarios = {}
+    for row in selected:
+        scenarios.setdefault(row["text"], []).append({
+            "incident_id": row["chunk_id"], "service": row["service"],
+            "source_dataset": row["source_dataset"], "source": row["source"],
+        })
     answer = "\n".join("- " + _inline(title).replace("#", "\\#") for title in scenarios)
     if decision["operation"] == "count":
         if re.search(r"\b(?:distinct|unique)\b", decision["text"]):
@@ -131,9 +154,9 @@ def _dataset_titles(
         answer = "\n".join(
             "- "
             + "; ".join(
-                _inline(titles[record["incident_id"]]["title"])
+                _inline(record["text"])
                 if field == "title"
-                else labels[field] + ": " + _inline(record[field])
+                else labels[field] + ": " + _inline(record["fields"][field])
                 for field in decision["fields"]
             )
             for record in selected

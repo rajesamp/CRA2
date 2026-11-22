@@ -57,6 +57,21 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/week2-4-evidence"
           week2/.venv/bin/python -m pytest week2/tests week3/tests week4/tests -q -m "not live" --junitxml="$RUNNER_TEMP/week2-4-evidence/tests.xml"
+      - name: Require complete C1 context results
+        run: |
+          week2/.venv/bin/python - "$RUNNER_TEMP/week2-4-evidence/tests.xml" <<'PY'
+          from sys import argv
+          from xml.etree import ElementTree
+          suite = ElementTree.parse(argv[1])
+          for name in ("c1_missed_blocks", "c1_false_blocks"):
+              rows = suite.findall(f".//testsuite/properties/property[@name='{name}']")
+              if len(rows) != 1:
+                  raise SystemExit(f"Expected one result for {name}")
+              errors, cases = map(int, rows[0].attrib["value"].split("/"))
+              print(f"{name} = {errors}/{cases}")
+              if errors != 0 or cases <= 0:
+                  raise SystemExit(f"Incomplete or failing C1 evaluation: {name}")
+          PY
       - name: Verify scorer negative and positive controls
         run: week2/.venv/bin/python -m week4.evaluate --verify-canaries --out "$RUNNER_TEMP/week2-4-evidence/canaries.json"
       - name: Evaluate development and validation contracts

@@ -180,3 +180,36 @@ def test_real_admission_audits_and_blocks_before_retrieval(tmp_path, monkeypatch
     assert len(store.read()) == 1 and secret not in str(store.read()) + html
     assert gate.remaining("verified-principal")[0] > 0 and classifier.calls == 0
     engine.assert_not_called()
+
+
+def test_recovery_returns_the_exact_checked_html(monkeypatch):
+    render = Mock(wraps=recovery.render)
+    monkeypatch.setattr(recovery, "render", render)
+    checked = []
+    original = recovery.LocalRails.check
+
+    async def observe(self, stage, payload):
+        if stage == "output":
+            checked.append(payload["answer"])
+        return await original(self, stage, payload)
+
+    monkeypatch.setattr(recovery.LocalRails, "check", observe)
+    html, report = recovery.guarded_analyze(VALUES, gate=admitted_gate(), client="principal")
+    assert report["status"] == "ok" and render.call_count == 1
+    assert checked == [html]
+
+
+def test_recovery_gates_decoded_nested_fields_before_success_render(monkeypatch):
+    import re
+    from week3 import guardrails
+
+    marker = "Retired fixture handbook"
+    report = recovery.analyze(*VALUES)
+    report["history"]["matches"][0]["root_cause"] = marker.replace("fixture ", "fixture\n")
+    monkeypatch.setattr(recovery, "analyze", lambda *_: report)
+    monkeypatch.setattr(guardrails, "INJECTION", re.compile(marker))
+    render = Mock(wraps=recovery.render)
+    monkeypatch.setattr(recovery, "render", render)
+    html, result = recovery.guarded_analyze(VALUES, gate=admitted_gate(), client="principal")
+    assert [c.args[0]["status"] for c in render.call_args_list] == ["guardrail_blocked"]
+    assert "history" not in result and "fixture" not in repr((html, result))
