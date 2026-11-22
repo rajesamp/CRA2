@@ -122,3 +122,22 @@ def test_real_retrieval_embedding_reuse_and_index_mutation(tmp_path):
     assert events[-2]['layer']=='query_embedding' and events[-2]['outcome']=='miss'
     with sqlite3.connect(copied) as db:db.execute("UPDATE chunks SET text=text||' mutated' WHERE chunk_id=(SELECT MIN(chunk_id) FROM chunks)")
     with pytest.raises(ValueError):c.retrieve(CHANGE,copied,**opts)
+
+
+def test_recheck_context_on_actual_warm_retrieval_cache(tmp_path, monkeypatch):
+    import re
+    from week3 import guardrails
+
+    question = "Has checkout-service had similar incidents before?"
+    shared = {"caches": WorkflowCaches(), "memory_store": MemoryStore(tmp_path/"cache.sqlite3")}
+    _, first = workflow.respond(question, **shared)
+    assert first["status"] == "history_only"
+    assert any(e["layer"] == "retrieval" and e["outcome"] == "miss" for e in first["cache"])
+    label = first["retrieved"][0]["chunk_id"]
+    monkeypatch.setattr(guardrails, "INJECTION", re.compile(re.escape(label)))
+    _, second = workflow.respond(question, **shared)
+    assert any(e["layer"] == "retrieval" and e["outcome"] == "hit" for e in second["cache"])
+    assert first["request_id"] != second["request_id"]
+    assert second["status"] == "guardrail_blocked" and second["retrieved"] == []
+    receipts = [e for trace in (first, second) for e in trace["rails"] if e["stage"] == "context"]
+    assert [e["outcome"] for e in receipts] == ["allow", "block"] and all(e["executed"] for e in receipts)

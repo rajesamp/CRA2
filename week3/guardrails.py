@@ -51,6 +51,59 @@ class RailUnavailable(ValueError):
     """A required check did not produce a verifiable verdict."""
 
 
+def _strings(value):
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for item in value.values():
+            yield from _strings(item)
+    elif isinstance(value, (list, tuple)):
+        for item in value:
+            yield from _strings(item)
+
+
+def _context_fields(payload):
+    checked(payload, "invalid_evidence")
+    if not isinstance(payload, list) or not all(
+        isinstance(hit, dict) and isinstance(hit.get("text"), str)
+        and isinstance(hit.get("chunk_id"), str) and hit["chunk_id"].strip()
+        and ("title" not in hit or isinstance(hit["title"], str)) for hit in payload
+    ):
+        raise RailUnavailable("invalid_evidence")
+    original = list(_strings(payload))
+    normalized = []
+    for value in original:
+        value = unicodedata.normalize("NFKC", value)
+        visible = "".join(c for c in value if unicodedata.category(c) != "Cf")
+        normalized.append(" ".join(visible.split()))
+    checked(normalized, "invalid_evidence")
+    return original, normalized
+
+
+def _unavailable_event(stage, started):
+    return {"stage": stage, "engine": "nemoguardrails", "version": "0.24.1",
+            "executed": False, "outcome": "unavailable", "severity": "M3",
+            "code": "rail_unavailable", "duration_ms": round((perf_counter()-started)*1000, 3)}
+
+
+async def check_context(rails, hits):
+    """Require a fresh, consistent context receipt before releasing this batch."""
+    start = len(rails.events)
+    started = perf_counter()
+    try:
+        allowed = await rails.check("context", hits)
+        receipt, = rails.events[start:]
+        if (type(allowed) is not bool or receipt.get("stage") != "context"
+                or receipt.get("engine") != "nemoguardrails" or receipt.get("executed") is not True
+                or receipt.get("outcome") != ("allow" if allowed else "block")
+                or receipt.get("code") != ("contract_valid" if allowed else "untrusted_context")):
+            raise RailUnavailable("inconsistent_verdict")
+        return allowed
+    except Exception:
+        rails.events[start:] = [_unavailable_event("context", started)]
+        raise RailUnavailable("rail_unavailable") from None
+
+
 class LocalRails:
     def __init__(self):
         # NeMo diagnostics can contain message text. Export only our own events.
@@ -74,11 +127,7 @@ class LocalRails:
                 allowed = not prohibited_request(payload)
                 code = "protected_action" if not allowed else code
             elif stage == "context":
-                checked(payload, "invalid_evidence")
-                allowed = isinstance(payload, list) and all(
-                    isinstance(h, dict) and isinstance(h.get("text"), str)
-                    and isinstance(h.get("chunk_id"), str) and h["chunk_id"]
-                    and not INJECTION.search(h["text"]) for h in payload)
+                allowed = not any(INJECTION.search(value) for view in fields for value in view)
                 code = "untrusted_context" if not allowed else code
             else:
                 text, trace = payload["answer"], payload["trace"]
@@ -92,9 +141,15 @@ class LocalRails:
         # No model-dependent rail is configured. check_async avoids generation.
         role = "assistant" if stage == "output" else "user"
         try:
-            guard(payload)
+            if stage == "context":
+                fields = _context_fields(payload)
+                # The registered local action owns the bounded values. NeMo's
+                # message history only needs a trigger for that action.
+                raw = "Evaluate selected evidence."
+            else:
+                guard(payload)
+                raw = json.dumps(payload, ensure_ascii=False, allow_nan=False)
             self.engine.register_action(validate, name="cra_validate")
-            raw = json.dumps(payload, ensure_ascii=False, allow_nan=False)
             result = await self.engine.check_async([{"role": role, "content": raw}])
             if len(verdict) != 1 or result.status not in {RailStatus.PASSED, RailStatus.BLOCKED}:
                 raise RailUnavailable("missing_verdict")
@@ -110,7 +165,5 @@ class LocalRails:
             self.engine.events_history_cache.clear()
             return allowed
         except Exception:
-            self.events.append({"stage": stage, "engine": "nemoguardrails", "version": "0.24.1",
-                "executed": False, "outcome": "unavailable", "severity": "M3",
-                "code": "rail_unavailable", "duration_ms": round((perf_counter()-started)*1000, 3)})
+            self.events.append(_unavailable_event(stage, started))
             raise RailUnavailable("rail_unavailable") from None

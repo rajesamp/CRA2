@@ -2,6 +2,7 @@
 
 import re
 import unicodedata
+from functools import partial
 from pathlib import Path
 
 from cra2 import system2
@@ -84,6 +85,15 @@ def respond(
     reviewer=None,
 ):
     """Return checked Markdown and an evidence-only trace, never raw SDK objects."""
+    prepared = prepare_response(question, history, mode, index_path=index_path,
+                                retriever=retriever, reviewer=reviewer)
+    if isinstance(prepared, answers.SelectedEvidence):
+        return prepared.compose(prepared.hits)
+    return prepared
+
+
+def prepare_response(question, history, mode, *, index_path, retriever=None, reviewer=None):
+    """Resolve early answers or select evidence once, before composition."""
     guard(question)
     catalog = responses.load()
     if (
@@ -128,7 +138,7 @@ def respond(
         return answer, trace
     if decision:
         if decision["kind"] == "browse":
-            return _dataset_titles(question, decision, catalog)
+            return answers.select_dataset(question, decision, catalog, records_loader=load_incidents)
         if decision["kind"] == "clarify":
             return _clarify(decision["question"], scope=scope)
         if decision["kind"] == "help":
@@ -194,6 +204,12 @@ def respond(
     query = question + (" " + service if service and service not in question else "")
     hits = (retriever or search)(query, index_path, limit=3, service=service)
     guard(hits)
+    return answers.SelectedEvidence(
+        hits, partial(_compose_hits, question, mode, service, scope, catalog, reviewer)
+    )
+
+
+def _compose_hits(question, mode, service, scope, catalog, reviewer, hits):
     trace = {
         "scope": scope,
         "status": "evidence_ready",

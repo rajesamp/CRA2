@@ -141,3 +141,91 @@ def test_policy_floor_is_preserved():
         retriever=lambda *_a, **_k: [deepcopy(HIT)], reviewer=review)
     expected = chat.resolve_settings("checkout-service", chat.CATALOG["checkout-service"], {}, chat.TEAM_SETTINGS)
     assert trace["risk_floor"] == ("medium" if expected["service"]["high_risk"] else "low")
+
+
+@pytest.mark.parametrize("query", [CHANGE, "Has checkout-service had similar incidents before?"])
+@pytest.mark.parametrize("failure", ["policy", "missing", "inconsistent", "exception"])
+def test_context_failure_precedes_consumers_and_export(monkeypatch, query, failure):
+    from unittest.mock import Mock
+    from week3 import guardrails
+
+    marker = "Retired fixture handbook."
+    hit = dict(HIT, title=marker)
+    selections = []
+    rails = guardrails.LocalRails()
+    original_check = rails.check
+
+    async def check(stage, payload):
+        if stage == "context" and failure != "policy":
+            if failure == "exception":
+                raise RuntimeError(marker)
+            if failure == "inconsistent":
+                await original_check(stage, payload)
+                return False
+            return True  # No receipt from the engine.
+        return await original_check(stage, payload)
+
+    if failure == "policy":
+        import re
+        monkeypatch.setattr(guardrails, "INJECTION", re.compile(re.escape(marker)))
+    monkeypatch.setattr(rails, "check", check)
+    monkeypatch.setattr(chat, "_compose_hits", forbidden)
+
+    def select(*args, **kwargs):
+        selections.append(query)
+        return [hit]
+
+    sink, exporter = Mock(), Mock()
+    exporter.submit.return_value = {"status": "disabled"}
+    answer, trace = workflow.respond(query, retriever=select, reviewer=forbidden,
+                                     tool_runner=forbidden, guardrails=rails,
+                                     telemetry_store=sink, trace_exporter=exporter)
+    assert selections == [query]
+    assert trace["status"] == ("guardrail_blocked" if failure == "policy" else "guardrails_unavailable")
+    receipt, = [e for e in trace["rails"] if e["stage"] == "context"]
+    assert receipt["code"] == ("untrusted_context" if failure == "policy" else "rail_unavailable")
+    assert receipt["executed"] == (failure == "policy")
+    assert trace["retrieved"] == [] and trace["mcp"]["attempted"] == 0 and not trace["request_attempted"]
+    sink.write.assert_called_once()
+    exporter.submit.assert_called_once()
+    assert marker not in repr((answer, trace, sink.write.call_args, exporter.submit.call_args))
+
+
+@pytest.mark.parametrize("query", ["List risk scenarios in the dataset, titles only",
+                                   "How many scenarios are in the dataset?"])
+def test_browse_screens_selected_trace_titles_before_render(monkeypatch, query):
+    import re
+    from week3 import guardrails
+
+    titles = json.loads((chat.HERE / "scenario_titles.json").read_text())
+    marker = next(iter(titles.values()))["title"]
+    monkeypatch.setattr(guardrails, "INJECTION", re.compile(re.escape(marker)))
+    monkeypatch.setattr(chat.answers, "_render_dataset", forbidden)
+    answer, trace = workflow.respond(query, retriever=forbidden, reviewer=forbidden, tool_runner=forbidden)
+    assert trace["status"] == "guardrail_blocked" and marker not in repr((answer, trace))
+    assert [e["outcome"] for e in trace["rails"] if e["stage"] == "context"] == ["block"]
+
+
+def test_delegated_history_preserves_checked_originals(monkeypatch):
+    hit = dict(HIT, text="Équipe Δ — approved rehearsal notes.\nSecond line.", chunk_id="pm:Å:02")
+    batch = [dict(hit)]
+    from week3.guardrails import LocalRails
+    check = LocalRails.check
+
+    async def update_source(self, stage, payload):
+        passed = await check(self, stage, payload)
+        if stage == "context":
+            batch[0]["text"] = "A later revision."
+        return passed
+
+    monkeypatch.setattr(LocalRails, "check", update_source)
+    from unittest.mock import Mock
+    select = Mock(return_value=batch)
+    answer, trace = workflow.respond("Has checkout-service had similar incidents before?",
+                                     retriever=select, tool_runner=forbidden, reviewer=forbidden)
+    select.assert_called_once()
+    assert trace["status"] == "history_only"
+    assert trace["retrieved"][0]["text"] == hit["text"]
+    assert trace["retrieved"][0]["chunk_id"] == hit["chunk_id"]
+    assert trace["retrieved"][0]["source"] == hit["source"]
+    assert hit["chunk_id"] in answer

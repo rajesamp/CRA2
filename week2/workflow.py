@@ -8,6 +8,7 @@ import re
 import html
 import unicodedata
 import inspect
+from copy import deepcopy
 from datetime import datetime, timezone
 from time import perf_counter
 from pathlib import Path
@@ -24,12 +25,13 @@ from cra2 import config
 from cra2.team_settings import load_settings
 from cra2.advisor import ADVISORY, CATALOG
 from week1 import chat, provider, responses, routing
+from week1.answers import SelectedEvidence
 from week2.contracts import ContractError, NAMES, checked, decode_json, validate_result
 from week2.mcp_client import call_tools
 from week2.memory import MemoryStore, MemoryUnavailable
 from week2.preferences import parse_command, effective_policy
 from week2.help import capability_lines, help_answer, help_topic
-from week3.guardrails import LocalRails, RailUnavailable
+from week3.guardrails import LocalRails, check_context
 from week3.support import coverage, approval_request, advisory_question
 from week3.cache import identity, CacheToolError
 from week4.telemetry import TelemetryUnavailable, TRANSPORTS
@@ -178,13 +180,20 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
     def get_hits(state, query, path, **options):
         from week1.retrieval import search
         if caches is not None and retrieve is search:
-            return caches.retrieve(query,path,scope=cache_scope(state),events=cache_events,**options)
-        return retrieve(query,path,**options)
+            hits = caches.retrieve(query,path,scope=cache_scope(state),events=cache_events,**options)
+        else:
+            hits = retrieve(query,path,**options)
+        # Hold a request-owned copy across the asynchronous rail and tool calls.
+        return deepcopy(checked(hits, "invalid_evidence"))
 
     async def rail_check(stage, payload):
         started_at = datetime.now(timezone.utc).isoformat()
         try:
-            if not await rails.check(stage, payload):
+            if stage == "context":
+                allowed = await check_context(rails, payload)
+            else:
+                allowed = await rails.check(stage, payload)
+            if not allowed:
                 return _answer(copy["guardrail_blocked"], "guardrail_blocked")
         except Exception:
             return _answer(copy["guardrail_failure"], "guardrails_unavailable")
@@ -275,18 +284,23 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
             return result
 
     async def legacy(state):
-        answer, trace = chat.respond(state["question"], state["history"], state["mode"],
-                                     index_path=index_path, retriever=lambda q,p,**k:get_hits(state,q,p,**k), reviewer=review)
-        if trace.get("retrieved"):
-            refused = await rail_check("context", trace["retrieved"])
-            if refused:
-                return refused
+        selection = chat.prepare_response(
+            state["question"], state["history"], state["mode"], index_path=index_path,
+            retriever=lambda q,p,**k:get_hits(state,q,p,**k), reviewer=review,
+        )
+        if isinstance(selection, SelectedEvidence):
+            if selection.hits != []:
+                refused = await rail_check("context", selection.hits)
+                if refused:
+                    return refused
+            answer, trace = selection.compose(selection.hits)
+        else:
+            answer, trace = selection
         return {"answer": answer, "trace": trace}
 
     async def retrieval(state):
         try:
             hits = get_hits(state, state["question"], index_path, limit=3, service=state["service"])
-            checked(hits, "invalid_evidence")
             refused = await rail_check("context", hits)
             if refused:
                 return refused
@@ -420,6 +434,8 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
             prior=state["trace"]
             result["trace"].update({k:prior[k] for k in ("mcp","provider_used","request_attempted") if k in prior})
             state.update(result)
+        if any(e["stage"] == "context" and e["outcome"] != "allow" for e in rails.events):
+            state.pop("memory_record", None)
         if "memory_record" in state:
             try:
                 settings=policy_settings()
