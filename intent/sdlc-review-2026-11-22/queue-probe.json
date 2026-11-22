@@ -1,0 +1,8 @@
+{
+  "queue_max_size": null,
+  "default_concurrency_limit": 1,
+  "chat_concurrency_limits": [
+    "default"
+  ],
+  "scope": "Constructed candidate app without launching a server; application dependencies reused from local locked project."
+}
