@@ -1,6 +1,7 @@
 """Task 18: local Gradio chat with actual MCP calls and recalled policy trace."""
 
 import argparse
+from inspect import unwrap
 import os
 from pathlib import Path
 from uuid import uuid4
@@ -366,7 +367,7 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
                 chatbot = gr.Chatbot(label="CRA2 conversation", height=490, elem_id="agent-chat")
                 gr.ChatInterface(reply, chatbot=chatbot, additional_inputs=[mode, session_id, trace_history, guardrail_state],
                     additional_outputs=[trace_display, trace_history, turn_selector, notice, controls, timer, cache_status, dashboard, trace_timer, guardrail_state, guardrail_display], save_history=False, cache_examples=False,
-                    flagging_mode="never", api_visibility="private", api_name="ui_response",
+                    flagging_mode="never", api_visibility="private", api_name="ui_response", concurrency_limit=1,
                     description="Name the service and describe the proposed change. Never enter credentials.",
                     analytics_enabled=False)
             chatbot.clear(reset_trace, outputs=[trace_display, trace_history, turn_selector, cache_status, dashboard, trace_timer, session_id], queue=False, api_visibility="private")
@@ -391,7 +392,13 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
             event(langsmith_view, inputs=[turn_selector, trace_history], outputs=[trace_display, trace_timer], queue=False, api_visibility="private")
         timer.tick(cooldown, outputs=[notice, controls, timer], queue=False, api_visibility="private")
         demo.load(cooldown, outputs=[notice, controls, timer], queue=False, api_visibility="private")
-    return demo
+    # ChatInterface generates separate wrappers for the UI and named API.
+    # Match the original callback so submit, retry and option selection join
+    # the same execution group as recovery, independent of their function IDs.
+    for binding in demo.fns.values():
+        if binding.fn and unwrap(binding.fn) in (reply, recovery):
+            binding.concurrency_id = "cra2-review"
+    return demo.queue(max_size=2)
 
 
 def main(argv=None):

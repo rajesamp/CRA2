@@ -31,7 +31,8 @@ invitations remain on hold.
    group for all review callbacks. Record the observed assertion failure before
    changing runtime code. Use the mount inventory to identify submit, retry,
    named chat and recovery bindings, plus lightweight UI callbacks. Verify the
-   inventory against the mounted app at startup so new work-bearing bindings
+   inventory against the mounted app at startup, including the suggested-option
+   selection path that the pinned ChatInterface also registers, so new work-bearing bindings
    cannot silently run unclassified.
 2. **Implement the local reservation ledger.** Use a private, temporary SQLite
    database shared by the two same-host test processes. Follow the project's
@@ -113,6 +114,12 @@ invitations remain on hold.
 Three existing controls passed locally on Python 3.13 before implementation.
 They cover owner access at the Gradio mount, session ownership and security
 cooldown retries. The scenarios below will verify the C2 behavior.
+
+The first C2 regression commit (`806fc0c`) recorded both baseline failures:
+the native queue had no maximum, and the five review bindings occupied three
+separate execution groups. Suggested-option selection, retry and textbox
+submission share a chat wrapper. The named chat API and recovery each have a
+separate wrapper. Inspect the callback registrations when updating Gradio.
 
 | Scenario | Passing evidence |
 |---|---|
