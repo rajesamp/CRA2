@@ -205,3 +205,13 @@ def test_mount_refuses_undeliverable_work(owner_mount, monkeypatch):
     finally:
         boundary.streams.release("idle-a", "heartbeat", finished=True)
         boundary.streams.release("idle-b", "heartbeat", finished=True)
+
+
+def test_authenticated_browser_can_verify_the_instance_before_reconnecting(owner_mount):
+    client, headers, _ = owner_mount
+    instance = client.get("/config", headers=headers).json()["app_id"]
+    path = "/gradio_api/app_id"
+    assert client.get(path).status_code == 401
+    response = client.get(path, headers=headers)
+    assert response.status_code == 200 and response.json() == {"app_id": instance}
+    assert response.headers["cache-control"] == "private, no-store"
