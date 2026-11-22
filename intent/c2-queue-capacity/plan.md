@@ -137,6 +137,23 @@ hexadecimal `Idempotency-Key` and receive the existing receipt on replay.
 All five work-bearing callbacks use the same ledger. The original published
 interface remains available outside the local fixture.
 
+The browser smoke test exposed a Gradio behavior visible only after a real
+refusal. Marking the textbox and conversation as outputs blanked them on a
+failed queue join. In the local mount the review writes to session state,
+then publishes visible outputs only on success. The smoke test now checks the
+previous answer, the draft and the retry message in Chrome. The browser uses
+Gradio's generic `predict` path for lightweight callbacks. Resolve those calls
+by their actual function index so identity and status updates still work.
+
+Run `python -m week4.capacity_load --scenario smoke --out smoke.json` or
+`python -m week4.capacity_load --scenario rehearsal --out rehearsal.json`
+with the Week 2 development environment, Node, Chrome and Playwright available.
+Set `CRA2_PLAYWRIGHT_MODULE` to the installed Node module if it is outside
+Node's normal search path. [Browser driver](../../week4/capacity_browser.cjs)
+and [fixture](../../week4/capacity_load.py) create a temporary loopback app,
+isolated browser contexts and synthetic signed identities. The fixture uses
+the private local ledger. Record exact-revision measurements for owner review.
+
 | Scenario | Passing evidence |
 |---|---|
 | Admission and FIFO | Hold one worker, queue two eligible reviews and refuse the next otherwise eligible submission with 503. Separately hit 2 outstanding and 4 admissions in 60 seconds across tabs and direct calls and verify a 429 response. Check the rolling-window boundary and retry hint. Force a ledger failure (503) and a failed pre-acceptance handoff (no charge or orphan). Refusals leave classifier, retrieval, tools and reviewer call counts at zero. Oldest eligible work starts next. |

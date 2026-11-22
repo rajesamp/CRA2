@@ -32,12 +32,19 @@ class CapacityChat(gr.ChatInterface):
 
         inputs = [self.chatbot, *self.additional_inputs]
         outputs = [self.textbox, self.chatbot, self.chatbot_state, *self.additional_outputs]
-        events = dict(outputs=outputs, concurrency_limit=1, concurrency_id=REVIEW_GROUP,
+        # Gradio clears visible output components on a failed queue join. Keep
+        # the draft and conversation out of the submission's failure path.
+        pending = gr.State()
+        events = dict(outputs=pending, concurrency_limit=1, concurrency_id=REVIEW_GROUP,
                       api_visibility="private", show_progress="minimal")
         submitted = self.textbox.submit(submit, [self.textbox, *inputs], api_name="submit_review",
                                         js=delivery_js(1 + len(inputs)), **events)
         retried = self.chatbot.retry(retry, inputs, api_name="retry_review", js=delivery_js(len(inputs)), **events)
         chosen = self.chatbot.option_select(choose, inputs, api_name="choose_review", js=delivery_js(len(inputs)), **events)
+        def publish(result):
+            return result
+        for event in (submitted, retried, chosen):
+            event.success(publish, pending, outputs, queue=False, api_visibility="private")
         self.fake_api_btn.click(self._api_wrapper(self.fn, self._submit_fn),
             [self.textbox, self.chatbot_state, *self.additional_inputs],
             [self.api_response, self.chatbot_state, *self.additional_outputs],

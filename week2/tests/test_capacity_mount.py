@@ -1,5 +1,7 @@
 """Queue contract for the actual CRA2 Gradio callback inventory."""
 from inspect import unwrap
+import asyncio
+from types import SimpleNamespace
 from uuid import uuid4
 
 import httpx
@@ -8,7 +10,8 @@ from fastapi.testclient import TestClient
 
 from week2 import app, cloud_app
 from week2.app import build_app
-from week2.capacity import LocalCapacity
+from week2.capacity import Busy, LocalCapacity
+from week2.capacity_streams import CapacityStreams
 from week2.iap import IAPKeys, IAPSettings, IAPVerifier
 from week2.tests.test_cloud_storage import ObjectFixture
 from week2.tests.test_iap import AUDIENCE, OWNER, identity, token
@@ -98,3 +101,52 @@ def test_queued_chat_and_recovery_share_the_direct_call_budget(owner_mount):
     busy = client.post("/gradio_api/queue/join", headers=headers,
                        json={"session_hash": "retry", "fn_index": ids["retry_review"], "data": [[], None, None, None, None]})
     assert busy.status_code == 429 and "Retry-After" in busy.headers
+
+
+def test_combined_connection_ceiling_leaves_owner_status_available(owner_mount):
+    client, headers, _ = owner_mount
+    boundary = client.app.app
+    slots = boundary.streams
+    slots.acquire("fixture", "active-tab", "heartbeat")
+    slots.acquire("fixture", "active-tab", "data")
+    try:
+        response = client.get("/gradio_api/heartbeat/another-tab", headers=headers)
+        assert response.status_code == 503 and response.headers["retry-after"] == "1"
+        assert client.get("/config", headers=headers).status_code == 200
+    finally:
+        slots.release("active-tab", "heartbeat", finished=True)
+        slots.release("active-tab", "data", finished=True)
+    assert not slots.active and slots.maximum == 2
+
+
+def test_reconnect_budget_idle_clock_and_abandoned_event(tmp_path):
+    async def exercise():
+        clock = [100.0]
+        store = LocalCapacity(tmp_path / "private" / "reviews.db")
+        receipt = store.reserve("client", "session", "chat")
+        store.accept(receipt, "event")
+        removed = []
+        async def clean_events(*, event_id):
+            removed.append(event_id)
+        queue = SimpleNamespace(pending_event_ids_session={"session": {"event"}},
+                                pending_messages_per_session={"session": object()}, clean_events=clean_events)
+        streams = CapacityStreams(SimpleNamespace(_queue=queue), store, clock=lambda: clock[0])
+        for _ in range(5):
+            streams.acquire("client", "session", "data")
+            streams.release("session", "data", finished=False)
+        with pytest.raises(Busy) as busy:
+            streams.acquire("client", "session", "data")
+        assert busy.value.status == 429 and busy.value.retry_after == 60
+        assert len(streams.orphans) == 1 and not removed
+        streams.orphans["session"].cancel()
+        streams._start_cleanup("session")
+        await asyncio.gather(*streams.tasks)
+        assert removed == ["event"] and not store.session_work("session")
+        clock[0] += 60
+        streams.acquire("client", "session", "heartbeat")
+        clock[0] += 59.9
+        assert await streams.idle_time_left("session") > 0
+        clock[0] += 0.1
+        assert await streams.idle_time_left("session") == 0
+        streams.release("session", "heartbeat", finished=True)
+    asyncio.run(exercise())

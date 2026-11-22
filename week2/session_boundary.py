@@ -12,9 +12,11 @@ import re
 from urllib.parse import parse_qs, urlencode
 
 from anyio import to_thread
+from gradio.server_messages import ProcessCompletedMessage
 from starlette.responses import JSONResponse
 
-from week2.capacity import Busy, CapacityUnavailable, ExistingReview, QueuedReview, REVIEW_GROUP, work_budget
+from week2.capacity import Busy, CapacityUnavailable, ExistingReview, QueuedReview, REVIEW_GROUP, WAIT_SECONDS, work_budget
+from week2.capacity_streams import CapacityStreams
 from week2.iap import Principal
 
 SESSION = re.compile(r"[A-Za-z0-9_-]{1,128}\Z")
@@ -31,7 +33,19 @@ class SessionBoundary:
     def __init__(self, app, demo, presence, capacity=None):
         self.app, self.demo, self.presence = app, demo, presence
         self.capacity = capacity
+        self.streams = CapacityStreams(demo, capacity) if capacity is not None else None
         self.draining = set()
+        if capacity is not None:
+            heavy = {"submit_review", "retry_review", "choose_review", "ui_response", "recovery"}
+            helpers = {"publish", "publish_1", "publish_2", "unnamed", "unnamed_1",
+                       "_pop_last_user_message", "reset_trace", "undo_trace", "show_identity",
+                       "show_identity_1", "clear_activity", "langsmith_view", "langsmith_view_1",
+                       "langsmith_view_2", "cooldown", "cooldown_1", "lambda",
+                       *(f"lambda_{i}" for i in range(1, 6))}
+            if ({f.api_name for f in demo.fns.values() if f.concurrency_id == REVIEW_GROUP} != heavy
+                    or {f.api_name for f in demo.fns.values() if f.concurrency_id != REVIEW_GROUP} != helpers):
+                raise ValueError("Review callback inventory requires inspection")
+            self.bindings = dict(demo.fns)
 
     async def __call__(self, scope, receive, send):
         if scope["type"] not in {"http", "websocket"}:
@@ -44,6 +58,7 @@ class SessionBoundary:
         path, method = scope["path"].rstrip("/"), scope["method"]
         api_path = path.removeprefix("/gradio_api")
         review = None
+        stream = None
         delivery = None
         if path.startswith("/gradio_api"):
             try:
@@ -51,7 +66,9 @@ class SessionBoundary:
                     pass
                 elif method == "GET" and api_path.startswith("/heartbeat/"):
                     scope = dict(scope)
-                    scope["path"] = "/gradio_api/heartbeat/" + session_key(principal, api_path[len("/heartbeat/"):])
+                    session = session_key(principal, api_path[len("/heartbeat/"):])
+                    stream = (session, "heartbeat")
+                    scope["path"] = "/gradio_api/heartbeat/" + session
                     scope["raw_path"] = scope["path"].encode()
                 elif method == "GET" and api_path == "/queue/data":
                     query = parse_qs(scope.get("query_string", b"").decode("ascii"), max_num_fields=8)
@@ -59,7 +76,9 @@ class SessionBoundary:
                     if len(values) != 1:
                         raise ValueError("Invalid session")
                     scope = dict(scope)
-                    scope["query_string"] = urlencode({"session_hash": session_key(principal, values[0])}).encode()
+                    session = session_key(principal, values[0])
+                    stream = (session, "data")
+                    scope["query_string"] = urlencode({"session_hash": session}).encode()
                 elif method == "POST" and (api_path in {"/queue/join", "/cancel"}
                         or re.fullmatch(r"/(?:run|api)/[A-Za-z0-9_-]+", api_path)):
                     body = bytearray()
@@ -93,14 +112,15 @@ class SessionBoundary:
                         name = None if api_path == "/queue/join" else api_path.rsplit("/", 1)[-1]
                         index = data.get("fn_index")
                         if index is None and name is not None:
-                            binding = next((fn for fn in self.demo.fns.values() if fn.api_name == name), None)
+                            binding = next((fn for fn in self.bindings.values() if fn.api_name == name), None)
                         else:
-                            binding = self.demo.fns.get(index) if type(index) is int else None
-                        if (binding is None or (name is not None and binding.api_name != name)
+                            binding = self.bindings.get(index) if type(index) is int else None
+                        if (binding is None or (name not in {None, "predict"} and binding.api_name != name)
                                 or not isinstance(data.get("data"), list)):
                             raise ValueError("Invalid callback")
                         if binding.concurrency_id == REVIEW_GROUP:
                             review = ("recovery" if binding.api_name == "recovery" else "chat", data["session_hash"])
+                            self.streams.touch(data["session_hash"])
                             keys = [v.decode("ascii") for k, v in scope["headers"] if k == b"idempotency-key"]
                             first = data["data"][0] if data["data"] else None
                             if isinstance(first, dict) and set(first) == {"cra2_delivery", "value"}:
@@ -143,9 +163,11 @@ class SessionBoundary:
                 message["headers"] = [(k, v) for k, v in message.get("headers", []) if k.lower() != b"cache-control"]
                 message["headers"].append((b"cache-control", b"private, no-store"))
             await send(message)
-        if review is None:
-            return await self.app(scope, receive, private_send)
         try:
+            if self.streams is not None and stream:
+                return await self.streams.serve(principal.key, *stream, self.app, scope, receive, private_send)
+            if review is None:
+                return await self.app(scope, receive, private_send)
             handle = self.join_review if api_path == "/queue/join" else self.run_direct
             await handle(principal.key, *review, delivery, scope, receive, private_send)
         except ExistingReview as prior:
@@ -163,7 +185,7 @@ class SessionBoundary:
     async def capacity_response(scope, receive, send, error):
         if not isinstance(error, Busy):
             error = Busy(503, 1, "Review capacity is temporarily unavailable.")
-        await JSONResponse({"detail": str(error)}, status_code=error.status,
+        await JSONResponse({"detail": f"{error} Retry in {error.retry_after} seconds."}, status_code=error.status,
                            headers={"Retry-After": str(error.retry_after), "Cache-Control": "no-store"})(
                                scope, receive, send)
 
@@ -184,6 +206,8 @@ class SessionBoundary:
                 if event is None or event.username != client or event.session_hash != session:
                     raise CapacityUnavailable
                 await to_thread.run_sync(capacity.accept, receipt, payload["event_id"])
+                handoff.event_id = payload["event_id"]
+                self.watch_deadlines(handoff, event)
             else:
                 await to_thread.run_sync(capacity.cancel, receipt)
                 if status == 503:
@@ -195,6 +219,30 @@ class SessionBoundary:
             handoff.ready.set()
         for message in messages:
             await send(message)
+
+    def watch_deadlines(self, handoff, event):
+        loop = asyncio.get_running_loop()
+        queue = self.demo._queue
+        timer = None
+
+        async def expire(phase):
+            if await to_thread.run_sync(self.capacity.expire_event, handoff.receipt, phase):
+                queue.send_message(event, ProcessCompletedMessage(success=False, output={
+                    "error": "Review time expired. Retry in 1 second.", "status": 503, "retry_after": 1}))
+                await queue.clean_events(event_id=event._id)
+
+        def arm(phase, delay):
+            nonlocal timer
+            if timer:
+                timer.cancel()
+            if phase != "finished":
+                def fire():
+                    task = asyncio.create_task(expire(phase))
+                    self.draining.add(task)
+                    task.add_done_callback(self.draining.discard)
+                timer = loop.call_later(delay, fire)
+        handoff.notify = lambda phase, delay: loop.call_soon_threadsafe(arm, phase, delay)
+        arm("waiting", WAIT_SECONDS)
 
     async def run_direct(self, client, operation, session, delivery, scope, receive, send):
         capacity = self.capacity

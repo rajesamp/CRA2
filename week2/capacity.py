@@ -70,6 +70,8 @@ class QueuedReview:
         self.store, self.receipt = store, receipt
         self.client, self.session, self.operation = client, session, operation
         self.ready = threading.Event()
+        self.notify = None
+        self.event_id = None
 
     def run(self, operation, request, invoke):
         if (operation != self.operation or request.username != self.client
@@ -77,15 +79,22 @@ class QueuedReview:
             raise CapacityUnavailable
         if not self.ready.wait(WAIT_SECONDS):
             raise Busy(503, 1, "The review reservation expired.")
+        from gradio.context import LocalContext
+        if self.event_id is None or LocalContext.event_id.get(None) != self.event_id:
+            raise CapacityUnavailable
         while (worker := self.store.try_start(self.receipt)) is None:
             time.sleep(0.05)
         outcome = "failed"
         try:
             with work_budget(self.store.monotonic, worker.deadline):
+                self.notify("running", max(0, worker.deadline - self.store.monotonic()))
                 result = invoke()
                 outcome = "completed"
         finally:
-            terminal = self.store.finish(worker, outcome)
+            try:
+                terminal = self.store.finish(worker, outcome)
+            finally:
+                self.notify("finished", 0)
         if terminal != "completed":
             raise Busy(503, 1, "The review ended before a result was available.")
         return result
@@ -149,7 +158,11 @@ class LocalCapacity:
                     db.execute("ALTER TABLE reviews ADD COLUMN event_id TEXT")
                     db.execute("CREATE UNIQUE INDEX review_delivery ON reviews(principal,session,operation,delivery)")
                     db.execute("PRAGMA user_version=3")
-                elif version != 3:
+                    version = 3
+                if version == 3:
+                    db.execute("ALTER TABLE reviews ADD COLUMN started REAL")
+                    db.execute("PRAGMA user_version=4")
+                elif version != 4:
                     raise CapacityUnavailable
                 try:
                     yield db
@@ -206,7 +219,8 @@ class LocalCapacity:
     def _expire(self, db, now):
         db.execute("DELETE FROM reviews WHERE ended IS NOT NULL AND ended <= ?", (now - WINDOW_SECONDS,))
         db.execute("""UPDATE reviews SET state='expired', ended=?
-                      WHERE state IN ('reserved','waiting') AND created <= ?""", (now, now - WAIT_SECONDS))
+                      WHERE (state='reserved' AND created <= ?) OR (state='waiting' AND admitted <= ?)""",
+                   (now, now - WAIT_SECONDS, now - WAIT_SECONDS))
         if db.execute("SELECT 1 FROM reviews WHERE state='running' LIMIT 1").fetchone():
             lock = self._worker_lock()
             if lock is not None:
@@ -263,6 +277,29 @@ class LocalCapacity:
             db.execute("""UPDATE reviews SET stop_reason=COALESCE(stop_reason,'cancelled')
                           WHERE receipt=? AND state='running'""", (receipt,))
 
+    def session_work(self, session):
+        key = hashlib.sha256(session.encode()).hexdigest()
+        with self.transaction() as db:
+            self._expire(db, self.clock())
+            return bool(db.execute("SELECT 1 FROM reviews WHERE session=? AND ended IS NULL LIMIT 1", (key,)).fetchone())
+
+    def cancel_event(self, session, event_id):
+        key = hashlib.sha256(session.encode()).hexdigest()
+        with self.transaction() as db:
+            row = db.execute("SELECT receipt FROM reviews WHERE session=? AND event_id=? AND ended IS NULL",
+                             (key, event_id)).fetchone()
+        if row:
+            self.cancel(row[0])
+
+    def expire_event(self, receipt, phase):
+        with self.transaction() as db:
+            if phase == "waiting":
+                self._expire(db, self.clock())
+                state = db.execute("SELECT state FROM reviews WHERE receipt=?", (receipt,)).fetchone()
+                return state == ("expired",)
+            return bool(db.execute("""UPDATE reviews SET stop_reason='expired' WHERE receipt=?
+                                      AND state='running' AND stop_reason IS NULL""", (receipt,)).rowcount)
+
     def try_start(self, receipt):
         with self.transaction() as db:
             now = self.clock()
@@ -278,7 +315,7 @@ class LocalCapacity:
             if lock is None:
                 return None
             try:
-                db.execute("UPDATE reviews SET state='running' WHERE receipt=?", (receipt,))
+                db.execute("UPDATE reviews SET state='running', started=? WHERE receipt=?", (now, receipt))
                 db.commit()
                 return Worker(receipt, lock, self.monotonic() + RUN_SECONDS)
             except BaseException:
