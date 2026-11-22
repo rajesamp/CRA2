@@ -150,3 +150,33 @@ def test_reconnect_budget_idle_clock_and_abandoned_event(tmp_path):
         assert await streams.idle_time_left("session") == 0
         streams.release("session", "heartbeat", finished=True)
     asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("kind", ["heartbeat", "data"])
+def test_idle_socket_disconnect_immediately_frees_its_permit(tmp_path, kind):
+    async def exercise():
+        queue = SimpleNamespace(stopped=False, pending_messages_per_session={"tab": asyncio.Queue()})
+        streams = CapacityStreams(SimpleNamespace(_queue=queue), LocalCapacity(tmp_path / "private" / "db"))
+        opened, disconnect = asyncio.Event(), asyncio.Event()
+        async def receive():
+            await disconnect.wait()
+            return {"type": "http.disconnect"}
+        async def send(message):
+            if message["type"] == "http.response.start":
+                opened.set()
+        async def idle(scope, receive, send):
+            await send({"type": "http.response.start", "status": 200, "headers": []})
+            await asyncio.Event().wait()
+        scope = {"type": "http", "asgi": {"version": "3.0", "spec_version": "2.4"}}
+        task = asyncio.create_task(streams.serve("owner", "tab", kind, idle, scope, receive, send))
+        await asyncio.wait_for(opened.wait(), 1)
+        disconnect.set()
+        try:
+            completed, _ = await asyncio.wait({task}, timeout=0.4)
+            assert task in completed and not streams.active
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            for pending in streams.orphans.values():
+                pending.cancel()
+    asyncio.run(exercise())
