@@ -9,6 +9,7 @@ import uvicorn
 
 from week2.app import build_app
 from week2.abuse import AbuseGate
+from week2.capacity import LocalCapacity
 from week2.cloud_storage import CloudStores
 from week2.iap import IAPMiddleware, IAPSettings, IAPVerifier, Principal
 from week2.presence import Presence, principal_from_request
@@ -23,7 +24,7 @@ def request_identity(request):
     return value
 
 
-def create_app(*, settings=None, verifier=None, stores=None):
+def create_app(*, settings=None, verifier=None, stores=None, local_capacity_path=None):
     settings = settings or IAPSettings(os.environ.get("CRA2_IAP_AUDIENCE", ""),
                                       os.environ.get("CRA2_OWNER_EMAIL", ""),
                                       tuple(value.strip() for value in os.environ.get("CRA2_ALLOWED_EMAILS", "").split(",") if value.strip()))
@@ -37,7 +38,8 @@ def create_app(*, settings=None, verifier=None, stores=None):
         return principal.key if isinstance(principal, Principal) else None
 
     stores = CloudStores.from_env() if stores is None else stores
-    gate = AbuseGate(store=stores.audit)
+    capacity = LocalCapacity(local_capacity_path) if local_capacity_path is not None else None
+    gate = AbuseGate(store=stores.audit, cooldowns=capacity)
     presence = Presence()
     demo = build_app(memory_resolver=stores.memory_for, telemetry_store=stores.telemetry,
                      abuse_gate=gate, identity_resolver=request_identity,
