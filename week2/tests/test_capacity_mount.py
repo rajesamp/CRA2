@@ -180,3 +180,28 @@ def test_idle_socket_disconnect_immediately_frees_its_permit(tmp_path, kind):
             for pending in streams.orphans.values():
                 pending.cancel()
     asyncio.run(exercise())
+
+
+def test_session_initialization_does_not_need_a_queue_stream(owner_mount):
+    client, _, _ = owner_mount
+    startup = [f for f in client.app.app.demo.fns.values() if any(event == "load" for _, event in f.targets)]
+    assert startup and all(not f.queue for f in startup)
+
+
+def test_mount_refuses_undeliverable_work(owner_mount, monkeypatch):
+    client, headers, path = owner_mount
+    boundary = client.app.app
+    config = client.get("/config", headers=headers).json()
+    recovery = next(f["id"] for f in config["dependencies"] if f["api_name"] == "recovery")
+    boundary.streams.acquire("synthetic", "idle-a", "heartbeat")
+    boundary.streams.acquire("synthetic", "idle-b", "heartbeat")
+    try:
+        monkeypatch.setattr(app, "guarded_analyze", lambda *a, **kw: pytest.fail("Undeliverable work reached analysis"))
+        response = client.post("/gradio_api/queue/join", headers=headers,
+                               json={"session_hash": "new-tab", "fn_index": recovery, "data": [*VALUES, None]})
+        assert response.status_code == 503 and response.headers["retry-after"] == "1"
+        with LocalCapacity(path).transaction() as db:
+            assert db.execute("SELECT COUNT(*) FROM reviews WHERE admitted IS NOT NULL").fetchone() == (0,)
+    finally:
+        boundary.streams.release("idle-a", "heartbeat", finished=True)
+        boundary.streams.release("idle-b", "heartbeat", finished=True)
