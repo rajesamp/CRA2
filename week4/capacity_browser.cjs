@@ -7,7 +7,9 @@ const { performance } = require("node:perf_hooks");
 async function main() {
   const cfg = JSON.parse(readFileSync(0, "utf8"));
   const browser = await chromium.launch({ channel: "chrome", args: ["--disable-background-networking"] });
-  const report = { offered: 0, visible: 0, refused: 0, failures: 0, visible_ms: [], arrivals_s: [] };
+  const report = { offered: 0, visible: 0, refused: 0, failures: 0, visible_ms: [], arrivals_s: [],
+    operations: {chat: 0, recovery: 0}, diagnostics: [] };
+  const diagnostics = new WeakMap();
   try {
     const contexts = [];
     for (const identity of cfg.identities) {
@@ -20,6 +22,17 @@ async function main() {
     }
     async function open(context, operation) {
       const page = await context.newPage();
+      const counts = {};
+      diagnostics.set(page, counts);
+      const count = key => { counts[key] = (counts[key] || 0) + 1; };
+      page.on("response", response => {
+        const path = new URL(response.url()).pathname;
+        if (path.startsWith("/gradio_api/")) count(path.split("/").slice(0, 4).join("/").replace(/heartbeat\/.*/, "heartbeat") + " " + response.status());
+      });
+      page.on("requestfailed", request => {
+        if (new URL(request.url()).pathname.startsWith("/gradio_api/")) count("failed transport " + request.method());
+      });
+      page.on("pageerror", () => count("page error"));
       await page.goto(cfg.origin, { waitUntil: "domcontentloaded" });
       const tab = operation === "chat" ? "Change Risk Advisor" : "Incidents & rollback";
       await page.getByRole("tab", { name: tab, exact: true }).click();
@@ -33,6 +46,7 @@ async function main() {
       }, operation);
       const started = performance.now();
       report.offered++;
+      report.operations[operation]++;
       report.arrivals_s.push(Number(((started - epoch) / 1000).toFixed(2)));
       const joined = page.waitForResponse(response => {
         return new URL(response.url()).pathname === "/gradio_api/queue/join" &&
@@ -93,7 +107,11 @@ async function main() {
           await submit(page, operation, epoch);
         } catch (error) {
           report.failures++;
+          if (report.diagnostics.length < 8) {
+            report.diagnostics.push({ submission: i + 1, operation, requests: diagnostics.get(page) || {} });
+          }
           console.error("Submission", i + 1, error.message.split("\n")[0]);
+          console.error("HTTP summary", JSON.stringify(diagnostics.get(page) || {}));
         } finally {
           if (page) await page.close();
         }

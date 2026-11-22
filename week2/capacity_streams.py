@@ -91,6 +91,38 @@ class CapacityStreams:
 
     async def serve(self, client, session, kind, app, scope, receive, send):
         self.acquire(client, session, kind)
+        disconnected = asyncio.Event()
+        released = False
+        def release_once(finished):
+            nonlocal released
+            if not released:
+                released = True
+                self.release(session, kind, finished=finished)
+        async def watch_socket():
+            while (await receive())["type"] != "http.disconnect":
+                pass
+            disconnected.set()
+        async def stream_receive():
+            await disconnected.wait()
+            return {"type": "http.disconnect"}
+
+        # An idle SSE producer may go many seconds without attempting a write.
+        # Read the socket's disconnect signal independently of its next frame.
+        watcher = asyncio.create_task(watch_socket())
+        producer = asyncio.create_task(self._serve_open(session, kind, app, scope, stream_receive, send, release_once))
+        try:
+            done, _ = await asyncio.wait({producer, watcher}, return_when=asyncio.FIRST_COMPLETED)
+            if producer in done:
+                await producer
+            else:
+                await watcher
+        finally:
+            watcher.cancel()
+            producer.cancel()
+            await asyncio.gather(watcher, producer, return_exceptions=True)
+            release_once(False)
+
+    async def _serve_open(self, session, kind, app, scope, receive, send, release_once):
         finished = False
         try:
             if kind == "heartbeat":
@@ -151,4 +183,4 @@ class CapacityStreams:
 
             await StreamingResponse(frames(), media_type="text/event-stream")(scope, receive, send)
         finally:
-            self.release(session, kind, finished=finished)
+            release_once(finished)

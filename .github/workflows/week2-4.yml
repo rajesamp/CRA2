@@ -79,6 +79,10 @@ jobs:
               "test_rate_persists_across_restart_and_boundary_is_exclusive",
               "test_combined_connection_ceiling_leaves_owner_status_available",
               "test_reconnect_budget_idle_clock_and_abandoned_event",
+              "test_mount_burst_with_two_signed_reviewers_preserves_fifo_and_refusal",
+              "test_disconnected_data_stream_reattaches_to_same_owned_event",
+              "test_expired_queued_worker_suppresses_result_and_holds_slot",
+              "test_waiting_review_expires_before_entering_the_callback",
           }
           for name in sorted(capacity_cases):
               cases = suite.findall(f".//testcase[@name='{name}']")

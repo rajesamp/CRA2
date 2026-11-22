@@ -154,6 +154,14 @@ and [fixture](../../week4/capacity_load.py) create a temporary loopback app,
 isolated browser contexts and synthetic signed identities. The fixture uses
 the private local ledger. Record exact-revision measurements for owner review.
 
+The first full rehearsal exposed missing visible results after repeated tab
+replacement. The added [lifecycle tests](../../week2/tests/test_capacity_lifecycle.py)
+exercise signed burst traffic, cancellation, deadlines and reconnects. A separate
+regression proved that an idle heartbeat or queue stream could hold a permit
+until its next write after socket disconnect. Watch the incoming disconnect
+alongside the SSE producer and release the permit exactly once. Keep HTTP outcome
+counts in the local rehearsal so a browser timeout can be traced to a route.
+
 | Scenario | Passing evidence |
 |---|---|
 | Admission and FIFO | Hold one worker, queue two eligible reviews and refuse the next otherwise eligible submission with 503. Separately hit 2 outstanding and 4 admissions in 60 seconds across tabs and direct calls and verify a 429 response. Check the rolling-window boundary and retry hint. Force a ledger failure (503) and a failed pre-acceptance handoff (no charge or orphan). Refusals leave classifier, retrieval, tools and reviewer call counts at zero. Oldest eligible work starts next. |

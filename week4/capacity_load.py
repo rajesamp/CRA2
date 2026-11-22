@@ -17,7 +17,7 @@ from starlette.datastructures import MutableHeaders
 from starlette.responses import Response
 import uvicorn
 
-from week2.capacity import LocalCapacity
+from week2.capacity import LocalCapacity, MAX_OUTSTANDING, MAX_WAITING, RUN_SECONDS, WAIT_SECONDS, WINDOW_ADMISSIONS, WINDOW_SECONDS
 from week2.cloud_app import create_app
 from week2.iap import IAPKeys, IAPSettings, IAPVerifier
 from week2.tests.test_cloud_storage import ObjectFixture
@@ -34,6 +34,8 @@ def percentiles(samples):
 
 
 def run(root, scenario):
+    revision = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+    modified = bool(subprocess.check_output(["git", "status", "--porcelain"]))
     keypair = identity.__wrapped__()
     member = "second@example.test"
     settings = IAPSettings(AUDIENCE, OWNER, (member,))
@@ -43,6 +45,7 @@ def run(root, scenario):
     protected = create_app(settings=settings, verifier=IAPVerifier(settings, keys=keys),
                            stores=ObjectFixture(root / "fixture.db").stores(), local_capacity_path=db_path)
     ledger = LocalCapacity(db_path)
+    response_counts = Counter()
     identities = {secrets.token_hex(32): (email, f"local-reviewer-{i}") for i, email in enumerate((OWNER, member))}
     streams = protected.app.streams
     with socket.socket() as sock:
@@ -58,6 +61,12 @@ def run(root, scenario):
                 del headers["x-local-test-identity"]
                 now = int(time.time())
                 headers["x-goog-iap-jwt-assertion"] = token(keypair, email=person[0], sub=person[1], iat=now, exp=now+90)
+                async def observed(message):
+                    if message["type"] == "http.response.start" and scope["path"].startswith("/gradio_api/"):
+                        route = scope["path"].split("/")[2]
+                        response_counts[f"{route} {message['status']}"] += 1
+                    await send(message)
+                return await protected(scope, receive, observed)
             await protected(scope, receive, send)
 
         server = uvicorn.Server(uvicorn.Config(fixture, log_level="error", access_log=False))
@@ -107,13 +116,18 @@ def run(root, scenario):
     reconciled = (offered == len(admitted) + browser["refused"]
                   and sum(outcomes.get(k, 0) for k in ("completed", "failed", "cancelled", "expired")) == len(admitted)
                   and browser["visible"] + browser.get("direct_seed_count", 0) == outcomes.get("completed", 0))
-    passed = (drained and reconciled and browser["failures"] == 0 and max(maxima.values()) <= 2
-              and maxima["running"] <= 1 and (scenario == "smoke" or browser["offered"] == 40))
+    passed = (drained and reconciled and browser["visible"] > 0 and browser["failures"] == 0
+              and maxima["streams"] <= 2 and maxima["waiting"] <= MAX_WAITING and maxima["running"] <= 1
+              and (scenario == "smoke" or browser["operations"] == {"chat": 20, "recovery": 20}))
     return {"scenario": scenario, "passed": passed, "drained": drained, "reconciled": reconciled,
-            "revision": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
-            "working_tree_modified": bool(subprocess.check_output(["git", "status", "--porcelain"])),
+            "revision": revision, "working_tree_modified": modified, "synthetic_principals": 2,
+            "limits": {"running":1, "waiting":MAX_WAITING, "outstanding_per_principal":MAX_OUTSTANDING,
+                       "admissions_per_window":WINDOW_ADMISSIONS, "window_s":WINDOW_SECONDS,
+                       "wait_s":WAIT_SECONDS, "run_s":RUN_SECONDS, "streams":2, "idle_stream_s":streams.idle,
+                       "reconnect_grace_s":streams.grace, "reconnects_per_minute":4},
             "python": platform.python_version(), "gradio": gradio.__version__,
             "admitted": len(admitted), "outcomes": outcomes, "observed_maxima": maxima,
+            "http_responses": dict(response_counts),
             "queue_wait": percentiles([(start - at) * 1000 for _, at, start in admitted if start is not None]),
             "submit_to_visible": percentiles(browser.pop("visible_ms")), "browser": browser}
 
