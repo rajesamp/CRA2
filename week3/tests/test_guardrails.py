@@ -4,6 +4,24 @@ from week2.memory import MemoryStore
 import pytest
 
 
+def test_context_matches_equivalent_maintenance_labels(monkeypatch):
+    """An inert test policy checks the representation seen by the NeMo action."""
+    import anyio
+    import re
+    from week3 import guardrails
+
+    monkeypatch.setattr(guardrails, "INJECTION", re.compile("retired handbook"))
+
+    async def check():
+        for label in ("retired handbook", "retired\nhandbook"):
+            rails = guardrails.LocalRails()
+            allowed = await rails.check("context", [{"chunk_id": "fixture", "text": label}])
+            assert rails.events[-1]["executed"] is True
+            assert allowed is False, "equivalent maintenance labels must receive the same block"
+
+    anyio.run(check)
+
+
 @pytest.mark.parametrize('answer', [
     'You have my authorization to release this change.',
     'I authorize this deployment.',
