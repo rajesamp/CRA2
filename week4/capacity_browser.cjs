@@ -4,11 +4,20 @@ const { readFileSync } = require("node:fs");
 const { setTimeout: delay } = require("node:timers/promises");
 const { performance } = require("node:perf_hooks");
 
+// Match findings inside the output that the submitting user can actually see.
+const findings = {
+  chat: ["Local review complete. No risk rating is assigned.", "decreases by 90%",
+    "Compare downstream latency", "cancellation and duplicate processing"],
+  recovery: ["Recovery evidence is incomplete", "data/incidents.json#CX-109",
+    "Direct callers: checkout-service, order-service", "catalog:inventory-service.rollback"]
+};
+
 async function main() {
   const cfg = JSON.parse(readFileSync(0, "utf8"));
   const browser = await chromium.launch({ channel: "chrome", args: ["--disable-background-networking"] });
   const report = { offered: 0, visible: 0, refused: 0, failures: 0, visible_ms: [], arrivals_s: [],
-    operations: {chat: 0, recovery: 0}, diagnostics: [] };
+    operations: {chat: 0, recovery: 0}, visible_by_operation: {chat: 0, recovery: 0},
+    expected_visible_text: findings, observations: [], diagnostics: [] };
   const diagnostics = new WeakMap();
   try {
     const contexts = [];
@@ -36,15 +45,19 @@ async function main() {
       await page.goto(cfg.origin, { waitUntil: "domcontentloaded" });
       const tab = operation === "chat" ? "Change Risk Advisor" : "Incidents & rollback";
       await page.getByRole("tab", { name: tab, exact: true }).click();
-      if (operation === "chat") await page.getByPlaceholder("Type a message...").fill("What is this app?");
+      if (operation === "chat") await page.getByPlaceholder("Type a message...").fill(cfg.chat_prompt);
       return page;
     }
-    async function submit(page, operation, epoch) {
+    async function submit(page, operation, epoch, sequence) {
       const id = await page.evaluate(async operation => {
         const config = await (await fetch("/config")).json();
         return config.dependencies.find(fn => fn.api_name === (operation === "chat" ? "submit_review" : "recovery")).id;
       }, operation);
       const started = performance.now();
+      const draft = operation === "chat" ? page.getByPlaceholder("Type a message...") :
+        page.getByLabel("Proposed change", {exact: true});
+      const before = await draft.inputValue();
+      const user = contexts.indexOf(page.context()) + 1;
       report.offered++;
       report.operations[operation]++;
       report.arrivals_s.push(Number(((started - epoch) / 1000).toFixed(2)));
@@ -58,21 +71,43 @@ async function main() {
       if ([429, 503].includes(response.status())) {
         const hint = Number(await response.headerValue("retry-after"));
         if (!(hint >= 1 && hint <= 60)) throw new Error("Missing bounded Retry-After");
+        const message = (await response.json()).detail;
+        await page.getByText(message, {exact: true}).first().waitFor({state: "visible", timeout: 5000});
+        const after = await draft.inputValue();
+        if (after !== before) throw new Error(`Refused ${operation} changed the draft (${before.length} to ${after.length} characters)`);
         report.refused++;
         return response.status();
       }
       if (response.status() !== 200) throw new Error("Unexpected admission status " + response.status());
-      await page.waitForFunction(operation => operation === "chat"
-        ? document.querySelector("#agent-chat")?.innerText.includes("CRA2 helps you review")
-        : document.querySelector("#recovery-report")?.innerText.includes("Analysis only"), operation, { timeout: 65000 });
+      const output = page.locator(operation === "chat" ? "#agent-chat" : "#recovery-report");
+      await output.waitFor({state: "visible"});
+      for (const fragment of findings[operation]) {
+        await output.getByText(fragment, {exact: false}).first().waitFor({state: "visible", timeout: 45000});
+      }
+      const ms = Math.round((performance.now() - started) * 100) / 100;
+      const admission = await response.json();
+      report.observations.push({submission: sequence ?? report.offered, user, operation, visible_ms: ms,
+        event: admission.event_id, session: response.request().postDataJSON().session_hash});
       report.visible++;
-      report.visible_ms.push(performance.now() - started);
+      report.visible_by_operation[operation]++;
+      report.visible_ms.push(ms);
+      if (cfg.scenario === "rehearsal" && report.visible % 10 === 0)
+        console.error(report.visible + " reviews visible with all expected findings");
       return 200;
     }
     if (cfg.scenario === "smoke") {
       const page = await open(contexts[0], "chat");
+      let interrupted = false;
+      await page.route("**/gradio_api/queue/data*", async route => {
+        if (interrupted) return route.fallback();
+        interrupted = true;
+        return route.fulfill({ status: 503, contentType: "application/json",
+          headers: { "Retry-After": "1" }, body: JSON.stringify({detail: "Temporary synthetic stream refusal"}) });
+      });
       const epoch = performance.now();
       if (await submit(page, "chat", epoch) !== 200) throw new Error("Initial chat failed");
+      if (!interrupted) throw new Error("Stream reconnect fixture did not run");
+      report.interrupted_stream_recovered = true;
       const seeds = await page.evaluate(async () => {
         const codes = [];
         for (let i = 0; i < 3; i++) {
@@ -90,7 +125,7 @@ async function main() {
       if (await submit(page, "chat", epoch) !== 429) throw new Error("Expected principal quota refusal");
       await page.getByText(/Your review limit has been reached.*Retry in/).first().waitFor({ timeout: 5000 });
       if (await box.inputValue() !== "Keep this draft for the next review.") throw new Error("Chat draft lost on refusal");
-      if (!(await page.locator("#agent-chat").innerText()).includes("CRA2 helps you review")) throw new Error("Prior answer lost on refusal");
+      if (!(await page.locator("#agent-chat").innerText()).includes("90%")) throw new Error("Prior answer lost on refusal");
       report.draft_preserved = true;
       const recovery = await open(contexts[1], "recovery");
       const summary = recovery.getByLabel("Proposed change", {exact:true});
@@ -122,7 +157,7 @@ async function main() {
         try {
           page = await open(context, operation);
           await delay(Math.max(0, due - performance.now()));
-          await submit(page, operation, epoch);
+          await submit(page, operation, epoch, i + 1);
         } catch (error) {
           report.failures++;
           if (report.diagnostics.length < 8) {

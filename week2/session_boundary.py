@@ -64,6 +64,10 @@ class SessionBoundary:
             try:
                 if method == "GET" and api_path in {"/info", "/user", "/login_check", "/theme.css"}:
                     pass
+                elif method == "GET" and api_path == "/app_id" and self.capacity is not None:
+                    # The signed Gradio client compares this nonce with /config
+                    # before reconnecting to a stream on the same process.
+                    pass
                 elif method == "GET" and api_path.startswith("/heartbeat/"):
                     scope = dict(scope)
                     session = session_key(principal, api_path[len("/heartbeat/"):])

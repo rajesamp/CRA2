@@ -1,9 +1,11 @@
 # C2 implementation plan · Bound review work at admission and dispatch
 
-**For owner review · 2026-11-22.** The owner accepted the [C2 spec](spec.md)
+**Approved for local testing · 2026-11-22.** The owner accepted the [C2 spec](spec.md)
 at `5ea45a3ae94a61ef48f1b3e182476fb8f925fcf9` and its limits **for local testing**.
-Plan acceptance starts the local build. The protected app stays owner-only and
-invitations remain on hold.
+The owner approved the reviewed plan at `8e38a2d`, including the stream timings
+in step 5, and requested 20 evidence-backed change reviews and 20 rollback
+reviews checked in the submitting browsers. The protected app stays owner-only
+and invitations remain on hold.
 
 | Approved local limit | Enforcement point |
 |---|---|
@@ -177,6 +179,18 @@ recovery form retains its draft, closes one tab, and resubmits the same form.
 | Deadline, cancellation and restart | With a controlled clock, test immediately before and at 15 and 45 seconds. Race cancel, completion and retry. Expire a waiter, then interrupt a worker and restart against the same file. Two independent processes must respect the global bounds. Confirm one terminal outcome, no early slot reuse and no quota or cooldown reset. |
 | Browser, identity and streams | Use local synthetic signed identities at the protected mount. Fill the two connection slots, refuse a third with a retry hint, and use cancel/status during saturation. Disconnect and reattach just before grace expiry. Separately let grace or the review deadline expire. Verify idle/reconnect bounds, draft preservation, event ownership, and existing unauthenticated and uninvited responses. Duplicate delivery charges once. An explicit resubmission of identical text counts as a new review. Keep a browser observation for visible behavior alongside HTTP/event assertions. |
 | Rehearsal | Schedule 40 logical submissions at 15-second intervals over ten minutes, alternating chat and recovery across two synthetic principals. Measure bursts separately. Record idle tabs and reconnects. Reconcile offered = admitted + refused, and admitted = completed + failed + expired + cancelled after drain. Running, waiting and open-stream counts must all return to zero after clients close. |
+
+Run the accepted mixed workload against two synthetic signed identities on
+loopback. Each identity submits ten checkout timeout changes and ten inventory
+schema rollbacks in fresh tabs. Verify the visible 90% decrease and operational
+checks in chat, and the incomplete recovery evidence, incident CX-109, direct
+callers and rollback source in the recovery report. Match each visible result
+to its completed event, signed identity and browser session. For each chat event
+also match the persisted evidence-only trace with completed retrieval and tool
+stages. Record cache hits and misses for this repeated workload. The smoke test
+interrupts a read of the result stream and exercises overload feedback in both
+forms. The local mount permits the authenticated Gradio process-ID read used for
+reconnect, and bounds retries of the existing result stream within the grace period.
 
 Archive the revision, Python/Gradio versions, actual limits, workload mix,
 per-outcome counts, observed maxima, and p50/p95 queue and submission-to-visible

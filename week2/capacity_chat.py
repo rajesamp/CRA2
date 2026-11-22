@@ -12,9 +12,31 @@ CAPACITY_HEAD = """<script>
   window.cra2CapacityFeedback = true;
   const original = window.fetch.bind(window);
   window.fetch = async function(resource, options) {
-    const response = await original(resource, options);
+    const target = new URL(resource instanceof Request ? resource.url : resource, location.href);
+    const method = options?.method || resource.method || "GET";
+    const signal = options?.signal || resource.signal;
+    const isDataStream = target.origin === location.origin && method.toUpperCase() === "GET" &&
+      target.pathname === "/gradio_api/queue/data";
+    const until = performance.now() + 15000;
+    let response;
+    // Retry only the read of this session's existing result stream. A submitted
+    // review is never retransmitted here. Stop on tab close or grace expiry.
+    for (let attempt = 0; ; attempt++) {
+      try {
+        response = await original(resource, options);
+      } catch (error) {
+        if (!isDataStream || signal?.aborted || attempt >= 3 || performance.now() + 1000 >= until) throw error;
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        continue;
+      }
+      if (!isDataStream || ![429, 503].includes(response.status) || signal?.aborted || attempt >= 3) break;
+      const wait = Number(response.headers.get("Retry-After"));
+      if (!Number.isInteger(wait) || wait < 1 || performance.now() + wait*1000 >= until) break;
+      await response.body?.cancel();
+      await new Promise(resolve => setTimeout(resolve, wait*1000));
+    }
     if (response.status !== 429 && response.status !== 503) return response;
-    const url = new URL(response.url || location.href);
+    const url = new URL(response.url || target);
     const hint = Number(response.headers.get("Retry-After"));
     if (url.origin !== location.origin || !url.pathname.startsWith("/gradio_api/") ||
         !Number.isInteger(hint) || hint < 1 || hint > 60) return response;
