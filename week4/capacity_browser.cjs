@@ -92,7 +92,25 @@ async function main() {
       if (await box.inputValue() !== "Keep this draft for the next review.") throw new Error("Chat draft lost on refusal");
       if (!(await page.locator("#agent-chat").innerText()).includes("CRA2 helps you review")) throw new Error("Prior answer lost on refusal");
       report.draft_preserved = true;
+      const recovery = await open(contexts[1], "recovery");
+      const summary = recovery.getByLabel("Proposed change", {exact:true});
+      const until = performance.now() + 5000;
+      while (![page, recovery].every(p => diagnostics.get(p)["/gradio_api/heartbeat 200"])) {
+        if (performance.now() >= until) throw new Error("Expected two idle browser heartbeat connections");
+        await delay(50);
+      }
+      await summary.fill("Preserve the inventory change description.");
+      if (await summary.inputValue() !== "Preserve the inventory change description.") throw new Error("Recovery fixture did not enter the draft");
+      if (await submit(recovery, "recovery", epoch) !== 503) throw new Error("Expected result-connection refusal");
+      await recovery.getByText(/result connection.*Retry in/i).first().waitFor({timeout:5000});
+      if (await summary.inputValue() !== "Preserve the inventory change description.") {
+        throw new Error("Recovery form lost on refusal (remaining characters: " + (await summary.inputValue()).length + ")");
+      }
       await page.close();
+      await delay(1100);
+      if (await submit(recovery, "recovery", epoch) !== 200) throw new Error("The preserved recovery draft could not retry");
+      report.recovery_draft_retried = true;
+      await recovery.close();
     } else {
       const epoch = performance.now() + 5000;
       await Promise.all(Array.from({ length: 40 }, async (_, i) => {

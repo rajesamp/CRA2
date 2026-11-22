@@ -27,6 +27,10 @@ class CapacityStreams:
         if session in self.activity:
             self.activity[session] = self.clock()
 
+    def check_delivery(self, session):
+        if len(self.active) >= 2 and (session, "data") not in self.active:
+            raise Busy(503, 1, "A result connection is currently unavailable.")
+
     def acquire(self, client, session, kind):
         now, key = self.clock(), (session, kind)
         self.interrupted = {k: at for k, at in self.interrupted.items() if now - at < 60}

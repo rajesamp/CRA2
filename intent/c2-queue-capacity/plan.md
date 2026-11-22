@@ -162,6 +162,15 @@ until its next write after socket disconnect. Watch the incoming disconnect
 alongside the SSE producer and release the permit exactly once. Keep HTTP outcome
 counts in the local rehearsal so a browser timeout can be traced to a route.
 
+The mount also checks whether a result stream can open before handing a new
+browser review to Gradio. A session with an existing data stream can reuse it.
+When both connections are occupied elsewhere, the provisional reservation is
+released and the user receives a bounded 503 retry. Lightweight page-load
+callbacks use the direct path. Gradio substitutes a generic toast for every
+503, so the fixture also displays the server's retry hint in an accessible
+notice. The Chrome smoke case fills both connections, verifies that the
+recovery form retains its draft, closes one tab, and resubmits the same form.
+
 | Scenario | Passing evidence |
 |---|---|
 | Admission and FIFO | Hold one worker, queue two eligible reviews and refuse the next otherwise eligible submission with 503. Separately hit 2 outstanding and 4 admissions in 60 seconds across tabs and direct calls and verify a 429 response. Check the rolling-window boundary and retry hint. Force a ledger failure (503) and a failed pre-acceptance handoff (no charge or orphan). Refusals leave classifier, retrieval, tools and reviewer call counts at zero. Oldest eligible work starts next. |

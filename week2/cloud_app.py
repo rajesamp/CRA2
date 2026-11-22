@@ -10,6 +10,7 @@ import uvicorn
 from week2.app import build_app
 from week2.abuse import AbuseGate
 from week2.capacity import LocalCapacity
+from week2.capacity_chat import CAPACITY_HEAD
 from week2.cloud_storage import CloudStores
 from week2.iap import IAPMiddleware, IAPSettings, IAPVerifier, Principal
 from week2.presence import Presence, principal_from_request
@@ -48,6 +49,7 @@ def create_app(*, settings=None, verifier=None, stores=None, local_capacity_path
     if os.environ.get("CRA2_ENV_FILE"):
         blocked.append(str(Path(os.environ["CRA2_ENV_FILE"]).expanduser().resolve()))
     gr.mount_gradio_app(api, demo, path="/", auth_dependency=authenticated_user,
+        head=CAPACITY_HEAD if capacity is not None else None,
         theme=gr.themes.Soft(primary_hue="teal", neutral_hue="slate"),
         blocked_paths=blocked, show_error=False, enable_monitoring=False, mcp_server=False,
         run_history=False, footer_links=[], max_file_size="1mb", ssr_mode=False,

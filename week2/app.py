@@ -331,6 +331,8 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
 
     with gr.Blocks(title="CRA2 · Change risk advisor", analytics_enabled=False) as demo:
         gr.Markdown("### CRA · Change Risk Advisor")
+        if local_capacity is not None:
+            gr.HTML('<p id="cra2-capacity-message" role="alert" hidden></p>', js_on_load=None)
         session_id = gr.State(value=lambda: uuid4().hex)
         trace_history = gr.State(value=[])
         guardrail_state = gr.State(value=SessionActivity())
@@ -428,6 +430,10 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
     for binding in demo.fns.values():
         if binding.fn and unwrap(binding.fn) in (unwrap(reply), unwrap(recovery)):
             binding.concurrency_id = REVIEW_GROUP
+        elif local_capacity is not None and any(event == "load" for _, event in binding.targets):
+            # Session initialization and the identity view must work even when
+            # both long-lived browser connections are occupied.
+            binding.queue = False
     return demo.queue(max_size=MAX_WAITING)
 
 

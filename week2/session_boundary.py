@@ -185,7 +185,8 @@ class SessionBoundary:
     async def capacity_response(scope, receive, send, error):
         if not isinstance(error, Busy):
             error = Busy(503, 1, "Review capacity is temporarily unavailable.")
-        await JSONResponse({"detail": f"{error} Retry in {error.retry_after} seconds."}, status_code=error.status,
+        unit = "second" if error.retry_after == 1 else "seconds"
+        await JSONResponse({"detail": f"{error} Retry in {error.retry_after} {unit}."}, status_code=error.status,
                            headers={"Retry-After": str(error.retry_after), "Cache-Control": "no-store"})(
                                scope, receive, send)
 
@@ -198,6 +199,7 @@ class SessionBoundary:
         async def capture(message):
             messages.append(message)
         try:
+            self.streams.check_delivery(session)
             await self.app(scope, receive, capture)
             status = messages[0]["status"]
             if status == 200:

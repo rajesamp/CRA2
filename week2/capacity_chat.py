@@ -4,10 +4,38 @@ import gradio as gr
 from week2.capacity import REVIEW_GROUP
 
 
+# The pinned Gradio client replaces every queue-join 503 with a generic toast.
+# Keep the server's authoritative retry hint available to the signed-in user.
+CAPACITY_HEAD = """<script>
+(() => {
+  if (window.cra2CapacityFeedback) return;
+  window.cra2CapacityFeedback = true;
+  const original = window.fetch.bind(window);
+  window.fetch = async function(resource, options) {
+    const response = await original(resource, options);
+    if (response.status !== 429 && response.status !== 503) return response;
+    const url = new URL(response.url || location.href);
+    const hint = Number(response.headers.get("Retry-After"));
+    if (url.origin !== location.origin || !url.pathname.startsWith("/gradio_api/") ||
+        !Number.isInteger(hint) || hint < 1 || hint > 60) return response;
+    const notice = document.getElementById("cra2-capacity-message");
+    if (notice) {
+      const body = await response.clone().json().catch(() => ({}));
+      notice.textContent = typeof body.detail === "string" ? body.detail :
+        "Review capacity is busy. Retry in " + hint + " seconds.";
+      notice.hidden = false;
+    }
+    return response;
+  };
+})();
+</script>"""
+
+
 def delivery_js(inputs):
     """Generate one opaque delivery key per gesture before Gradio sends it."""
-    return ("(...values) => [{cra2_delivery: crypto.randomUUID().replaceAll('-', ''), "
-            f"value: values[0]}}, ...values.slice(1, {inputs})]")
+    return ("(...values) => {const notice = document.getElementById('cra2-capacity-message'); "
+            "if (notice) notice.hidden = true; return [{cra2_delivery: crypto.randomUUID().replaceAll('-', ''), "
+            f"value: values[0]}}, ...values.slice(1, {inputs})];}}")
 
 
 class CapacityChat(gr.ChatInterface):
