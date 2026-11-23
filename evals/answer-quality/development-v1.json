@@ -1,0 +1,166 @@
+{
+  "version": "development-v1",
+  "corpus_sha256": {
+    "catalog": "1f92c7525820328fd58b55e3e1226c60aecb0a848a1dc29fb463808e73c0b5ef",
+    "incidents": "1e62a6aa696a9de88c85b3f1f0b4a55262b43ad2ec3838ec0e8ea33302971b2e"
+  },
+  "sources": {
+    "CX-104.service": {
+      "collection": "incidents",
+      "record": "CX-104",
+      "field": "service"
+    },
+    "CX-107.cause": {
+      "collection": "incidents",
+      "record": "CX-107",
+      "field": "root_cause"
+    },
+    "checkout.status": {
+      "collection": "catalog",
+      "record": "checkout-service",
+      "field": "status"
+    },
+    "auth.freeze": {
+      "collection": "catalog",
+      "record": "auth-service",
+      "field": "freeze_window_active"
+    },
+    "operator.summary": {
+      "collection": "case_input",
+      "record": "public-freeze",
+      "field": "summary"
+    },
+    "inventory.rollback": {
+      "collection": "catalog",
+      "record": "inventory-service",
+      "field": "rollback"
+    },
+    "checkout.calls": {
+      "collection": "catalog",
+      "record": "checkout-service",
+      "field": "depends_on"
+    },
+    "inventory.calls": {
+      "collection": "catalog",
+      "record": "inventory-service",
+      "field": "depends_on"
+    }
+  },
+  "cases": [
+    {
+      "id": "public-analogue",
+      "split": "development",
+      "family": "cx104-checkout-tls",
+      "challenge": "wrong-service analogue",
+      "entry_point": "chat",
+      "as_of": "2026-11-22",
+      "input": {
+        "message": "We are updating the checkout TLS library. Was CX-104 a checkout incident?"
+      },
+      "sources": [
+        "CX-104.service"
+      ]
+    },
+    {
+      "id": "public-cause",
+      "split": "development",
+      "family": "cx107-index-lock",
+      "challenge": "unsupported cause",
+      "entry_point": "recovery",
+      "as_of": "2026-11-22",
+      "input": {
+        "service": "order-service",
+        "change_type": "Schema migration",
+        "summary": "Review a proposed orders index build in light of CX-107.",
+        "rollback_plan": "Revert the index migration.",
+        "compatibility": "Unknown",
+        "rehearsal": "Unknown",
+        "reconciliation": "Unknown"
+      },
+      "sources": [
+        "CX-107.cause"
+      ]
+    },
+    {
+      "id": "public-health",
+      "split": "development",
+      "family": "checkout-catalog-health",
+      "challenge": "stale evidence",
+      "entry_point": "chat",
+      "as_of": "2026-11-22",
+      "input": {
+        "message": "Does the stored checkout status prove the service is healthy now?"
+      },
+      "sources": [
+        "checkout.status"
+      ]
+    },
+    {
+      "id": "public-ambiguous",
+      "split": "development",
+      "family": "unspecified-limit",
+      "challenge": "ambiguous change",
+      "entry_point": "chat",
+      "as_of": "2026-11-22",
+      "input": {
+        "message": "We are raising a limit. What should we verify first?"
+      },
+      "sources": []
+    },
+    {
+      "id": "public-absent",
+      "split": "development",
+      "family": "unlisted-worker",
+      "challenge": "no evidence",
+      "entry_point": "chat",
+      "as_of": "2026-11-22",
+      "input": {
+        "message": "What do we know about recovery for the new synthetic voucher-worker?"
+      },
+      "sources": []
+    },
+    {
+      "id": "public-freeze",
+      "split": "development",
+      "family": "auth-freeze-declaration",
+      "challenge": "conflicting sources",
+      "entry_point": "recovery",
+      "as_of": "2026-11-22",
+      "input": {
+        "service": "auth-service",
+        "change_type": "Config change",
+        "summary": "The operator reports that the auth freeze has ended. Review the config change.",
+        "rollback_plan": "",
+        "compatibility": "Unknown",
+        "rehearsal": "Unknown",
+        "reconciliation": "Unknown"
+      },
+      "sources": [
+        "auth.freeze",
+        "operator.summary"
+      ]
+    },
+    {
+      "id": "public-schema",
+      "split": "development",
+      "family": "inventory-schema-revert",
+      "challenge": "recovery side effects",
+      "entry_point": "recovery",
+      "as_of": "2026-11-22",
+      "input": {
+        "service": "inventory-service",
+        "change_type": "Schema migration",
+        "summary": "Rename a stock column and assess checkout exposure.",
+        "rollback_plan": "Redeploy the previous inventory image.",
+        "compatibility": "Unknown",
+        "rehearsal": "Unknown",
+        "reconciliation": "Unknown"
+      },
+      "sources": [
+        "inventory.rollback",
+        "checkout.calls",
+        "inventory.calls"
+      ]
+    }
+  ]
+}

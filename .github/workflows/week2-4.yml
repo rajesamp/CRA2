@@ -108,6 +108,16 @@ jobs:
         run: |
           evaluation/.venv/bin/python intent/guardrail-activity-evals/validate_decision.py
           evaluation/.venv/bin/python -m pytest evaluation/test_score.py -q --junitxml="$RUNNER_TEMP/week2-4-evidence/evaluation-tests.xml"
+      - name: Run C3 public answer controls and verify the committed development report
+        if: matrix.python-version == '3.13'
+        run: |
+          evaluation/.venv/bin/python -m pytest evaluation/test_answer_quality.py -q --junitxml="$RUNNER_TEMP/week2-4-evidence/c3-tests.xml"
+          evaluation/.venv/bin/python -m evaluation.answer_quality \
+            --verify intent/c3-answer-quality/public-development-evidence.json \
+            --out "$RUNNER_TEMP/week2-4-evidence/c3-public.json"
+      - name: Record C3 public inputs through the guarded app callbacks
+        if: matrix.python-version == '3.13'
+        run: week2/.venv/bin/python -m evaluation.probe_public_inputs --out "$RUNNER_TEMP/week2-4-evidence/c3-callbacks.json"
       - name: Collect actual offline retrieval and evaluate with TruLens
         if: matrix.python-version == '3.13'
         env:

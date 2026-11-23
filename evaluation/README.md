@@ -45,3 +45,38 @@ support offline retrieval metrics. The pinned decision and six shared API
 fixtures are in `intent/guardrail-activity-evals/`. TruLens is a suitable pilot;
 a quality winner is not established. The smallest separating test is both
 adapters against the same frozen CRA2 corpus cases with identical failure rules.
+
+## C3 public answer-quality controls
+
+Run the public calibration on Python 3.13 from the repository root.
+
+```sh
+evaluation/.venv/bin/python -m pytest evaluation/test_answer_quality.py -q
+evaluation/.venv/bin/python -m evaluation.answer_quality \
+  --verify intent/c3-answer-quality/public-development-evidence.json \
+  --out /tmp/cra2-c3-public.json
+```
+
+The [public input packet](../evals/answer-quality/development-v1.json) includes four chat prompts and three recovery forms. Each case identifies its previously exposed development family, as-of date and synthetic evidence. Source locators resolve to versioned catalog fields, historical incident fields or that case's own operator declaration. An explicit empty evidence list is valid. A missing trace, unresolved source, future-dated incident or cross-case declaration invalidates a packet.
+
+The [development key](../evals/answer-quality/development-key-v1.json) contains a small vocabulary of complete English statements, acceptable paraphrases, the expected disposition and required facts or caveats. The [control answers](../evals/answer-quality/development-controls-v1.json) supply seven grounded responses and twelve deliberate defects. Runner inputs contain neither answers nor keys. Only the offline scorer reads them together.
+
+For these constructed answers, line one expresses a disposition. Each remaining line is one complete statement with optional bracketed citations. The scorer matches the entire statement against the public vocabulary. It checks each claimed source against the resolved evidence admitted for that case. An unrecognized statement or an altered answer, case, evidence value or rubric invalidates the grade binding. The scorer counts a contradicted required fact separately from an omitted one. An unverifiable claim earns zero support. A request for additional evidence is guidance and contributes no factual claim to the support denominator.
+
+The [public report](../intent/c3-answer-quality/public-development-evidence.json) lists the actual findings per control and gives integer counts pooled, by challenge and by entry point. Repeated variants are counted separately. A public pass means the grounded answers and planted defects produced their expected findings. Browser-delivery and latency sample counts are zero. The next collection step pairs signed browser submissions with the rendered answer and the evidence admitted on that attempt. Free-form candidate answers require grading under the approved rubric.
+
+The independent pilot stays **incomplete** until the owner names a reviewer and adjudicator and their offline handoffs are complete. This command accepts public fixtures only. Keep independent inputs, answer keys, identities and votes outside this directory and CI.
+
+### What the app returned locally
+
+With the synthetic index provisioned, run the seven inputs through the same guarded callbacks that serve the UI.
+
+```sh
+week2/.venv/bin/python -m evaluation.probe_public_inputs --out /tmp/cra2-c3-callbacks.json
+```
+
+This probe reads only the runnable packet. It uses temporary local audit and memory stores, disables NeMo usage telemetry and model calls, and checks for network attempts in the probe process. It fixes the recovery analysis date at the case's as-of date. The artifact records application status, admission outcome and a digest of the returned text or HTML. An `ok` recovery status means the callback returned a report. Its factual support still needs review.
+
+On Python 3.13.15 all four chat inputs passed admission and then routed out of scope. Of the three recovery forms, two returned reports and the inventory schema form hit the admission classifier's `prohibited_action_similarity` condition. These cases are available for reproduction before changing routing or admission. The signed browser capture and run-specific evidence join are pending. [Callback observations](../intent/c3-answer-quality/public-callback-observations.json)
+
+**Development family exposure.** The CX-104 TLS, CX-107 index and inventory schema families overlap the public retrieval cases and their incident/postmortem pairs. The health and freeze cases reuse the public catalog and the freeze/health verification runbook. The ambiguous-limit and unlisted-worker prompts are public from this version. Reserve each family and its derivatives for development in future blind runs. [Retrieval cases](retrieval-cases-v1.json) · [Public runbook](../week1/corpus/rb-freeze-health-verification.md)

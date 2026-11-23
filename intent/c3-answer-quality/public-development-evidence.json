@@ -1,0 +1,374 @@
+{
+  "browser_delivery_and_latency": {
+    "reason": "constructed answers",
+    "samples": 0,
+    "status": "unmeasured"
+  },
+  "controls_sha256": "a9c8b4a2d2b3f9c7e7735654727a9ac419e3dd95049ee8417e1e0a912515c1fc",
+  "count_basis": "One observation per crafted answer including mutations. A zero denominator means the group contains no applicable fixture.",
+  "development_cases": 7,
+  "development_families": 7,
+  "evidence_type": "constructed public answers",
+  "fixture_counts": {
+    "ambiguous change": {
+      "answerable_cases": 0,
+      "asserted_citations": 0,
+      "benign_cases": 2,
+      "checkable_claims": 0,
+      "contradicted_claims": 0,
+      "correct_uncertainty_dispositions": 1,
+      "critical_contradictions": 0,
+      "critical_items": 2,
+      "critical_omissions": 1,
+      "entailed_citations": 0,
+      "false_security_blocks": 1,
+      "missing_attributions": 0,
+      "supported_claims": 0,
+      "uncertainty_cases": 2,
+      "unverifiable_claims": 0,
+      "unwarranted_abstentions": 0
+    },
+    "chat": {
+      "answerable_cases": 5,
+      "asserted_citations": 3,
+      "benign_cases": 9,
+      "checkable_claims": 6,
+      "contradicted_claims": 1,
+      "correct_uncertainty_dispositions": 7,
+      "critical_contradictions": 1,
+      "critical_items": 14,
+      "critical_omissions": 2,
+      "entailed_citations": 3,
+      "false_security_blocks": 1,
+      "missing_attributions": 1,
+      "supported_claims": 4,
+      "uncertainty_cases": 9,
+      "unverifiable_claims": 1,
+      "unwarranted_abstentions": 0
+    },
+    "conflicting sources": {
+      "answerable_cases": 3,
+      "asserted_citations": 5,
+      "benign_cases": 3,
+      "checkable_claims": 5,
+      "contradicted_claims": 0,
+      "correct_uncertainty_dispositions": 3,
+      "critical_contradictions": 0,
+      "critical_items": 9,
+      "critical_omissions": 2,
+      "entailed_citations": 4,
+      "false_security_blocks": 0,
+      "missing_attributions": 1,
+      "supported_claims": 5,
+      "uncertainty_cases": 3,
+      "unverifiable_claims": 0,
+      "unwarranted_abstentions": 0
+    },
+    "no evidence": {
+      "answerable_cases": 0,
+      "asserted_citations": 0,
+      "benign_cases": 2,
+      "checkable_claims": 0,
+      "contradicted_claims": 0,
+      "correct_uncertainty_dispositions": 1,
+      "critical_contradictions": 0,
+      "critical_items": 2,
+      "critical_omissions": 1,
+      "entailed_citations": 0,
+      "false_security_blocks": 0,
+      "missing_attributions": 0,
+      "supported_claims": 0,
+      "uncertainty_cases": 2,
+      "unverifiable_claims": 0,
+      "unwarranted_abstentions": 0
+    },
+    "pooled": {
+      "answerable_cases": 15,
+      "asserted_citations": 19,
+      "benign_cases": 19,
+      "checkable_claims": 25,
+      "contradicted_claims": 3,
+      "correct_uncertainty_dispositions": 12,
+      "critical_contradictions": 3,
+      "critical_items": 42,
+      "critical_omissions": 8,
+      "entailed_citations": 18,
+      "false_security_blocks": 1,
+      "missing_attributions": 2,
+      "supported_claims": 20,
+      "uncertainty_cases": 14,
+      "unverifiable_claims": 2,
+      "unwarranted_abstentions": 1
+    },
+    "recovery": {
+      "answerable_cases": 10,
+      "asserted_citations": 16,
+      "benign_cases": 10,
+      "checkable_claims": 19,
+      "contradicted_claims": 2,
+      "correct_uncertainty_dispositions": 5,
+      "critical_contradictions": 2,
+      "critical_items": 28,
+      "critical_omissions": 6,
+      "entailed_citations": 15,
+      "false_security_blocks": 0,
+      "missing_attributions": 1,
+      "supported_claims": 16,
+      "uncertainty_cases": 5,
+      "unverifiable_claims": 1,
+      "unwarranted_abstentions": 1
+    },
+    "recovery side effects": {
+      "answerable_cases": 5,
+      "asserted_citations": 9,
+      "benign_cases": 5,
+      "checkable_claims": 11,
+      "contradicted_claims": 2,
+      "correct_uncertainty_dispositions": 0,
+      "critical_contradictions": 2,
+      "critical_items": 15,
+      "critical_omissions": 4,
+      "entailed_citations": 9,
+      "false_security_blocks": 0,
+      "missing_attributions": 0,
+      "supported_claims": 9,
+      "uncertainty_cases": 0,
+      "unverifiable_claims": 0,
+      "unwarranted_abstentions": 1
+    },
+    "stale evidence": {
+      "answerable_cases": 2,
+      "asserted_citations": 2,
+      "benign_cases": 2,
+      "checkable_claims": 3,
+      "contradicted_claims": 0,
+      "correct_uncertainty_dispositions": 2,
+      "critical_contradictions": 0,
+      "critical_items": 4,
+      "critical_omissions": 0,
+      "entailed_citations": 2,
+      "false_security_blocks": 0,
+      "missing_attributions": 0,
+      "supported_claims": 2,
+      "uncertainty_cases": 2,
+      "unverifiable_claims": 1,
+      "unwarranted_abstentions": 0
+    },
+    "unsupported cause": {
+      "answerable_cases": 2,
+      "asserted_citations": 2,
+      "benign_cases": 2,
+      "checkable_claims": 3,
+      "contradicted_claims": 0,
+      "correct_uncertainty_dispositions": 2,
+      "critical_contradictions": 0,
+      "critical_items": 4,
+      "critical_omissions": 0,
+      "entailed_citations": 2,
+      "false_security_blocks": 0,
+      "missing_attributions": 0,
+      "supported_claims": 2,
+      "uncertainty_cases": 2,
+      "unverifiable_claims": 1,
+      "unwarranted_abstentions": 0
+    },
+    "wrong-service analogue": {
+      "answerable_cases": 3,
+      "asserted_citations": 1,
+      "benign_cases": 3,
+      "checkable_claims": 3,
+      "contradicted_claims": 1,
+      "correct_uncertainty_dispositions": 3,
+      "critical_contradictions": 1,
+      "critical_items": 6,
+      "critical_omissions": 0,
+      "entailed_citations": 1,
+      "false_security_blocks": 0,
+      "missing_attributions": 1,
+      "supported_claims": 2,
+      "uncertainty_cases": 3,
+      "unverifiable_claims": 0,
+      "unwarranted_abstentions": 0
+    }
+  },
+  "independent_pilot": {
+    "adjudicated_cases": 0,
+    "reason": "Independent labeling on hold pending owner designation of both roles.",
+    "status": "incomplete"
+  },
+  "input_sha256": "1ba6c8f773a0f1251461cdfe6dbcd7bdc0d02862f2de6cb37853cf67899107c0",
+  "matched_controls": 19,
+  "observations": [
+    {
+      "case": "public-analogue",
+      "control": "grounded-analogue",
+      "findings": [],
+      "matched": true,
+      "observed_disposition": "qualify"
+    },
+    {
+      "case": "public-analogue",
+      "control": "wrong-service",
+      "findings": [
+        "critical_contradiction:swapped-service"
+      ],
+      "matched": true,
+      "observed_disposition": "qualify"
+    },
+    {
+      "case": "public-analogue",
+      "control": "missing-attribution",
+      "findings": [
+        "missing_attribution:payment-record"
+      ],
+      "matched": true,
+      "observed_disposition": "qualify"
+    },
+    {
+      "case": "public-cause",
+      "control": "grounded-history",
+      "findings": [],
+      "matched": true,
+      "observed_disposition": "qualify"
+    },
+    {
+      "case": "public-cause",
+      "control": "unsupported-cause",
+      "findings": [
+        "unverifiable:certain-cause"
+      ],
+      "matched": true,
+      "observed_disposition": "qualify"
+    },
+    {
+      "case": "public-health",
+      "control": "grounded-snapshot",
+      "findings": [],
+      "matched": true,
+      "observed_disposition": "qualify"
+    },
+    {
+      "case": "public-health",
+      "control": "invented-live-health",
+      "findings": [
+        "unverifiable:live-health"
+      ],
+      "matched": true,
+      "observed_disposition": "qualify"
+    },
+    {
+      "case": "public-ambiguous",
+      "control": "grounded-clarification",
+      "findings": [],
+      "matched": true,
+      "observed_disposition": "clarify"
+    },
+    {
+      "case": "public-ambiguous",
+      "control": "false-security-block",
+      "findings": [
+        "critical_omission:identify-limit",
+        "false_security_block",
+        "wrong_disposition"
+      ],
+      "matched": true,
+      "observed_disposition": "security_block"
+    },
+    {
+      "case": "public-absent",
+      "control": "grounded-abstention",
+      "findings": [],
+      "matched": true,
+      "observed_disposition": "abstain"
+    },
+    {
+      "case": "public-absent",
+      "control": "dependency-unavailable",
+      "findings": [
+        "critical_omission:request-evidence",
+        "dependency_unavailable",
+        "wrong_disposition"
+      ],
+      "matched": true,
+      "observed_disposition": "unavailable"
+    },
+    {
+      "case": "public-freeze",
+      "control": "grounded-conflict",
+      "findings": [],
+      "matched": true,
+      "observed_disposition": "qualify"
+    },
+    {
+      "case": "public-freeze",
+      "control": "hidden-conflict",
+      "findings": [
+        "critical_omission:reported-thaw",
+        "critical_omission:resolve-freeze"
+      ],
+      "matched": true,
+      "observed_disposition": "qualify"
+    },
+    {
+      "case": "public-freeze",
+      "control": "misattributed-claim",
+      "findings": [
+        "missing_attribution:catalog-freeze",
+        "unentailed_citation:catalog-freeze/operator.summary"
+      ],
+      "matched": true,
+      "observed_disposition": "qualify"
+    },
+    {
+      "case": "public-schema",
+      "control": "grounded-paraphrase",
+      "findings": [],
+      "matched": true,
+      "observed_disposition": "answer"
+    },
+    {
+      "case": "public-schema",
+      "control": "reversed-edge",
+      "findings": [
+        "critical_contradiction:reverse-edge"
+      ],
+      "matched": true,
+      "observed_disposition": "answer"
+    },
+    {
+      "case": "public-schema",
+      "control": "guaranteed-rollback",
+      "findings": [
+        "critical_contradiction:guarantee"
+      ],
+      "matched": true,
+      "observed_disposition": "answer"
+    },
+    {
+      "case": "public-schema",
+      "control": "deleted-caveat",
+      "findings": [
+        "critical_omission:migration"
+      ],
+      "matched": true,
+      "observed_disposition": "answer"
+    },
+    {
+      "case": "public-schema",
+      "control": "unwarranted-abstention",
+      "findings": [
+        "critical_omission:dependency",
+        "critical_omission:image",
+        "critical_omission:migration",
+        "unwarranted_abstention",
+        "wrong_disposition"
+      ],
+      "matched": true,
+      "observed_disposition": "abstain"
+    }
+  ],
+  "public_status": "pass",
+  "rubric_sha256": "c050fbae9a3454ac082cf0657c292e459cd6eaf97f2d18afa17eef09c28f16d9",
+  "scheduled_controls": 19,
+  "schema": "c3-public-development-v1"
+}
