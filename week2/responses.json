@@ -1,5 +1,5 @@
 {
-  "snapshot": "**Operational evidence via MCP · synthetic snapshot**\n\nObservation time and freshness are unknown. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.",
+  "snapshot": "**Operational evidence via MCP · synthetic snapshot**\n\nObservation time and freshness are unknown. Verify live service signals before using this snapshot for a deployment decision. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.",
   "tool_failure": "Operational evidence is unavailable. No combined risk assessment is assigned; current health, dependencies and freeze applicability remain unconfirmed.",
   "retrieval_failure": "Historical evidence is unavailable. No risk indication is assigned. Check the local index and model setup.",
   "health": "Recorded health for {service}: **{health}**. Reported freeze status: **{freeze}**. Active incidents: unknown. Evidence: {evidence}.",

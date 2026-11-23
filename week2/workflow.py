@@ -32,6 +32,7 @@ from week2.capacity import remaining_budget
 from week2.memory import MemoryStore, MemoryUnavailable
 from week2.preferences import parse_command, effective_policy
 from week2.help import capability_lines, help_answer, help_topic
+from week2.review_questions import incident_field, named_services, review_intent
 from week3.guardrails import LocalRails, check_context
 from week3.support import coverage, approval_request, advisory_question
 from week3.cache import identity, CacheToolError
@@ -228,7 +229,8 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
             result["trace"]["topic"] = topic
             return result
         scope = routing.classify_scope(question, decision, CATALOG)
-        if scope == "non_cra2" or decision is not None:
+        intent, identifiers = review_intent(active, CATALOG)
+        if (scope == "non_cra2" and intent is None) or decision is not None:
             return {"route": "legacy"}
         # An anchored preference command stores its bounded note as inert data;
         # words inside that note are never interpreted as execution requests.
@@ -239,12 +241,44 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
             return _answer(responses.message(catalog, "advisory_boundary"), "advisory_boundary")
         if re.search(r"\bremember\b|\b(?:save|store)\b.*\bpreference", active):
             return _answer(copy["memory_help"], "needs_clarification")
-        names = chat._services(question)
+        names = named_services(active, CATALOG) if intent else chat._services(question)
         if len(names) > 1:
             return _answer(responses.message(catalog, "multiple_services"), "needs_clarification")
-        service = _context_service(question, history)
+        if intent == "incident":
+            if len(identifiers) != 1:
+                return _answer("Which one incident should I check?", "needs_clarification")
+            incident_id = identifiers[0]
+            field = incident_field(incident_id)
+            if field is None:
+                return _answer(f"No incident record matches {incident_id}. Please check the record ID.", "incident_lookup")
+            refused = await rail_check("context", [field])
+            if refused:
+                return refused
+            answer = f"{incident_id} records an incident on {chat._inline(field['text'])}. Source: {field['source']}."
+            if names and names[0] != field["text"]:
+                answer += f" For {names[0]} this is a cross-service analogue. Verify the dependency before applying its findings."
+            result = _answer(answer, "incident_lookup")
+            result["trace"]["retrieved"] = [field]
+            return result
+        if intent == "recovery":
+            if len(identifiers) != 1:
+                return _answer("Which single service needs a recovery review?", "needs_clarification")
+            if identifiers[0] not in CATALOG:
+                return _answer(f"The catalog has no recovery record for {chat._inline(identifiers[0])}. "
+                               "Provide its runbook and a tested rollback procedure before assessing recovery.",
+                               "no_recovery_record")
+        service = names[0] if names else _context_service(question, history)
+        if intent == "limit" and not service:
+            return _answer("Which service and which limit are changing? Include the current and proposed values.",
+                           "needs_clarification")
         if not service:
             return _answer(responses.message(catalog, "missing_service"), "needs_clarification")
+        if intent == "recovery":
+            return _answer(f"Open Incidents & rollback and select {service} to review its recorded recovery "
+                           "approach, callers and reconciliation checks.", "recovery_guidance")
+        if intent == "snapshot":
+            return {"route": "memory_read", "next_route": "tools", "service": service,
+                    "calls": [(NAMES[0], {"service_name": service})]}
         specific = chat._specific_change(question, service)
         dependency = bool(re.search(r"\bdepend(?:s|ents|encies)?\b", active))
         health = bool(re.search(r"\b(?:health|status|freeze)\b", active))

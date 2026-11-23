@@ -52,7 +52,7 @@ def examples():
         raise ValueError("Invalid classifier examples")
     data = json.loads(raw)
     rows = data["examples"]
-    if data["version"] != 1 or not 10 <= len(rows) <= 200:
+    if data["version"] != 2 or not 10 <= len(rows) <= 200:
         raise ValueError("Invalid classifier examples")
     identities = set()
     for row in rows:

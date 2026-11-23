@@ -1,5 +1,7 @@
 """Admission must stop work before an agent call; owner records never enter UI state."""
 
+import hashlib
+import json
 from pathlib import Path
 
 import pytest
@@ -119,8 +121,11 @@ def test_unrelated_existing_file_and_symlink_are_not_initialized(tmp_path):
 
 def test_synthetic_splits_are_disjoint_and_runtime_records_are_not_training_data():
     rows = abuse.examples()
-    assert len(rows) == 80 and len({row["text"] for row in rows}) == 80
-    assert {split: sum(row["split"] == split for row in rows) for split in ("train", "validation", "test")} == {"train": 48, "validation": 16, "test": 16}
+    assert len(rows) == len({row["text"] for row in rows}) == 81
+    assert {split: sum(row["split"] == split for row in rows) for split in ("train", "validation", "test")} == {"train": 49, "validation": 16, "test": 16}
+    original = [row for row in rows if row["id"] != "train-benign-recovery-review"]
+    encoded = json.dumps(original, sort_keys=True, separators=(",", ":")).encode()
+    assert hashlib.sha256(encoded).hexdigest() == "c35ec3483135c42d6081f04996aeb82436d31cfd658836d5533cf548f27ec4ec"
 
 
 def test_blocked_request_never_enters_agent_and_private_verdict_is_not_projected(tmp_path, monkeypatch):

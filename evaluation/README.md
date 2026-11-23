@@ -80,3 +80,15 @@ This probe reads only the runnable packet. It uses temporary local audit and mem
 On Python 3.13.15 all four chat inputs passed admission and then routed out of scope. Of the three recovery forms, two returned reports and the inventory schema form hit the admission classifier's `prohibited_action_similarity` condition. These cases are available for reproduction before changing routing or admission. The signed browser capture and run-specific evidence join are pending. [Callback observations](../intent/c3-answer-quality/public-callback-observations.json)
 
 **Development family exposure.** The CX-104 TLS, CX-107 index and inventory schema families overlap the public retrieval cases and their incident/postmortem pairs. The health and freeze cases reuse the public catalog and the freeze/health verification runbook. The ambiguous-limit and unlisted-worker prompts are public from this version. Reserve each family and its derivatives for development in future blind runs. [Retrieval cases](retrieval-cases-v1.json) · [Public runbook](../week1/corpus/rb-freeze-health-verification.md)
+
+### Reproduce signed local browser verification
+
+Use the Week 2 Python 3.13 environment with the synthetic index, Node, Playwright and Chrome installed. For a shared Playwright installation, set `CRA2_PLAYWRIGHT_MODULE` to its module path.
+
+```sh
+week2/.venv/bin/python -m evaluation.collect_answers --out /tmp/cra2-c3-signed-browser.json
+```
+
+The fixture mounts the protected app on loopback with ephemeral signing keys, one synthetic owner and temporary storage. Each public input is submitted through a fresh browser context, paced to respect the normal owner quota. The driver captures the visible assistant message or recovery report. The collector matches its submitted values, delivery receipt, session, principal, queue event and callback before checking the visible facts and the source fields that the callback used. The report retains the submitted case ID, returned text, source references and duration. Signing credentials and browser session handles stay in the fixture.
+
+A passing run covers the seven exposed development cases. Independent labeling still requires the owner's named reviewer and adjudicator. The earlier callback-only observations are the pre-fix baseline.
