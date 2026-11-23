@@ -393,3 +393,30 @@ def test_locked_audit_result_rejects_early_overwrite_and_delete(tmp_path):
         + AUDIT + '/o/' + name, headers=s.client._headers()))
     assert response.status_code == 403 and response.json()['error'] == 'retentionPolicyNotMet'
     assert s.client.read(AUDIT, name) == (old, generation)
+
+
+def test_unacknowledged_old_submission_cannot_overwrite_a_newer_edit(tmp_path, monkeypatch):
+    from week2.reconcile_review import reconcile
+    fixture = ObjectFixture(tmp_path / 'late-replay.db')
+    stores = fixture.stores()
+    m = stores.memory_for(OWNER)
+    review = '8' * 32
+    original = stores.client.write
+    def disconnect(bucket, name, row, generation='0'):
+        if name == m._name(SERVICE):
+            raise StorageUnavailable('unacknowledged_submission')
+        return original(bucket, name, row, generation)
+    monkeypatch.setattr(stores.client, 'write', disconnect)
+    with pytest.raises(MutationStatus, match='memory_unconfirmed'):
+        m.write(SERVICE, freeze_notes='older edit', review_id=review)
+    fresh = fixture.stores()
+    m = fresh.memory_for(OWNER)
+    m.write(SERVICE, freeze_notes='newer edit')
+    before = fresh.client.read(STATE, m._name(SERVICE))
+    with pytest.raises(MutationStatus):
+        m.write(SERVICE, freeze_notes='older edit', review_id=review)
+    assert fresh.client.read(STATE, m._name(SERVICE)) == before
+    assert reconcile(fresh.settings, fresh.client, review) == 'failed'
+    assert fresh.client.read(STATE, m._name(SERVICE)) == before
+    terminal = [r for r in rows(fixture, AUDIT, 'audit/v1/') if r['request_id'] == review][-1]
+    assert terminal['reason'] == 'superseded_generation'
