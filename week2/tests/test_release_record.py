@@ -206,12 +206,12 @@ def test_packaging_rejects_stale_input_and_writes_only_public_fields(tmp_path, m
         shutil.copyfile(ROOT / filename, target)
     expected = labels.label_fields(SOURCE, candidate["dataset"])
     receipt = tmp_path / "week2/_build_inputs.json"
-    record.write(receipt, {**expected,"dataset_inputs":{}})
+    record.write(receipt, {**expected,"dataset_inputs":{}, "runtime_sha256":labels.runtime_digest(tmp_path)})
     with pytest.raises(ValueError, match="dataset binding"):
         labels.package(tmp_path)
     calls = []
     monkeypatch.setattr(labels, "check_index", calls.append)
-    record.write(receipt, {**expected, "dataset_inputs":candidate["dataset_inputs"]})
+    record.write(receipt, {**expected, "dataset_inputs":candidate["dataset_inputs"], "runtime_sha256":labels.runtime_digest(tmp_path)})
     labels.package(tmp_path)
     assert calls == [tmp_path]
     assert not receipt.exists()

@@ -12,11 +12,7 @@ import tempfile
 from xml.etree import ElementTree
 
 from evaluation.answer_packet import digest
-from week2.release_info import COMPONENTS, ROOT, dataset_inputs, label_fields
-
-
-class VerificationError(ValueError):
-    """A fixed diagnostic safe to retain in the operator summary."""
+from week2.release_info import COMPONENTS, ROOT, dataset_inputs, label_fields, runtime_digest, VerificationError
 
 
 def require(ok, message):
@@ -61,7 +57,9 @@ def identity(root, source, source_at):
                        retrieval_sha256=file_hash(root / "evaluation/retrieval-cases-v1.json"),
                        lock_sha256=file_hash(root / "evaluation/uv.lock"), evaluator_revision=source)
     return {"schema_version": 1, **label, "source_at": timestamp(source_at), "components": COMPONENTS.copy(),
-            "dataset_inputs": files, "evaluation": evaluations}
+            "dataset_inputs": files, "runtime_sha256": runtime_digest(root),
+            "recipe_sha256": {name: file_hash(root / name) for name in ("Containerfile", ".dockerignore")},
+            "evaluation": evaluations}
 
 
 def verify_dataset(record, root):
@@ -75,6 +73,8 @@ def verify_identity(record, root, source):
     verify_dataset(record, root)
     expected = identity(root, source, record["source_at"])
     require(expected["evaluation"] == record.get("evaluation"), "evaluation packet, rubric or evaluator mismatch")
+    require(expected["runtime_sha256"] == record.get("runtime_sha256"), "runtime source mismatch")
+    require(expected["recipe_sha256"] == record.get("recipe_sha256"), "build recipe mismatch")
     require(expected == record, "release identity mismatch")
 
 
@@ -108,7 +108,7 @@ def prepare(root, source, context, encoder):
         dest.parent.mkdir(parents=True)
         shutil.copyfile(encoder, dest)
         write(stage / "week2/_build_inputs.json", {**label_fields(source, record["dataset"]),
-                                                  "dataset_inputs": record["dataset_inputs"]})
+                                                  "dataset_inputs": record["dataset_inputs"], "runtime_sha256": record["runtime_sha256"]})
         stage.rename(context)
     return record
 

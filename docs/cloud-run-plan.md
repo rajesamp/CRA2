@@ -318,7 +318,7 @@ The protected workspace displays a short release, source and dataset label from 
 
 ### Reproduce a candidate locally
 
-Use a clean checkout at the intended commit, Python 3.13, the approved encoder archive, Node with Playwright and Chrome, and an existing local Podman connection. Place outputs outside the checkout. The prepare command takes files from the named Git commit, calculates full source and dataset identities, and copies only the reviewed model archive into the build cache. The container build verifies the archive, its extracted files and the resulting index against the packaged sources. It writes the compact display label after verification.
+Use a clean checkout at the intended commit, Python 3.13, the approved encoder archive, Node with Playwright and Chrome, and an existing local Podman connection. Place outputs outside the checkout. The prepare command takes files from the named Git commit, calculates full source and dataset identities, and copies only the reviewed model archive into the build cache. The container build verifies the archive, its extracted files and the resulting index against the packaged sources. It also compares the application bytes in the image with the exported source fingerprint before writing the display label.
 
 ```sh
 candidate=$(git rev-parse HEAD)

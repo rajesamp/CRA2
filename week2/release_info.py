@@ -1,6 +1,7 @@
 """Offline release label. The signed-in UI reads only this bounded metadata."""
 from hashlib import sha256
 import json
+import os
 from pathlib import Path
 import re
 
@@ -8,6 +9,10 @@ ROOT = Path(__file__).resolve().parents[1]
 LABEL_FILE = Path(__file__).with_name("_release.json")
 FALLBACK = "Local build · Release unverified"
 COMPONENTS = {"protected": "week2.cloud_app", "intro": "week2.landing"}
+
+
+class VerificationError(ValueError):
+    """A bounded binding diagnostic safe for the operator summary."""
 
 
 def digest(value):
@@ -59,6 +64,26 @@ def dataset_inputs(root):
     return {path.relative_to(root).as_posix(): sha256(path.read_bytes()).hexdigest() for path in paths}
 
 
+def runtime_digest(root):
+    """Fingerprint application files that the clean Podman context ships."""
+    files = [root / name for name in ("pyproject.toml", "uv.lock", "README.md") if (root / name).is_file()]
+    for name in ("cra2", "data", "evals", "week1", "week2", "week3", "week4"):
+        for directory, children, names in os.walk(root / name):
+            children[:] = [d for d in children if not d.startswith(".") and d not in {"tests","__pycache__"}]
+            for filename in names:
+                if filename.startswith(".") or filename.endswith((".sqlite3", ".sqlite3-wal", ".sqlite3-shm", ".pyc")):
+                    continue
+                path = Path(directory) / filename
+                if path.relative_to(root).as_posix() not in {"week2/_build_inputs.json", "week2/_release.json"}:
+                    files.append(path)
+    entries = {}
+    for path in files:
+        if path.is_symlink():
+            raise ValueError("unexpected linked runtime source")
+        entries[path.relative_to(root).as_posix()] = sha256(path.read_bytes()).hexdigest()
+    return digest(entries)
+
+
 def check_index(root):
     from week1 import retrieval
     from week1.setup_index import provision_model
@@ -81,7 +106,9 @@ def package(root=ROOT):
     expected = json.loads(manifest.read_bytes())
     files = dataset_inputs(root)
     label = label_fields(expected["source"], digest(files))
-    if expected != {**label, "dataset_inputs": files}:
+    if expected.get("runtime_sha256") != runtime_digest(root):
+        raise ValueError("packaged runtime source does not match exported source")
+    if expected != {**label, "dataset_inputs": files, "runtime_sha256": expected["runtime_sha256"]}:
         raise ValueError("packaged source or dataset binding mismatch")
     check_index(root)
     (root / "week2/_release.json").write_text(json.dumps(label) + "\n")
