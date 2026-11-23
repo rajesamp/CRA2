@@ -11,4 +11,6 @@ The owner authorized implementation of the [November 23 spec](spec.md), includin
 
 The local Chrome collector in `evaluation/probe_audit_browser.py` compares each displayed message with the signed request's private records. The operator entry point is `python -m week2.reconcile_review REVIEW_ID`. If the original telemetry write was never confirmed and its measurements are gone, a repair record reports measurements unavailable. A competing or mismatched immutable record cannot be treated as confirmation.
 
+Only a submitter that receives a definitive generation rejection may retry against a newer generation. A redelivery with an ambiguous outcome cannot rebase the older edit. The operator may close it as failed once its generation is superseded and the unchanged journal proves no later edit displaced its receipt.
+
 The highest-risk boundary is a crash between a state write and its confirmation. Test storage generations and the recorded operation identity directly, including equal successive values. Counters and matching preference values alone cannot establish success. The local SQLite preference store retains its existing non-cloud contract.

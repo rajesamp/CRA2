@@ -163,7 +163,7 @@ class PreferenceJournal:
             _, current_version = self.load(review)
             if current_version != version:
                 continue
-            if phase == 'submitting' and op['expected'] == generation:
+            if phase == 'submitting':
                 # Another delivery owns this conditional write. Its acknowledgement
                 # may have been lost. No second caller may declare failure or submit it.
                 raise MutationStatus('memory_unconfirmed')
@@ -180,6 +180,14 @@ class PreferenceJournal:
             try:
                 self.client.write(self.bucket, name, dict(record, _receipt=proof), generation)
             except GenerationConflict:
+                # Only the submitter that received a definite rejection can rebase.
+                # A restarted or duplicate delivery has no such acknowledgement.
+                current, journal_generation = self.load(review)
+                if current['phase'] == 'submitting' and current['expected'] == generation:
+                    try:
+                        self.update(current, journal_generation, phase='requested')
+                    except GenerationConflict:
+                        pass
                 continue
             except WriteRejected:
                 current, version = self.load(review)
@@ -224,10 +232,16 @@ class PreferenceJournal:
                 if phase in {'requested', 'submitting'}:
                     current, generation = self.memory._read(op['service'], self.memory._name(op['service']))
                     receipt = (current or {}).get('_receipt', {})
-                    if receipt.get('mutation_id') != op['mutation_id']:
-                        return 'unconfirmed'
-                    self.checkpoint(receipt, generation)
-                    continue
+                    if receipt.get('mutation_id') == op['mutation_id']:
+                        self.checkpoint(receipt, generation)
+                        continue
+                    if phase == 'submitting' and generation != op['expected']:
+                        # The old conditional write can no longer succeed. Every
+                        # later writer checkpoints a displaced receipt first.
+                        # This CAS fails if that checkpoint raced our state read.
+                        self.update(op, version, phase='failed', failure='superseded_generation', ended=utcnow())
+                        continue
+                    return 'unconfirmed'
                 if not op.get('audit_confirmed'):
                     self.append(op, True, operator)
                     self.update(op, version, audit_confirmed=True)
