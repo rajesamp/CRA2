@@ -12,11 +12,25 @@ async function main() {
     const context = await browser.newContext({serviceWorkers: "block"});
     await context.route("**/*", route => {
       if (new URL(route.request().url()).origin !== origin) return route.abort();
+      if (!config.assertion) return route.continue();
       return route.continue({headers: {...route.request().headers(), "x-goog-iap-jwt-assertion": config.assertion}});
     });
     const page = await context.newPage();
     page.setDefaultTimeout(15000);
     await page.goto(origin, {waitUntil: "domcontentloaded"});
+    if (operation === "release") {
+      const label = page.locator("#cra2-release");
+      await label.waitFor({state: "visible"});
+      console.log(JSON.stringify({text: (await label.innerText()).trim()}));
+      return;
+    }
+    if (operation === "intro") {
+      await page.getByRole("link", {name: /Sign in with Google/}).waitFor();
+      const html = await page.content();
+      console.log(JSON.stringify({private_content: config.canaries.some(value => html.includes(value)),
+        protected_label: await page.locator("#cra2-release").count()}));
+      return;
+    }
     const chat = operation === "chat";
     await page.getByRole("tab", {name: chat ? "Change Risk Advisor" : "Incidents & rollback", exact: true}).click();
     const textbox = page.getByPlaceholder("Type a message...");

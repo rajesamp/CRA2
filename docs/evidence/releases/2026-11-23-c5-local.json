@@ -1,0 +1,139 @@
+{
+  "acceptance": {
+    "result": "pending"
+  },
+  "build": {
+    "result": "unknown"
+  },
+  "holds": {
+    "independent_labeling": "on_hold",
+    "invitations": "on_hold"
+  },
+  "hosted": {
+    "result": "unknown"
+  },
+  "identity": {
+    "bundle": "CRA2-878740a81665",
+    "components": {
+      "intro": "week2.landing",
+      "protected": "week2.cloud_app"
+    },
+    "dataset": "cf1dce75a8ee27ea39c1e33dc7c32e19c54b3640c24d3a495c07c04442eeacc4",
+    "dataset_inputs": {
+      "data/checkout_system.json": "1f92c7525820328fd58b55e3e1226c60aecb0a848a1dc29fb463808e73c0b5ef",
+      "data/incidents.json": "1e62a6aa696a9de88c85b3f1f0b4a55262b43ad2ec3838ec0e8ea33302971b2e",
+      "data/sample_incidents.json": "c3e0f1999e68768bf163d63bbfbde6968e75c2d16ae9bfb2c30116f6129e7b82",
+      "week1/corpus/manifest.json": "87027139f7f9a912fde88574d9b3d59e89aba04bcbdcfbd8bf4bde28e6dec4c4",
+      "week1/corpus/pm-cx101-checkout-timeout.md": "513f0e41accda636f4103aaaf6b4e5f79eb2797fdc581ae3992f774610099b6c",
+      "week1/corpus/pm-cx102-checkout-retries.md": "6665e83d2b799a86a803709911945365c20c42ef711c7f64a67206832fee0f4d",
+      "week1/corpus/pm-cx104-payment-tls.md": "3a02bd723a64e3dfa2ffdf5d6e3d74a8bdd980cd8501bbf4300bd2e2e2512ac7",
+      "week1/corpus/pm-cx107-order-index.md": "83ff68b7f3e20527247df1140e5254cb26b16605ddf6d91639c42d35233212eb",
+      "week1/corpus/pm-cx109-inventory-column.md": "feaf27d74307de33706f0fd4524f2776e687441a90bbab3b0c4fe999496f33f0",
+      "week1/corpus/pm-cx115-auth-sessions.md": "e47151c40271105f0333e300d06d6272b9e205b4d2839f20217bfe7e1cb108e7",
+      "week1/corpus/rb-checkout-config-risk.md": "f604d82474af76e9bd2233cee55ccc01b3ae523ae29c1ee69a867a4b0d6e34e2",
+      "week1/corpus/rb-dependency-verification.md": "e296cccb022b42e158949e7073c4e405d338e1888ea331a6a689ec9f9870dc55",
+      "week1/corpus/rb-freeze-health-verification.md": "279456387fba87603955596e4385a9c4b15ab34fcf981b929959564a670d7aea",
+      "week1/corpus/rb-similar-incidents.md": "71f64aea4940ded0e1a4125bc313a8c714a9fdee5bebecf1fbd0ec43559227ef",
+      "week1/corpus/rb-team-advisory.md": "c680e1493e843ac3aa5e650dee3210a57f902a3beed7fad55db8f772fda8bfd8"
+    },
+    "evaluation": {
+      "controls_sha256": "a9c8b4a2d2b3f9c7e7735654727a9ac419e3dd95049ee8417e1e0a912515c1fc",
+      "evaluator_revision": "6d34826ad7a985aaad56f2b138590db416de5d22",
+      "input_sha256": "1ba6c8f773a0f1251461cdfe6dbcd7bdc0d02862f2de6cb37853cf67899107c0",
+      "lock_sha256": "f3edd2c722842a8f37538efd1165357cbd21f1cf355fc1364b1bceb8a4c5da02",
+      "packet_file_sha256": "80bbae42d512fe56702deb85d61fa8dce62b1c8514137caebb9a4beb482c8e1f",
+      "retrieval_sha256": "3867dfacc207cf6fd9e47e40c7bbc686501e90c7f8d4cd6afba9941cf272387f",
+      "rubric_sha256": "c050fbae9a3454ac082cf0657c292e459cd6eaf97f2d18afa17eef09c28f16d9"
+    },
+    "recipe_sha256": {
+      ".dockerignore": "2f85e9e19c63a01a585ea07730cfc68c02f7f34940985b1722b7041369b6e61d",
+      "Containerfile": "98beed08051d809374c6943219e152e7641a0aaa01daeb6fcc312675696d460d"
+    },
+    "runtime_sha256": "eeca4d301cef1c8463adf5a7110391ef6a35884254d2dc12e2a31cb53613e044",
+    "schema_version": 1,
+    "source": "6d34826ad7a985aaad56f2b138590db416de5d22",
+    "source_at": "2026-11-23T22:25:05Z"
+  },
+  "local": {
+    "at": "2026-11-23T22:32:46Z",
+    "browser": {
+      "anonymous_intro": {
+        "private_content": false,
+        "protected_label": 0
+      },
+      "fixed_redirect": true,
+      "owner_labels": {
+        "invalid": "Local build \u00b7 Release unverified",
+        "missing": "Local build \u00b7 Release unverified",
+        "packaged": "Release CRA2-878740a81665 \u00b7 Source 6d34826ad7a9 \u00b7 Dataset cf1dce75a8ee"
+      }
+    },
+    "c1": {
+      "c1_false_blocks": "0/5",
+      "c1_missed_blocks": "0/8"
+    },
+    "c5_regressions": 15,
+    "checks": {
+      "answer_tests": 42,
+      "canaries": 7,
+      "development-validation": 18,
+      "evaluation": 14,
+      "faults": 9,
+      "guarded_callbacks": 7,
+      "public_controls": 19,
+      "reserved": 4,
+      "retrieval_cases": 6,
+      "tests": 555
+    },
+    "evidence": "01fbf8761efc306582ca165973ed81526e3fe1abe1cbab0e99bb16aa237372ea",
+    "fresh_checkout_reproduced_record_after_removing_ci_artifacts": true,
+    "image": {
+      "anonymous_intro_http": 200,
+      "archive_manifest": "sha256:1cd23d533f5c58e0989eeb7875b1f194d0b5d6ef2b831e1bb0f93cae6815c44e",
+      "config": "sha256:1ab628bc5217fab74f36b9fdd9f851787416feb00e669cb303067ca7c361d797",
+      "container_report_sha256": "f1fd5d95b9ade143887428172d7e6c9fc2ba708e02a0494d52105891c5fcb6aa",
+      "displayed_label": "Release CRA2-878740a81665 \u00b7 Source 6d34826ad7a9 \u00b7 Dataset cf1dce75a8ee",
+      "format": "local OCI archive",
+      "network_disabled_smoke": true,
+      "offline_intents_passed": 6,
+      "platform": "linux/amd64",
+      "runtime_user": "65532:65532"
+    },
+    "named_c2_capacity_cases": 11,
+    "python": "3.13.15",
+    "rejected_bindings": {
+      "dataset": "dataset bytes or manifest mismatch",
+      "recipe": "build recipe mismatch",
+      "rubric": "evaluation packet, rubric or evaluator mismatch",
+      "source": "source revision mismatch"
+    },
+    "result": "passed",
+    "scan": {
+      "blocking_findings": 0,
+      "database_built": "2026-11-23T06:28:32Z",
+      "detection_control_matches": 27,
+      "evidence_sha256": "fb9e3892eb5e476b0a6f05a8b84d14b9ce8daf8a40d13305b68c9cb21074bb8c",
+      "matches_examined": 11,
+      "packages_examined": 159,
+      "severity_counts": {
+        "Low": 3,
+        "Medium": 7,
+        "Negligible": 1
+      },
+      "status": "passed",
+      "subject_config": "sha256:1ab628bc5217fab74f36b9fdd9f851787416feb00e669cb303067ca7c361d797"
+    },
+    "scope": "Python 3.13 local tests",
+    "scope_note": "Registry publication, release signing, hosted C5 CI, live traffic and owner product acceptance were outside this local run.",
+    "source": "6d34826ad7a985aaad56f2b138590db416de5d22",
+    "test_environment": "macOS amd64 and synthetic signed owner with fixture storage",
+    "tests": 555
+  },
+  "review": {
+    "result": "unknown"
+  },
+  "schema_version": 1,
+  "serving": {
+    "result": "unknown"
+  }
+}

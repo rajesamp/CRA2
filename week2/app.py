@@ -19,6 +19,7 @@ import gradio as gr
 from cra2.secrets import configure_sdk_logging
 from cra2.advisor import ADVISORY, LEVELS, _inline, CATALOG
 from week1.responses import guard
+from week2.release_info import release_label
 from week2.memory import MemoryStore
 from week2.preferences import parse_command
 from week2.workflow import load_copy, respond
@@ -367,6 +368,7 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
 
     with gr.Blocks(title="CRA2 · Change risk advisor", analytics_enabled=False) as demo:
         gr.Markdown("### CRA · Change Risk Advisor")
+        gr.Markdown(release_label(), elem_id="cra2-release")
         if local_capacity is not None:
             gr.HTML('<p id="cra2-capacity-message" role="alert" hidden></p>', js_on_load=None)
         session_id = gr.State(value=lambda: uuid4().hex)

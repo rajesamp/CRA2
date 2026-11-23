@@ -39,7 +39,7 @@ COPY week4 ./week4
 RUN ["/usr/local/bin/uv", "sync", "--locked", "--no-dev", "--no-install-package", "cra2", "--project", "week2", "--python", "/usr/bin/python3.13"]
 # The reviewed archive must be present in the build context. Setup verifies its
 # exact size/SHA-256 and every extracted file; runtime never downloads a model.
-RUN ["/bin/sh", "-c", "/app/week2/.venv/bin/python -m week1.setup_index && rm week1/.cache/models/fast-bge-small-en-v1.5.tar.gz && chmod -R a=rX week1/.cache"]
+RUN ["/bin/sh", "-c", "/app/week2/.venv/bin/python -m week1.setup_index && /app/week2/.venv/bin/python -m week2.release_info && rm week1/.cache/models/fast-bge-small-en-v1.5.tar.gz && chmod -R a=rX week1/.cache"]
 
 FROM os
 WORKDIR /app

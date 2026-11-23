@@ -35,3 +35,6 @@ week1/.cache/**
 !week1/.cache/models/
 week1/.cache/models/**
 !week1/.cache/models/fast-bge-small-en-v1.5.tar.gz
+
+# Build the display label from the prepared release inputs inside the image.
+week2/_release.json
