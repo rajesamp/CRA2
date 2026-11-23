@@ -49,4 +49,4 @@ Keep the existing offline TruLens retrieval job and its thresholds. Add a separa
 
 Use synthetic principals and approved local fixtures. Record sanitized synthetic answer snapshots and source references. Keep live prompts, account details, private audit records and credentials out of eval artifacts. Keep the protected app owner-only and invitations on hold.
 
-**Next stage.** The [implementation plan](plan.md) is ready for owner review. The independent reviewer and adjudicator are unassigned.
+The owner approved the [implementation plan](plan.md) and authorized public development controls. The independent reviewer and adjudicator are unassigned.

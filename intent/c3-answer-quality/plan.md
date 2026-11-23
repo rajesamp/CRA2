@@ -1,6 +1,6 @@
 # C3 implementation plan · Grade the visible answer against its evidence
 
-**Draft for owner review.** The owner approved the [C3 spec and pilot criteria](spec.md) at `febea5b`. The decision now is whether to proceed with the sequence and human handoffs below. The pilot uses synthetic changes on a signed loopback fixture. The Cloud Run app stays owner-only and invitations stay on hold.
+**Approved November 22, 2026.** The owner approved this plan at `5046beb` and the [C3 spec and pilot criteria](spec.md) at `febea5b`. Start with public development controls on Python 3.13. Independent labeling is on hold until the owner names the reviewer and adjudicator. The pilot uses synthetic changes on a signed loopback fixture. Cloud Run access stays owner-only and invitations stay on hold.
 
 ## Files and order of work
 
@@ -37,4 +37,4 @@ Public development controls can be built after plan approval. Independent labeli
 - **Pilot decision.** A pass requires all seven held-out challenges covered, every scheduled answer matched and adjudicated, zero critical contradictions or omissions, zero false security blocks on benign controls, and the expected disposition on every uncertainty case. Known gate breaches are failures. Missing evidence is incomplete. If both occur, display both. Support, entailment and latency remain descriptive under the approved pilot.
 - **Leakage and privacy.** Run browser collection on loopback and scoring offline with provider access disabled. Strip identity and transport handles before preparing grader packets. Keep sealed inputs, keys, raw votes and the candidate mapping outside Git and CI uploads. CI gets public controls, sanitized aggregates, version digests and review status. The owner verifies the human sign-offs against the private decision log. A matching digest alone cannot establish independent review. After exposure, retire a held-out family to regression use. Any future blind run uses fresh families.
 
-**Ready for review.** Engineering delivers a repeatable development run and validated report format. The independent reviewer supplies the frozen labels and first votes. The adjudicator supplies the final case decisions. The owner reviews the pilot outcome separately from this implementation plan.
+**Implementation handoff.** Engineering delivers a repeatable development run and validated report format. After designation, the independent reviewer supplies the frozen labels and first votes, and the adjudicator supplies the final case decisions. The owner reviews the pilot outcome separately.
