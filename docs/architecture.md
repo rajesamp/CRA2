@@ -278,7 +278,7 @@ complete token-cost estimate when any attempt lacks usage.
 
 Offline tests cover question scope, retrieval staleness, policy floors,
 malformed model output, cache identity, rendering, accounting, and
-package-resource contracts. CI targets Python 3.10 and 3.13, builds a wheel,
+package-resource contracts. CI targets Python 3.13, builds a wheel,
 and runs a five-repeat calibration gate. The gate scores every repeat; one good
 first response cannot hide later regressions. Unexpected clarification fails a
 calibration case without crashing the scorer. Repeatability covers status,
