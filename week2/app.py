@@ -1,6 +1,9 @@
 """Task 18: local Gradio chat with actual MCP calls and recalled policy trace."""
 
 import argparse
+import hashlib
+from datetime import datetime, timezone
+from time import perf_counter
 from inspect import signature, unwrap
 from functools import wraps
 import os
@@ -17,20 +20,21 @@ from cra2.secrets import configure_sdk_logging
 from cra2.advisor import ADVISORY, LEVELS, _inline, CATALOG
 from week1.responses import guard
 from week2.memory import MemoryStore
+from week2.preferences import parse_command
 from week2.workflow import load_copy, respond
 from week2.abuse import AbuseGate
 from week2.capacity import Busy, CapacityUnavailable, MAX_WAITING, QueuedReview, REVIEW_GROUP
 from week2.capacity_chat import CapacityChat, delivery_js
 from week2.owner_audit import OwnerAuditStore
 from week2.guardrail_activity import (SessionActivity, admission_event, record_activity,
-                                     clear_activity, CSS as GUARDRAIL_CSS)
+                                     clear_activity, recovery_stages, CSS as GUARDRAIL_CSS)
 from week2.presentation import review_summary
 from week2.welcome import INTRO, ROADMAP, CSS, LOCAL_IDENTITY, EXAMPLE
 from week2.incident_rollback import (CHANGE_TYPES, CHECK_VALUES, RECONCILIATION_VALUES,
                                     guarded_analyze, render as render_recovery, EMPTY as RECOVERY_EMPTY,
                                     CSS as RECOVERY_CSS)
 from week3.cache import WorkflowCaches
-from week4.telemetry import TelemetryStore
+from week4.telemetry import TelemetryStore, TelemetryUnavailable
 from week4.dashboard import dashboard_view
 from week4.langsmith_tracing import EXPORTER, Settings, safe_url
 
@@ -139,14 +143,24 @@ def chat_response(answer, trace):
     return text + "\n\n" + ADVISORY
 
 
+def local_telemetry(memory_store):
+    host_store = getattr(memory_store, "store", memory_store)
+    path = Path(getattr(host_store, "path", Path(__file__).with_name(".local") / "team-memory.sqlite3"))
+    return TelemetryStore(path.parent / "telemetry" / "requests.sqlite3")
+
+
+def callback_id(request, operation):
+    state = getattr(getattr(request, "request", None), "state", None)
+    seed = getattr(state, "cra2_review_seed", None)
+    return hashlib.sha256((operation + seed).encode()).hexdigest()[:32] if seed else uuid4().hex
+
+
 def ui_reply(message, history, mode, session_id, *, memory_store=None, transport="browser",
-             telemetry_store=None):
+             telemetry_store=None, request_id=None):
     if telemetry_store is None:
-        host_store = getattr(memory_store, "store", memory_store)
-        memory_path = Path(getattr(host_store, "path", Path(__file__).with_name(".local") / "team-memory.sqlite3"))
-        telemetry_store = TelemetryStore(memory_path.parent / "telemetry" / "requests.sqlite3")
+        telemetry_store = local_telemetry(memory_store)
     answer, trace = respond(message, history, mode, session_id=session_id, memory_store=memory_store, caches=HOST_CACHES,
-        telemetry_store=telemetry_store, transport=transport)
+        telemetry_store=telemetry_store, transport=transport, request_id=request_id)
     turn = 1 + sum(1 for item in (history or []) if isinstance(item, dict) and item.get("role") == "user")
     question = message if trace.get("status") != "unavailable" and isinstance(message, str) and 0 < len(message) <= 4000 else "Input withheld"
     review_mode = mode if mode in ("Local evidence only", "Groq assessment") else "Unavailable"
@@ -221,13 +235,18 @@ def protected_reply(history, mode, session_id, *, transport="browser"):
 
 
 def guarded_ui_reply(message, history, mode, session_id, *, gate, client, memory_store=None, transport="browser",
-                     telemetry_store=None):
+                     telemetry_store=None, request_id=None):
     admission = gate.admit(message, client)
     if admission["blocked"]:
         result = protected_reply(history, mode, session_id,transport=transport)
+        if (admission.get("reason") == "unavailable" and not admission.get("cooldown")
+                and isinstance(message, str) and len(message) <= 4000 and parse_command(message)):
+            answer = "Preference was not changed by this attempt. The admission check is unavailable."
+            result[2]["response_details"] = answer
+            result = answer, result[1], result[2]
     else:
         result = ui_reply(message, history, mode, session_id, memory_store=memory_store, transport=transport,
-                      telemetry_store=telemetry_store)
+                      telemetry_store=telemetry_store, request_id=request_id)
     if result[2]["status"] == "out_of_scope":
         if not gate.record_out_of_scope(message, client, admission["verdict"]):
             result = protected_reply(history, mode, session_id,transport=transport)
@@ -261,6 +280,8 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
     if memory_resolver is not None and (identity_resolver is None or memory_store is not None or telemetry_store is None):
         raise ValueError("Cloud storage requires a verified identity and explicit telemetry store")
     store = MemoryStore() if memory_store is None and memory_resolver is None else memory_store
+    if telemetry_store is None:
+        telemetry_store = local_telemetry(store)
     gate = AbuseGate() if abuse_gate is None else abuse_gate
     identity = identity_resolver or request_client
     chat_interface = CapacityChat if local_capacity is not None else gr.ChatInterface
@@ -293,7 +314,7 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
         client = identity(request)
         memory = memory_resolver(client) if memory_resolver is not None else store
         answer, _, trace = guarded_ui_reply(message, history, mode, session_id, gate=gate, client=client,
-                                           memory_store=memory, telemetry_store=telemetry_store)
+                                           memory_store=memory, telemetry_store=telemetry_store, request_id=callback_id(request, "chat"))
         updated = retain_trace(traces, trace)
         display, poll = langsmith_view(trace["turn"], updated)
         choices = gr.update(choices=trace_choices(updated), value=trace["turn"], interactive=True)
@@ -310,12 +331,27 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
 
     @metered("recovery")
     def recovery(service, kind, summary, plan, compatibility, rehearsal, reconciliation, request: gr.Request, activity=None):
+        started = perf_counter()
+        review = callback_id(request, "recovery")
         try:
             client = identity(request)
         except (ValueError, AttributeError):
             return render_recovery(RECOVERY_EMPTY), *record_activity(activity, "recovery", RECOVERY_EMPTY)
         html, report = guarded_analyze((service, kind, summary, plan, compatibility, rehearsal, reconciliation),
                                       gate=gate, client=client)
+        report = dict(report, request_id=review, operation="recovery",
+                      duration_ms=round((perf_counter() - started) * 1000, 3),
+                      created_at=datetime.now(timezone.utc).isoformat())
+        if report["status"] == "ok" and any(s["outcome"] != "allow" for s in recovery_stages(report)):
+            report["status"] = "unavailable"
+            html = render_recovery(RECOVERY_EMPTY)
+        try:
+            telemetry_store.write(report)
+        except TelemetryUnavailable:
+            report["telemetry_status"] = "unavailable"
+            if report["status"] == "ok":
+                html = render_recovery({"status": "unavailable", "message":
+                    "The review record could not be confirmed. No recovery conclusion is available."})
         return html, *record_activity(activity, "recovery", report)
 
     def reset_trace():

@@ -1,7 +1,7 @@
 """Durable owner demo state using the Cloud Storage JSON API and service identity."""
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 import os
@@ -17,6 +17,7 @@ from cra2.advisor import CATALOG, TEAM_SETTINGS
 from week1.responses import guard
 from week2.memory import FIELDS, MemoryUnavailable, _text
 from week2.owner_audit import AuditUnavailable
+from week2.preference_journal import MutationStatus, PreferenceJournal, fingerprint
 from week4.telemetry import TelemetryUnavailable, compact
 
 
@@ -32,6 +33,10 @@ HEX64 = re.compile(r'[0-9a-f]{64}\Z')
 
 
 class StorageUnavailable(ValueError):
+    pass
+
+
+class WriteRejected(StorageUnavailable):
     pass
 
 
@@ -64,6 +69,8 @@ class StorageClient:
                                   follow_redirects=False) as response:
                 if response.status_code == 412:
                     raise GenerationConflict('generation_conflict')
+                if method == 'POST' and response.status_code in {400, 401, 403, 404}:
+                    raise WriteRejected('storage_rejected')
                 if missing and response.status_code == 404:
                     return None
                 response.raise_for_status()
@@ -78,7 +85,7 @@ class StorageClient:
                 if not isinstance(value, dict):
                     raise StorageUnavailable('invalid_storage_response')
                 return value
-        except GenerationConflict:
+        except (GenerationConflict, WriteRejected):
             raise
         except (httpx.HTTPError, ValueError, UnicodeError, RecursionError):
             raise StorageUnavailable('storage_unavailable') from None
@@ -99,6 +106,14 @@ class StorageClient:
             params={'fields': 'iamConfiguration,retentionPolicy,lifecycle,softDeletePolicy,versioning'})
 
     def read(self, bucket, name):
+        for _ in range(4):
+            try:
+                return self._read_generation(bucket, name)
+            except GenerationConflict:
+                continue
+        raise GenerationConflict('object_changed')
+
+    def _read_generation(self, bucket, name):
         url = f'{GOOGLE_STORAGE}/storage/v1/b/{bucket}/o/{quote(name, safe="")}'
         metadata = self._request('GET', url, params={'fields': 'generation'},
                                  headers=self._headers(), missing=True)
@@ -179,10 +194,12 @@ class CloudAudit:
 
 
 class CloudPreferences:
-    def __init__(self, bucket, client, audit, principal):
-        self.team = TEAM_SETTINGS['team']
-        self.scope = hashlib.sha256((principal + '\0' + self.team).encode()).hexdigest()
+    def __init__(self, bucket, client, audit, scope):
+        if not isinstance(scope, str) or not HEX64.fullmatch(scope):
+            raise ValueError('invalid_private_scope')
+        self.team, self.scope = TEAM_SETTINGS['team'], scope
         self.bucket, self.client, self.audit = bucket, client, audit
+        self.journal = PreferenceJournal(self)
 
     def _name(self, service):
         if service not in CATALOG:
@@ -197,7 +214,12 @@ class CloudPreferences:
             _check_policy(self.client.bucket(self.bucket), TELEMETRY, TELEMETRY_DAYS)
         else:
             guard(record)
-            if (set(record) != set(FIELDS) or record['team'] != self.team or record['service'] != service
+            receipt = record.get('_receipt')
+            if '_receipt' in record and (not isinstance(receipt, dict)
+                    or set(receipt) != {'request_id', 'mutation_id', 'service'} or receipt['service'] != service
+                    or any(not re.fullmatch(r'[0-9a-f]{32}', receipt[k]) for k in ('request_id', 'mutation_id'))):
+                raise ValueError('Invalid preference receipt')
+            if (set(record) - {'_receipt'} != set(FIELDS) or record['team'] != self.team or record['service'] != service
                     or record['source'] != 'explicit_team_preference'
                     or (record['high_risk'] is not None and type(record['high_risk']) is not bool)
                     or (record['freeze_notes'] is not None and not _text(record['freeze_notes'], 500))
@@ -211,37 +233,69 @@ class CloudPreferences:
             name = self._name(service)
             for _ in range(4):
                 try:
-                    return self._read(service, name)[0]
+                    row, _ = self._read(service, name)
+                    return {k: row[k] for k in FIELDS} if row else None
                 except GenerationConflict:
                     continue
         except (ValueError, TypeError):
             pass
         raise MemoryUnavailable('memory_unavailable')
 
-    def write(self, service, *, high_risk=None, freeze_notes=None):
+    def updated(self, service, previous, updates):
+        return dict(team=self.team, service=service, source='explicit_team_preference',
+                    updated_at=datetime.now(timezone.utc).isoformat(),
+                    high_risk=updates.get('high_risk', previous.get('high_risk')),
+                    freeze_notes=updates.get('freeze_notes', previous.get('freeze_notes')))
+
+    def _write(self, review_id, service, high_risk, freeze_notes, telemetry_required):
         try:
-            name = self._name(service)
+            self._name(service)
             guard([high_risk, freeze_notes])
             if ((high_risk is None and freeze_notes is None)
                     or (high_risk is not None and type(high_risk) is not bool)
                     or (freeze_notes is not None and not _text(freeze_notes, 500))):
-                raise ValueError
-            self.audit.append(None, self.scope, 'memory_write_requested', {'service': service, 'outcome': 'requested'})
-            for _ in range(4):
+                raise MutationStatus('memory_not_changed')
+            updates = {k: v for k, v in (('high_risk', high_risk), ('freeze_notes', freeze_notes)) if v is not None}
+            return self.journal.apply(review_id, service, updates, telemetry_required=telemetry_required)
+        except MutationStatus:
+            raise
+        except AuditUnavailable:
+            raise MutationStatus('memory_not_changed') from None
+        except (TypeError, ValueError):
+            raise MutationStatus('memory_unconfirmed') from None
+
+    def write(self, service, *, high_risk=None, freeze_notes=None, review_id=None):
+        return self._write(review_id or uuid4().hex, service, high_risk, freeze_notes, False)
+
+    def write_review(self, review, service, *, high_risk=None, freeze_notes=None):
+        return self._write(review, service, high_risk, freeze_notes, True)
+
+    def confirm_telemetry(self, trace, telemetry):
+        review = trace['request_id']
+        digest = fingerprint(compact(trace))
+        try:
+            for _ in range(6):
+                op, version = self.journal.load(review)
+                if not op or op['scope'] != self.scope or op['phase'] != 'committed':
+                    raise TelemetryUnavailable('missing_write_proof')
+                if op.get('telemetry_confirmed'):
+                    return
+                if datetime.now(timezone.utc) - datetime.fromisoformat(op['created']) >= timedelta(days=TELEMETRY_DAYS):
+                    raise TelemetryUnavailable('telemetry_expired')
                 try:
-                    previous, generation = self._read(service, name)
-                    previous = previous or {}
-                    record = {'team': self.team, 'service': service, 'source': 'explicit_team_preference',
-                              'updated_at': datetime.now(timezone.utc).isoformat(),
-                              'high_risk': previous.get('high_risk') if high_risk is None else high_risk,
-                              'freeze_notes': previous.get('freeze_notes') if freeze_notes is None else freeze_notes}
-                    self.client.write(self.bucket, name, record, generation)
-                    return record
+                    if not op.get('telemetry_expected'):
+                        self.journal.update(op, version, telemetry_expected=digest)
+                        continue
+                    if op['telemetry_expected'] != digest:
+                        raise TelemetryUnavailable('telemetry_reconciliation_required')
+                    telemetry.write(trace)
+                    self.journal.update(op, version, telemetry_confirmed=True)
+                    return
                 except GenerationConflict:
                     continue
-        except (ValueError, TypeError):
+        except (ValueError, KeyError):
             pass
-        raise MemoryUnavailable('memory_unavailable')
+        raise TelemetryUnavailable('telemetry_unavailable')
 
 
 class CloudTelemetry:
@@ -273,4 +327,5 @@ class CloudStores:
         if (not isinstance(principal, str) or not principal.startswith('iap:')
                 or not HEX64.fullmatch(principal[4:])):
             raise MemoryUnavailable('memory_unavailable')
-        return CloudPreferences(self.settings.state_bucket, self.client, self.audit, principal)
+        scope = hashlib.sha256((principal + '\0' + TEAM_SETTINGS['team']).encode()).hexdigest()
+        return CloudPreferences(self.settings.state_bucket, self.client, self.audit, scope)

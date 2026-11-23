@@ -31,6 +31,7 @@ from week2.mcp_client import call_tools
 from week2.capacity import remaining_budget
 from week2.memory import MemoryStore, MemoryUnavailable
 from week2.preferences import parse_command, effective_policy
+from week2.preference_journal import MutationStatus, MESSAGES
 from week2.help import capability_lines, help_answer, help_topic
 from week2.review_questions import incident_field, named_services, review_intent
 from week3.guardrails import LocalRails, check_context
@@ -96,6 +97,7 @@ def load_copy():
 
 
 class State(TypedDict, total=False):
+    request_id: str
     question: str
     history: list
     mode: str
@@ -309,11 +311,18 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
     def memory_write(state):
         try:
             policy_settings()
+            if hasattr(store, "write_review"):
+                store.write_review(state["request_id"], state["service"], **state["memory_updates"])
+                result = _answer("Preference saved.", "memory_saved")
+                result["trace"]["events"] = [{"event": "memory_written", "service": state["service"]}]
+                return result
             record = store.write(state["service"], **state["memory_updates"])
             result = _answer(copy["memory_saved"].format(service=state["service"]), "memory_saved")
             result.update(memory_record=record, policy=current_policy(state["service"], record))
             result["trace"]["events"] = [{"event": "memory_written", "service": state["service"]}]
             return result
+        except MutationStatus as error:
+            return _answer(MESSAGES[error.status], error.status)
         except (MemoryUnavailable, ValueError, OSError):
             result = _answer(copy["memory_unavailable"], "memory_unavailable")
             result["trace"]["memory"] = {"status": "unavailable"}
@@ -532,9 +541,9 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
     return builder.compile()
 
 
-async def arespond(question, history=None, mode="Local evidence only", *, session_id=None, telemetry_store=None, transport="cli", trace_exporter=None, **collaborators):
+async def arespond(question, history=None, mode="Local evidence only", *, session_id=None, request_id=None, telemetry_store=None, transport="cli", trace_exporter=None, **collaborators):
     """Only final guarded answer and trace leave this boundary; no raw state."""
-    request_id = uuid4().hex
+    request_id = request_id or uuid4().hex
     began=perf_counter();spans=[]
     started_at = datetime.now(timezone.utc).isoformat()
     try:
@@ -552,7 +561,7 @@ async def arespond(question, history=None, mode="Local evidence only", *, sessio
         # Automatic tracing must never upload raw state, including rail setup.
         with tracing_context(enabled=False):
             graph = build_workflow(**collaborators,spans=spans)
-            result = await graph.ainvoke({"question": effective_question, "history": history or [], "mode": mode},
+            result = await graph.ainvoke({"request_id": request_id, "question": effective_question, "history": history or [], "mode": mode},
                                         config={"recursion_limit": 10, "callbacks": []})
         trace = result["trace"]
         trace.setdefault("mcp", {"status":"unavailable","attempted":None,"failed":None}
@@ -573,13 +582,25 @@ async def arespond(question, history=None, mode="Local evidence only", *, sessio
             {"stage":"cache_"+e["layer"],"duration_ms":e.get("duration_ms",0),"outcome":e["outcome"]} for e in trace.get("cache",[])]
         for item in [*trace["spans"],*trace.get("events",[]),*trace.get("rails",[]),*trace.get("cache",[])]:
             item["request_id"]=request_id
-        if telemetry_store is not None:
+        if trace["status"] == "memory_replay_rejected":
+            # The original submission owns this review's immutable telemetry key.
+            trace["telemetry_status"] = "replay_rejected"
+        elif telemetry_store is not None:
             try:
-                telemetry_store.write(trace)
+                memory = collaborators.get("memory_store")
+                if hasattr(memory, "confirm_telemetry") and trace["status"] in {"memory_saved", "memory_confirmation_incomplete"}:
+                    memory.confirm_telemetry(trace, telemetry_store)
+                else:
+                    telemetry_store.write(trace)
                 trace["telemetry_status"]="recorded"
             except TelemetryUnavailable:
-                result["answer"]=load_copy()["telemetry_failure"]+"\n\n"+ADVISORY
-                trace.update(status="telemetry_unavailable",telemetry_status="unavailable")
+                trace["telemetry_status"] = "unavailable"
+                if trace["status"] in {"memory_saved", "memory_confirmation_incomplete"}:
+                    trace["status"] = "memory_confirmation_incomplete"
+                    result["answer"] = MESSAGES[trace["status"]] + "\n\n" + ADVISORY
+                elif trace["status"] not in MESSAGES:
+                    result["answer"] = load_copy()["telemetry_failure"] + "\n\n" + ADVISORY
+                    trace["status"] = "telemetry_unavailable"
                 trace.pop("assessment",None)
         responses.guard([result["answer"], trace])
         trace.update(started_at=started_at, ended_at=datetime.now(timezone.utc).isoformat())

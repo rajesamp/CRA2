@@ -55,7 +55,8 @@ def test_real_gradio_mount_admits_owner_and_blocks_unauthenticated_routes(tmp_pa
                        'Local evidence only', 'synthetic-session', [], SimpleNamespace(username=identity))
         assert result[2][-1]['status'] == 'memory_saved'
         assert fixture.stores().memory_for(identity).read(SERVICE)['high_risk'] is True
-        assert fixture.count(AUDIT, 'audit/v1/') == fixture.count(STATE, 'telemetry/v1/') == 1
+        assert fixture.count(AUDIT, 'audit/v1/') == 2
+        assert fixture.count(STATE, 'telemetry/v1/') == 1
 
 
 def test_cloud_abuse_identity_cannot_fall_back_to_proxy_or_browser_headers():

@@ -68,7 +68,7 @@ class ObjectFixture:
         with sqlite3.connect(self.path) as db:
             if req.method == 'POST':
                 db.execute('BEGIN IMMEDIATE')
-            old = db.execute('SELECT generation, body FROM objects WHERE bucket=? AND name=?',
+            old = db.execute('SELECT generation, body, created FROM objects WHERE bucket=? AND name=?',
                              (bucket, name)).fetchone()
             if req.method == 'GET':
                 if old is None:
@@ -78,6 +78,9 @@ class ObjectFixture:
                         return httpx.Response(412)
                     return httpx.Response(200, content=old[1])
                 return httpx.Response(200, json={'generation': str(old[0])})
+            if (bucket == AUDIT and old and self.now - old[2] < 30 * DAY
+                    and (req.method == 'DELETE' or req.url.params.get('ifGenerationMatch') == str(old[0]))):
+                return httpx.Response(403, json={'error': 'retentionPolicyNotMet'})
             assert req.method == 'POST' and req.url.params['uploadType'] == 'media'
             if bucket == self.fail_upload_bucket:
                 return httpx.Response(503)
@@ -124,10 +127,10 @@ print(json.dumps([record, f.count(m['AUDIT'], 'audit/v1/'), s.memory_for(m['OTHE
                                                     cwd=ROOT, text=True, timeout=45))
                    for mode in ('write', 'read')]
     assert write == read and read[0]['high_risk'] is True
-    assert read[1:] == [2, None]
+    assert read[1:] == [3, None]
     with sqlite3.connect(path) as db:
         audit = [json.loads(b) for b, in db.execute('SELECT body FROM objects WHERE bucket=?', (AUDIT,))]
-    assert {x['kind'] for x in audit} == {'memory_write_requested', 'out_of_scope'}
+    assert {x['kind'] for x in audit} == {'memory_write_requested', 'memory_write_committed', 'out_of_scope'}
     assert all('question' not in x and 'freeze_notes' not in x for x in audit)
 
 
@@ -138,7 +141,7 @@ def test_concurrent_independent_updates_merge_after_generation_conflict(tmp_path
     seen = threading.local()
 
     def synchronize(bucket, name):
-        if name.startswith('preferences/v1/') and not getattr(seen, 'first', False):
+        if name.endswith('/' + SERVICE + '.json') and not getattr(seen, 'first', False):
             seen.first = True
             barrier.wait(timeout=10)
 
@@ -150,7 +153,7 @@ def test_concurrent_independent_updates_merge_after_generation_conflict(tmp_path
         b.result(timeout=15)
     record = fixture.stores().memory_for(OWNER).read(SERVICE)
     assert (record['high_risk'], record['freeze_notes']) == (True, 'Check with owner')
-    assert fixture.count(AUDIT, 'audit/v1/') == 2
+    assert fixture.count(AUDIT, 'audit/v1/') == 4
 
 
 def test_retention_expires_metadata_without_terminal_row_cap(tmp_path):
@@ -166,7 +169,7 @@ def test_retention_expires_metadata_without_terminal_row_cap(tmp_path):
     fixture.cleanup(7 * DAY)
     assert fixture.count(STATE, 'telemetry/v1/') == 0
     fixture.cleanup(30 * DAY - 1)
-    assert fixture.count(AUDIT, 'audit/v1/') == 1
+    assert fixture.count(AUDIT, 'audit/v1/') == 2
     fixture.cleanup(30 * DAY)
     assert fixture.count(AUDIT, 'audit/v1/') == 0
     assert stores.memory_for(OWNER).read(SERVICE)['high_risk'] is True
@@ -182,7 +185,9 @@ def test_wrong_retention_and_audit_failure_block_mutation(tmp_path):
     fixture.fail_upload_bucket = AUDIT
     with pytest.raises(MemoryUnavailable):
         fixture.stores().memory_for(OWNER).write(SERVICE, high_risk=True)
-    assert fixture.count(STATE, 'preferences/v1/') == 0
+    memory = fixture.stores().memory_for(OWNER)
+    assert memory.read(SERVICE) is None
+    assert fixture.count(STATE, memory._name(SERVICE)) == 0
 
 
 def test_missing_bucket_and_a_lifecycle_rule_for_preferences_do_not_pass(tmp_path):

@@ -17,6 +17,29 @@ from week2.presence import Presence, principal_from_request
 from week2.session_boundary import SessionBoundary
 
 
+# Preserve an idempotency key on transport redelivery of the same Gradio POST.
+REVIEW_HEAD = """<script>
+(() => {
+  const send = window.fetch.bind(window);
+  const keys = new WeakMap();
+  window.fetch = (resource, options) => {
+    const request = resource instanceof Request ? resource : null;
+    const url = new URL(request?.url || resource, location.href);
+    const method = options?.method || request?.method || "GET";
+    if (url.origin !== location.origin || method.toUpperCase() !== "POST" ||
+        !url.pathname.startsWith("/gradio_api/")) return send(resource, options);
+    const headers = new Headers(options?.headers || request?.headers);
+    const gesture = options || request;
+    if (gesture && !headers.has("Idempotency-Key")) {
+      if (!keys.has(gesture)) keys.set(gesture, crypto.randomUUID().replaceAll("-", ""));
+      headers.set("Idempotency-Key", keys.get(gesture));
+    }
+    return send(resource, {...options, headers});
+  };
+})();
+</script>"""
+
+
 def request_identity(request):
     # Gradio supplies username from our auth_dependency, never browser form data.
     value = request.username if request is not None else None
@@ -49,7 +72,7 @@ def create_app(*, settings=None, verifier=None, stores=None, local_capacity_path
     if os.environ.get("CRA2_ENV_FILE"):
         blocked.append(str(Path(os.environ["CRA2_ENV_FILE"]).expanduser().resolve()))
     gr.mount_gradio_app(api, demo, path="/", auth_dependency=authenticated_user,
-        head=CAPACITY_HEAD if capacity is not None else None,
+        head=CAPACITY_HEAD if capacity is not None else REVIEW_HEAD,
         theme=gr.themes.Soft(primary_hue="teal", neutral_hue="slate"),
         blocked_paths=blocked, show_error=False, enable_monitoring=False, mcp_server=False,
         run_history=False, footer_links=[], max_file_size="1mb", ssr_mode=False,

@@ -9,6 +9,7 @@ import asyncio
 import hashlib
 import json
 import re
+from uuid import uuid4
 from urllib.parse import parse_qs, urlencode
 
 from anyio import to_thread
@@ -135,6 +136,17 @@ class SessionBoundary:
                                         or not re.fullmatch(r"[0-9a-f]{32}", keys[0])):
                                     raise ValueError("Invalid delivery ID")
                                 delivery = keys[0]
+                    if api_path != "/cancel":
+                        if self.capacity is None:
+                            keys = [v.decode("ascii") for k, v in scope["headers"] if k == b"idempotency-key"]
+                            if keys and (len(keys) != 1 or not re.fullmatch(r"[0-9a-f]{32}", keys[0])):
+                                raise ValueError("Invalid delivery ID")
+                            delivery = keys[0] if keys else None
+                        # The opaque server-side namespace includes the signed principal/session.
+                        # No browser handle or raw delivery key leaves this boundary.
+                        scope["state"]["cra2_review_seed"] = (hashlib.sha256(
+                            (data["session_hash"] + "\0" + delivery).encode()).hexdigest()
+                            if delivery else uuid4().hex)
                     encoded = json.dumps(data).encode()
                     original_receive = receive
                     delivered = False
