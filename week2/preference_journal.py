@@ -87,6 +87,12 @@ class PreferenceJournal:
         name, event = audit_event(op, terminal)
         bucket = self.memory.audit.settings.audit_bucket
         self.memory.audit.ensure()
+        if operator is not None:
+            existing, _ = operator.read(bucket, name)
+            if existing is not None:
+                if existing != event:
+                    raise MemoryUnavailable('audit_receipt_mismatch')
+                return
         try:
             self.client.write(bucket, name, event)
         except GenerationConflict:
@@ -243,4 +249,6 @@ class PreferenceJournal:
                 return phase
             except GenerationConflict:
                 continue
+            except MemoryUnavailable:
+                return 'unconfirmed'
         return 'unconfirmed'

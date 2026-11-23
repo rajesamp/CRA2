@@ -68,7 +68,7 @@ class ObjectFixture:
         with sqlite3.connect(self.path) as db:
             if req.method == 'POST':
                 db.execute('BEGIN IMMEDIATE')
-            old = db.execute('SELECT generation, body FROM objects WHERE bucket=? AND name=?',
+            old = db.execute('SELECT generation, body, created FROM objects WHERE bucket=? AND name=?',
                              (bucket, name)).fetchone()
             if req.method == 'GET':
                 if old is None:
@@ -78,6 +78,9 @@ class ObjectFixture:
                         return httpx.Response(412)
                     return httpx.Response(200, content=old[1])
                 return httpx.Response(200, json={'generation': str(old[0])})
+            if (bucket == AUDIT and old and self.now - old[2] < 30 * DAY
+                    and (req.method == 'DELETE' or req.url.params.get('ifGenerationMatch') == str(old[0]))):
+                return httpx.Response(403, json={'error': 'retentionPolicyNotMet'})
             assert req.method == 'POST' and req.url.params['uploadType'] == 'media'
             if bucket == self.fail_upload_bucket:
                 return httpx.Response(503)

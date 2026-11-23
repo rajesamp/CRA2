@@ -145,6 +145,12 @@ def test_reconciliation_rejects_different_create_only_row(tmp_path, monkeypatch)
     with pytest.raises(MutationStatus, match='memory_confirmation_incomplete'):
         m.write(SERVICE, high_risk=True, review_id=review)
     fresh = fixture.stores()
+    original_repair = fresh.client.write
+    def reject_overwrite(bucket, name, row, generation='0'):
+        if bucket == AUDIT:
+            pytest.fail('operator attempted to replace an existing locked audit event')
+        original_repair(bucket, name, row, generation)
+    monkeypatch.setattr(fresh.client, 'write', reject_overwrite)
     assert reconcile(fresh.settings, fresh.client, review) == 'unconfirmed'
     assert 'audit_confirmed' not in fresh.client.read(STATE, journal_name(review))[0]
 
@@ -368,3 +374,22 @@ def test_runtime_uses_only_create_for_audit_and_telemetry(tmp_path, monkeypatch)
     m.confirm_telemetry({'request_id': review, 'status': 'memory_saved', 'transport': 'browser',
                          'duration_ms': 2}, s.telemetry)
     assert len(set(writes)) == len(writes) == 3
+
+
+def test_locked_audit_result_rejects_early_overwrite_and_delete(tmp_path):
+    import httpx
+    from week2.cloud_storage import WriteRejected
+    fixture = ObjectFixture(tmp_path / 'locked.db')
+    s = fixture.stores()
+    m = s.memory_for(OWNER)
+    m.write(SERVICE, high_risk=True)
+    _, result = rows(fixture, AUDIT, 'audit/v1/')
+    name = 'audit/v1/' + result['event_key'] + '.json'
+    old, generation = s.client.read(AUDIT, name)
+    fixture.now = 30 * DAY - 1
+    with pytest.raises(WriteRejected):
+        s.client.write(AUDIT, name, dict(old, outcome='failed'), generation)
+    response = fixture.handle(httpx.Request('DELETE', 'https://storage.googleapis.com/storage/v1/b/'
+        + AUDIT + '/o/' + name, headers=s.client._headers()))
+    assert response.status_code == 403 and response.json()['error'] == 'retentionPolicyNotMet'
+    assert s.client.read(AUDIT, name) == (old, generation)
