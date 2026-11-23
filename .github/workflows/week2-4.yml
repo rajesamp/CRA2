@@ -57,7 +57,7 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/week2-4-evidence"
           week2/.venv/bin/python -m pytest week2/tests week3/tests week4/tests -q -m "not live" --junitxml="$RUNNER_TEMP/week2-4-evidence/tests.xml"
-      - name: Require complete C1 context results
+      - name: Require complete C1 context and C2 capacity checks
         run: |
           week2/.venv/bin/python - "$RUNNER_TEMP/week2-4-evidence/tests.xml" <<'PY'
           from sys import argv
@@ -71,6 +71,23 @@ jobs:
               print(f"{name} = {errors}/{cases}")
               if errors != 0 or cases <= 0:
                   raise SystemExit(f"Incomplete or failing C1 evaluation: {name}")
+          capacity_cases = {
+              "test_all_review_callbacks_share_one_running_slot",
+              "test_queued_chat_and_recovery_share_the_direct_call_budget",
+              "test_shared_worker_slot_recovers_only_after_its_process_dies",
+              "test_cooldown_survives_a_process_restart_and_keeps_its_original_expiry",
+              "test_rate_persists_across_restart_and_boundary_is_exclusive",
+              "test_combined_connection_ceiling_leaves_owner_status_available",
+              "test_reconnect_budget_idle_clock_and_abandoned_event",
+              "test_mount_burst_with_two_signed_reviewers_preserves_fifo_and_refusal",
+              "test_disconnected_data_stream_reattaches_to_same_owned_event",
+              "test_expired_queued_worker_suppresses_result_and_holds_slot",
+              "test_waiting_review_expires_before_entering_the_callback",
+          }
+          for name in sorted(capacity_cases):
+              cases = suite.findall(f".//testcase[@name='{name}']")
+              if len(cases) != 1 or any(cases[0].find(tag) is not None for tag in ("skipped", "error", "failure")):
+                  raise SystemExit(f"Missing or failing C2 regression: {name}")
           PY
       - name: Verify scorer negative and positive controls
         run: week2/.venv/bin/python -m week4.evaluate --verify-canaries --out "$RUNNER_TEMP/week2-4-evidence/canaries.json"

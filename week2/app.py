@@ -1,6 +1,8 @@
 """Task 18: local Gradio chat with actual MCP calls and recalled policy trace."""
 
 import argparse
+from inspect import signature, unwrap
+from functools import wraps
 import os
 from pathlib import Path
 from uuid import uuid4
@@ -17,6 +19,8 @@ from week1.responses import guard
 from week2.memory import MemoryStore
 from week2.workflow import load_copy, respond
 from week2.abuse import AbuseGate
+from week2.capacity import Busy, CapacityUnavailable, MAX_WAITING, QueuedReview, REVIEW_GROUP
+from week2.capacity_chat import CapacityChat, delivery_js
 from week2.owner_audit import OwnerAuditStore
 from week2.guardrail_activity import (SessionActivity, admission_event, record_activity,
                                      clear_activity, CSS as GUARDRAIL_CSS)
@@ -252,14 +256,39 @@ def request_client(request):
 
 
 def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, memory_resolver=None,
-              telemetry_store=None, identity_view=None):
+              telemetry_store=None, identity_view=None, local_capacity=None):
     configure_sdk_logging()
     if memory_resolver is not None and (identity_resolver is None or memory_store is not None or telemetry_store is None):
         raise ValueError("Cloud storage requires a verified identity and explicit telemetry store")
     store = MemoryStore() if memory_store is None and memory_resolver is None else memory_store
     gate = AbuseGate() if abuse_gate is None else abuse_gate
     identity = identity_resolver or request_client
+    chat_interface = CapacityChat if local_capacity is not None else gr.ChatInterface
 
+    def metered(operation):
+        def decorate(fn):
+            if local_capacity is None:
+                return fn
+            parameters = signature(fn)
+            @wraps(fn)
+            def wrapped(*args, **kwargs):
+                request = parameters.bind(*args, **kwargs).arguments["request"]
+                state = request.request.state
+                handoff = getattr(state, "cra2_queued_review", None)
+                if getattr(state, "cra2_direct_review", None) == operation:
+                    return fn(*args, **kwargs)
+                if not isinstance(handoff, QueuedReview):
+                    raise gr.Error("Review capacity is temporarily unavailable.", print_exception=False)
+                try:
+                    return handoff.run(operation, request, lambda: fn(*args, **kwargs))
+                except Busy as error:
+                    raise gr.Error(f"{error} Retry in {error.retry_after} seconds.", print_exception=False) from None
+                except CapacityUnavailable:
+                    raise gr.Error("Review capacity is temporarily unavailable.", print_exception=False) from None
+            return wrapped
+        return decorate
+
+    @metered("chat")
     def reply(message, history, mode, session_id, traces, request: gr.Request, activity=None):
         client = identity(request)
         memory = memory_resolver(client) if memory_resolver is not None else store
@@ -279,6 +308,7 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
     def show_identity(request: gr.Request):
         return identity_view(request) if identity_view is not None else LOCAL_IDENTITY
 
+    @metered("recovery")
     def recovery(service, kind, summary, plan, compatibility, rehearsal, reconciliation, request: gr.Request, activity=None):
         try:
             client = identity(request)
@@ -301,6 +331,8 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
 
     with gr.Blocks(title="CRA2 · Change risk advisor", analytics_enabled=False) as demo:
         gr.Markdown("### CRA · Change Risk Advisor")
+        if local_capacity is not None:
+            gr.HTML('<p id="cra2-capacity-message" role="alert" hidden></p>', js_on_load=None)
         session_id = gr.State(value=lambda: uuid4().hex)
         trace_history = gr.State(value=[])
         guardrail_state = gr.State(value=SessionActivity())
@@ -364,9 +396,9 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
             notice = gr.HTML(visible=False, elem_id="security-notice")
             with gr.Group(elem_id="chat-controls") as controls:
                 chatbot = gr.Chatbot(label="CRA2 conversation", height=490, elem_id="agent-chat")
-                gr.ChatInterface(reply, chatbot=chatbot, additional_inputs=[mode, session_id, trace_history, guardrail_state],
+                chat_interface(reply, chatbot=chatbot, additional_inputs=[mode, session_id, trace_history, guardrail_state],
                     additional_outputs=[trace_display, trace_history, turn_selector, notice, controls, timer, cache_status, dashboard, trace_timer, guardrail_state, guardrail_display], save_history=False, cache_examples=False,
-                    flagging_mode="never", api_visibility="private", api_name="ui_response",
+                    flagging_mode="never", api_visibility="private", api_name="ui_response", concurrency_limit=1,
                     description="Name the service and describe the proposed change. Never enter credentials.",
                     analytics_enabled=False)
             chatbot.clear(reset_trace, outputs=[trace_display, trace_history, turn_selector, cache_status, dashboard, trace_timer, session_id], queue=False, api_visibility="private")
@@ -382,7 +414,8 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
         identity_refresh.click(show_identity, outputs=identity_display, queue=False, api_visibility="private")
         recovery_run.click(recovery, inputs=[recovery_service, recovery_kind, recovery_summary, recovery_plan,
             recovery_compatibility, recovery_rehearsal, recovery_reconciliation, guardrail_state],
-            outputs=[recovery_result, guardrail_state, guardrail_display], api_visibility="private", concurrency_limit=1)
+            outputs=[recovery_result, guardrail_state, guardrail_display], api_visibility="private", concurrency_limit=1,
+            js=delivery_js(8) if local_capacity is not None else None)
         guardrail_clear.click(clear_activity, inputs=guardrail_state, outputs=[guardrail_state, guardrail_display],
                               queue=False, api_visibility="private")
         demo.load(show_identity, outputs=identity_display, queue=False, api_visibility="private")
@@ -391,7 +424,17 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
             event(langsmith_view, inputs=[turn_selector, trace_history], outputs=[trace_display, trace_timer], queue=False, api_visibility="private")
         timer.tick(cooldown, outputs=[notice, controls, timer], queue=False, api_visibility="private")
         demo.load(cooldown, outputs=[notice, controls, timer], queue=False, api_visibility="private")
-    return demo
+    # ChatInterface generates separate wrappers for the UI and named API.
+    # Match the original callback so submit, retry and option selection join
+    # the same execution group as recovery, independent of their function IDs.
+    for binding in demo.fns.values():
+        if binding.fn and unwrap(binding.fn) in (unwrap(reply), unwrap(recovery)):
+            binding.concurrency_id = REVIEW_GROUP
+        elif local_capacity is not None and any(event == "load" for _, event in binding.targets):
+            # Session initialization and the identity view must work even when
+            # both long-lived browser connections are occupied.
+            binding.queue = False
+    return demo.queue(max_size=MAX_WAITING)
 
 
 def main(argv=None):

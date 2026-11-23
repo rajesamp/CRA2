@@ -1,0 +1,667 @@
+{
+  "scope": "Approved single-instance loopback workload with local evidence, synthetic signed identities and temporary storage.",
+  "plan_approved_at_revision": "8e38a2d",
+  "tested_revision": "07074331ca3199cf3b8b47efba6fdcea414cd937",
+  "verified_visible_reviews_by_user": {
+    "synthetic_1": {
+      "chat": 10,
+      "recovery": 10
+    },
+    "synthetic_2": {
+      "recovery": 10,
+      "chat": 10
+    }
+  },
+  "review_sources_sha256": {
+    "checkout_system.json": "1f92c7525820328fd58b55e3e1226c60aecb0a848a1dc29fb463808e73c0b5ef",
+    "incidents.json": "1e62a6aa696a9de88c85b3f1f0b4a55262b43ad2ec3838ec0e8ea33302971b2e"
+  },
+  "workload": {
+    "duration_s": 600,
+    "interval_s": 15,
+    "max_abs_submission_schedule_offset_s": 0.03,
+    "chat_input": "Checkout service configuration timeout from 4 seconds to 400 milliseconds.",
+    "recovery_input": "Inventory schema migration. Rename the stock column and update order-service readers. Compatibility, rehearsal and reconciliation unknown.",
+    "cache_conditions": "Fresh application process and persisted local index. Identical inputs repeated across both users. Per-chat observations report cache hits and misses.",
+    "timing_scope": "Browser submission to confirmed visible findings, excluding tab startup. Additional local regression processes ran concurrently."
+  },
+  "rehearsal": {
+    "scenario": "rehearsal",
+    "passed": true,
+    "drained": true,
+    "reconciled": true,
+    "revision": "07074331ca3199cf3b8b47efba6fdcea414cd937",
+    "working_tree_modified": false,
+    "synthetic_principals": 2,
+    "limits": {
+      "running": 1,
+      "waiting": 2,
+      "outstanding_per_principal": 2,
+      "admissions_per_window": 4,
+      "window_s": 60,
+      "wait_s": 15,
+      "run_s": 45,
+      "streams": 2,
+      "idle_stream_s": 60,
+      "reconnect_grace_s": 15,
+      "reconnects_per_minute": 4
+    },
+    "python": "3.13.15",
+    "gradio": "6.32.0",
+    "admitted": 40,
+    "outcomes": {
+      "completed": 40
+    },
+    "observed_maxima": {
+      "running": 1,
+      "waiting": 1,
+      "streams": 2
+    },
+    "http_responses": {
+      "heartbeat 200": 40,
+      "run 200": 140,
+      "queue 200": 80
+    },
+    "chat_evidence": {
+      "outcomes": {
+        "evidence_only": 20
+      },
+      "tool_attempts": 40,
+      "tool_failures": 0,
+      "provider_attempts": 0
+    },
+    "queue_wait": {
+      "n": 40,
+      "p50_ms": 2.61,
+      "p95_ms": 4.19
+    },
+    "submit_to_visible": {
+      "n": 40,
+      "p50_ms": 945.4,
+      "p95_ms": 2897.61
+    },
+    "browser": {
+      "offered": 40,
+      "visible": 40,
+      "refused": 0,
+      "failures": 0,
+      "arrivals_s": [
+        0.02,
+        15.02,
+        30.02,
+        45.03,
+        60.02,
+        75.02,
+        90.02,
+        105.02,
+        120.02,
+        135.02,
+        150.02,
+        165.02,
+        180.02,
+        195.02,
+        210.02,
+        225.02,
+        240.02,
+        255.02,
+        270.02,
+        285.02,
+        300.02,
+        315.02,
+        330.01,
+        345.02,
+        360.02,
+        375.02,
+        390.02,
+        405.02,
+        420.02,
+        435.02,
+        450.02,
+        465.02,
+        480.02,
+        495.02,
+        510.02,
+        525.02,
+        540.02,
+        555.02,
+        570.02,
+        585.02
+      ],
+      "operations": {
+        "chat": 20,
+        "recovery": 20
+      },
+      "visible_by_operation": {
+        "chat": 20,
+        "recovery": 20
+      },
+      "expected_visible_text": {
+        "chat": [
+          "Local review complete. No risk rating is assigned.",
+          "decreases by 90%",
+          "Compare downstream latency",
+          "cancellation and duplicate processing"
+        ],
+        "recovery": [
+          "Recovery evidence is incomplete",
+          "data/incidents.json#CX-109",
+          "Direct callers: checkout-service, order-service",
+          "catalog:inventory-service.rollback"
+        ]
+      },
+      "observations": [
+        {
+          "submission": 1,
+          "user": 1,
+          "operation": "chat",
+          "visible_ms": 3869.86,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 2,
+          "user": 2,
+          "operation": "recovery",
+          "visible_ms": 355.49,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 3,
+          "user": 2,
+          "operation": "chat",
+          "visible_ms": 3469.76,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 4,
+          "user": 1,
+          "operation": "recovery",
+          "visible_ms": 945.4,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 5,
+          "user": 1,
+          "operation": "chat",
+          "visible_ms": 2336.9,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 6,
+          "user": 2,
+          "operation": "recovery",
+          "visible_ms": 863.94,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 7,
+          "user": 2,
+          "operation": "chat",
+          "visible_ms": 2350.05,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 8,
+          "user": 1,
+          "operation": "recovery",
+          "visible_ms": 356.47,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 9,
+          "user": 1,
+          "operation": "chat",
+          "visible_ms": 2338.13,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 10,
+          "user": 2,
+          "operation": "recovery",
+          "visible_ms": 381.15,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 11,
+          "user": 2,
+          "operation": "chat",
+          "visible_ms": 2897.61,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 12,
+          "user": 1,
+          "operation": "recovery",
+          "visible_ms": 871.8,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 13,
+          "user": 1,
+          "operation": "chat",
+          "visible_ms": 2345.69,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 14,
+          "user": 2,
+          "operation": "recovery",
+          "visible_ms": 366.95,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 15,
+          "user": 2,
+          "operation": "chat",
+          "visible_ms": 2334.52,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 16,
+          "user": 1,
+          "operation": "recovery",
+          "visible_ms": 355.76,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 17,
+          "user": 1,
+          "operation": "chat",
+          "visible_ms": 2328.29,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 18,
+          "user": 2,
+          "operation": "recovery",
+          "visible_ms": 359.01,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 19,
+          "user": 2,
+          "operation": "chat",
+          "visible_ms": 2345.51,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 20,
+          "user": 1,
+          "operation": "recovery",
+          "visible_ms": 346.69,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 21,
+          "user": 1,
+          "operation": "chat",
+          "visible_ms": 2333.75,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 22,
+          "user": 2,
+          "operation": "recovery",
+          "visible_ms": 346.4,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 23,
+          "user": 2,
+          "operation": "chat",
+          "visible_ms": 2329.61,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 24,
+          "user": 1,
+          "operation": "recovery",
+          "visible_ms": 256.68,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 25,
+          "user": 1,
+          "operation": "chat",
+          "visible_ms": 2331.06,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 26,
+          "user": 2,
+          "operation": "recovery",
+          "visible_ms": 261.59,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 27,
+          "user": 2,
+          "operation": "chat",
+          "visible_ms": 2349.37,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 28,
+          "user": 1,
+          "operation": "recovery",
+          "visible_ms": 353.61,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 29,
+          "user": 1,
+          "operation": "chat",
+          "visible_ms": 2353.2,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 30,
+          "user": 2,
+          "operation": "recovery",
+          "visible_ms": 346.88,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 31,
+          "user": 2,
+          "operation": "chat",
+          "visible_ms": 2328.36,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 32,
+          "user": 1,
+          "operation": "recovery",
+          "visible_ms": 357.76,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 33,
+          "user": 1,
+          "operation": "chat",
+          "visible_ms": 2347.88,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 34,
+          "user": 2,
+          "operation": "recovery",
+          "visible_ms": 354.21,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 35,
+          "user": 2,
+          "operation": "chat",
+          "visible_ms": 2346.63,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 36,
+          "user": 1,
+          "operation": "recovery",
+          "visible_ms": 260.78,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 37,
+          "user": 1,
+          "operation": "chat",
+          "visible_ms": 2343.54,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 38,
+          "user": 2,
+          "operation": "recovery",
+          "visible_ms": 354.33,
+          "matched_session_completion": true
+        },
+        {
+          "submission": 39,
+          "user": 2,
+          "operation": "chat",
+          "visible_ms": 2351.05,
+          "matched_session_completion": true,
+          "matched_local_evidence": true,
+          "cache": {
+            "hit": 0,
+            "miss": 4
+          }
+        },
+        {
+          "submission": 40,
+          "user": 1,
+          "operation": "recovery",
+          "visible_ms": 258.96,
+          "matched_session_completion": true
+        }
+      ],
+      "diagnostics": []
+    }
+  },
+  "overload_and_reconnect": {
+    "smoke": {
+      "passed": true,
+      "visible": 2,
+      "visible_refusals": 2,
+      "drafts_preserved": true,
+      "reconnected": true,
+      "recovery_resubmitted": true
+    },
+    "smoke-repeat": {
+      "passed": true,
+      "visible": 2,
+      "visible_refusals": 2,
+      "drafts_preserved": true,
+      "reconnected": true,
+      "recovery_resubmitted": true
+    },
+    "overload-1": {
+      "passed": true,
+      "visible": 2,
+      "visible_refusals": 2,
+      "drafts_preserved": true,
+      "reconnected": true,
+      "recovery_resubmitted": true
+    },
+    "overload-2": {
+      "passed": true,
+      "visible": 2,
+      "visible_refusals": 2,
+      "drafts_preserved": true,
+      "reconnected": true,
+      "recovery_resubmitted": true
+    },
+    "overload-3": {
+      "passed": true,
+      "visible": 2,
+      "visible_refusals": 2,
+      "drafts_preserved": true,
+      "reconnected": true,
+      "recovery_resubmitted": true
+    }
+  },
+  "earlier_observation": "One pre-commit smoke run detected a draft mismatch on refusal and exited before it recorded the operation. Five exact-revision smoke runs checked both forms successfully. The cause of the earlier observation remains undetermined.",
+  "python_3_13_local_checks": {
+    "application": {
+      "tests": 502,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "evaluator": {
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "c1_missed_blocks": "0/8",
+    "c1_false_blocks": "0/5",
+    "contracts": {
+      "canaries": {
+        "passed": 7,
+        "total": 7
+      },
+      "development": {
+        "passed": 18,
+        "total": 18
+      },
+      "reserved": {
+        "passed": 4,
+        "total": 4
+      },
+      "faults": {
+        "passed": 9,
+        "total": 9
+      }
+    },
+    "offline_retrieval": {
+      "framework": "trulens-feedback",
+      "version": "2.16.0",
+      "case_count": 6,
+      "mean": {
+        "precision": 0.8333333333333334,
+        "recall": 0.8333333333333334
+      },
+      "network_attempts": 0,
+      "provider_attempts": 0
+    }
+  },
+  "preliminary_delivery_runs": [
+    {
+      "revision": "b9f8e0768c6edd750741208162bf79206a4f548d",
+      "workload": "app help and recovery form",
+      "offered": 40,
+      "completed": 36,
+      "visible": 35,
+      "failures": 5
+    },
+    {
+      "revision": "a5563efb05d38a4d56565507cab0988db446cbbf",
+      "workload": "app help and recovery form",
+      "offered": 40,
+      "completed": 32,
+      "visible": 30,
+      "failures": 10
+    },
+    {
+      "revision": "9ce15deb48fc9d9f8773b87cd2682ed08c2b860d",
+      "workload": "app help and recovery form",
+      "offered": 40,
+      "completed": 40,
+      "visible": 40,
+      "failures": 0
+    }
+  ],
+  "input_artifact_sha256": {
+    "rehearsal.json": "9465f1799c853da5819bc667ac70b2182484c56f26073f5384cf6d39cb68854f",
+    "smoke.json": "c784d52b68c9217fdab2499dd18cbde2a9a65269d8060643f363d76f0756d38b",
+    "smoke-repeat.json": "ef91b656f822b6fbb396b8f6c5b55b81fc03a1d9a6a9b5369a60c9532ee20a13",
+    "overload-1.json": "6da7be836f696577f785e2a1793df61b4e7ff59e40e7ca6cb29ac5cae3b270cd",
+    "overload-2.json": "eee657ac0f8d31b6991ffddc91d70866396753fe6139a2f2d2447d40cdf147ea",
+    "overload-3.json": "51192ebf8400b179e21b70beca879c20553f6b6134192078c625fd48745e5de7",
+    "tests.xml": "ae2b867f378d090c8a232a6e124c97ca26a07216f08cb9055ef47bbbcd251af6",
+    "eval.xml": "75ca83720c0a5d784bb92bdef80a8e755bd4be6ba62542984d063c934627115a",
+    "canaries.json": "05f5aead915baf787e7faa3acbfe286a693585ca3c735aa6f5ed4a9041c7d893",
+    "development.json": "32c1a077f4d81069e3ca944bd6ceecbc03fab13e213bd20f7c04043c24e54945",
+    "reserved.json": "85415760f291650cca09c40e3d68fd38825847091f9da75fbb2fe120f6ae564f",
+    "faults.json": "6ed0852f6b0101a808ea3dfc80589e569aeb5467c57fb270a2c32c46a0c890da",
+    "trulens.json": "87c44e389ea14e8d2c70b3dc3dcfa7cccfe57ced040c6cd11611f2f4a0409a80"
+  },
+  "limits_of_evidence": "These observations cover the two fixed synthetic changes on one host. Cloud Run performance, 1,000-user capacity, additional scenarios and independent semantic answer quality require separate evidence."
+}

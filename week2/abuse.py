@@ -16,6 +16,7 @@ from week1.responses import guard
 from cra2.secrets import reject_credentials
 from week1.retrieval import _default_encoder, _embed
 from week1.routing import active_request
+from week2.capacity import CapacityUnavailable
 from week2.owner_audit import OwnerAuditStore
 from week2.help import admin_navigation
 
@@ -107,10 +108,11 @@ class AbuseClassifier:
 class AbuseGate:
     """Server-owned client cooldowns. No browser state can clear or choose them."""
 
-    def __init__(self, *, store=None, classifier=None, clock=time.monotonic, additional_credentials=()):
+    def __init__(self, *, store=None, classifier=None, clock=time.monotonic, additional_credentials=(), cooldowns=None):
         self.store = store if store is not None else OwnerAuditStore()
         self.classifier = classifier if classifier is not None else AbuseClassifier()
         self.clock = clock
+        self.cooldowns = cooldowns
         self.additional_credentials = tuple(additional_credentials)
         self.secret = secrets.token_bytes(32)
         self.bans = {}
@@ -122,12 +124,23 @@ class AbuseGate:
         return hmac.new(self.secret, client.encode(), hashlib.sha256).hexdigest()
 
     def remaining(self, client):
+        if self.cooldowns is not None:
+            try:
+                return self.cooldowns.remaining(client)
+            except CapacityUnavailable:
+                return COOLDOWN_SECONDS, "unavailable"
         with self.lock:
             until, reason = self.bans.get(self._key(client), (0, ""))
             seconds = max(0, math.ceil(until - self.clock()))
             return seconds, reason if seconds else ""
 
     def pause(self, client, reason="unavailable"):
+        if self.cooldowns is not None:
+            try:
+                reason = self.cooldowns.pause(client, reason, COOLDOWN_SECONDS)
+            except CapacityUnavailable:
+                reason = "unavailable"
+            return {"blocked": True, "reason": reason}
         with self.lock:
             key = self._key(client)
             # Rejected retries do not extend the original timeout.
@@ -141,8 +154,9 @@ class AbuseGate:
 
     def admit(self, question, client):
         with self.lock:
-            if self.remaining(client)[0]:
-                return {"blocked": True, "reason": self.remaining(client)[1], "cooldown": True}
+            seconds, reason = self.remaining(client)
+            if seconds:
+                return {"blocked": True, "reason": reason, "cooldown": True}
             try:
                 self.store.ensure()
                 try:
