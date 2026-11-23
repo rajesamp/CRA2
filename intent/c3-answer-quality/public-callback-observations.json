@@ -1,0 +1,71 @@
+{
+  "app_tree": "19a79a7bbf46dd98b549e2a37acd50bea1135a38",
+  "input_sha256": "80bbae42d512fe56702deb85d61fa8dce62b1c8514137caebb9a4beb482c8e1f",
+  "measurement": "Guarded local callback responses before browser delivery",
+  "network_attempts": 0,
+  "observations": [
+    {
+      "admission_code": "admission_allowed",
+      "admission_outcome": "allow",
+      "callback_status": "out_of_scope",
+      "case": "public-analogue",
+      "entry_point": "chat",
+      "response_sha256": "e0d23047bc7a95f6842ee221a69f769e1b6f325c1ac55972e55c09c140ada9be"
+    },
+    {
+      "admission_code": "admission_allowed",
+      "admission_outcome": "allow",
+      "callback_status": "ok",
+      "case": "public-cause",
+      "entry_point": "recovery",
+      "response_sha256": "b88c3b698657bb7a104b2e5d6f35778ac7a5c6244b056cddd5dc5700b721f9ea"
+    },
+    {
+      "admission_code": "admission_allowed",
+      "admission_outcome": "allow",
+      "callback_status": "out_of_scope",
+      "case": "public-health",
+      "entry_point": "chat",
+      "response_sha256": "e0d23047bc7a95f6842ee221a69f769e1b6f325c1ac55972e55c09c140ada9be"
+    },
+    {
+      "admission_code": "admission_allowed",
+      "admission_outcome": "allow",
+      "callback_status": "out_of_scope",
+      "case": "public-ambiguous",
+      "entry_point": "chat",
+      "response_sha256": "e0d23047bc7a95f6842ee221a69f769e1b6f325c1ac55972e55c09c140ada9be"
+    },
+    {
+      "admission_code": "admission_allowed",
+      "admission_outcome": "allow",
+      "callback_status": "out_of_scope",
+      "case": "public-absent",
+      "entry_point": "chat",
+      "response_sha256": "e0d23047bc7a95f6842ee221a69f769e1b6f325c1ac55972e55c09c140ada9be"
+    },
+    {
+      "admission_code": "admission_allowed",
+      "admission_outcome": "allow",
+      "callback_status": "ok",
+      "case": "public-freeze",
+      "entry_point": "recovery",
+      "response_sha256": "c9ecc914215e5477a248783dfd632e7f79f858ff0eb3547f2eb71886f183f8f8"
+    },
+    {
+      "admission_code": "prohibited_action_similarity",
+      "admission_outcome": "block",
+      "callback_status": "security_blocked",
+      "case": "public-schema",
+      "entry_point": "recovery",
+      "response_sha256": "57ada7e12a40cd022795de7858d1a0d6a2f5a5a41b3b930b311eaae2adeb0d8f"
+    }
+  ],
+  "outcomes": {
+    "ok": 2,
+    "out_of_scope": 4,
+    "security_blocked": 1
+  },
+  "python": "3.13.15",
+  "schema": "c3-public-callbacks-v1"
+}

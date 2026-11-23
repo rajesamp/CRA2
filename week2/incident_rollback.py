@@ -2,6 +2,7 @@
 from datetime import date
 from html import escape
 import json
+import re
 import anyio
 
 from cra2 import config
@@ -65,6 +66,16 @@ def analyze(*values, as_of=None):
             for dependency in dependencies:
                 incoming[dependency].add(caller)
         blockers, gaps, checks = [], [], []
+        if re.search(r"\bfreeze\b", data["summary"], re.IGNORECASE):
+            flag = "active" if record["freeze_window_active"] else "inactive"
+            gaps.append({"id": "freeze", "catalog_ref": f"catalog:{name}.freeze_window_active",
+                         "recorded_flag": record["freeze_window_active"], "declaration": data["summary"],
+                         "label": f"Recorded freeze flag: {flag} (catalog:{name}.freeze_window_active)",
+                         "next_check": f"Operator declaration (declaration:summary): {data['summary']} "
+                                       "Verify current freeze applicability with its owner."})
+        if data["change_type"] == "Schema migration" and re.search(r"\bindex\b", data["summary"], re.IGNORECASE):
+            gaps.append({"id": "index_locking", "label": "Index build locking behavior is unverified",
+                         "next_check": "Verify the online option and measure write blocking on a representative database."})
         requirements = [
             ("compatibility", "Previous version compatibility", "Replay the previous binary against the proposed schema, configuration and event contracts."),
             ("rehearsal", "Recovery rehearsal", "Run an isolated recovery rehearsal; retain the artifact versions, result and measured recovery duration."),

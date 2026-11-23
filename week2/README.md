@@ -50,7 +50,7 @@ flags them. This does not admit appended actions or change classifier training.
 ## Private out-of-scope collection and abuse cooldown
 
 Chat requests are screened locally before agent execution. A fixed collection
-of 80 synthetic examples supports the installed BGE semantic classifier;
+of 81 synthetic examples supports the installed BGE semantic classifier;
 explicit protected-resource actions have a separate contract check. Ordinary
 unrelated questions are privately recorded without a block. Flagged requests
 hide chat controls, show a centered 15-second countdown, and restore chat

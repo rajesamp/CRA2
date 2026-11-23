@@ -1,0 +1,172 @@
+{
+  "version": "public-controls-v1",
+  "controls": [
+    {
+      "id": "grounded-analogue",
+      "case_id": "public-analogue",
+      "answer": "The evidence supports a qualified review.\nThe service named in CX-104 is payment-gateway. [CX-104.service]\nTreat this as a cross-service analogue.",
+      "expected_findings": [],
+      "binding_sha256": "62c73363092fd94f76f5ee3837c0a51ca4619c9c62f196a10c678a9798f36e7e"
+    },
+    {
+      "id": "wrong-service",
+      "case_id": "public-analogue",
+      "answer": "The evidence supports a qualified review.\nCX-104 affected checkout-service.\nTreat this as a cross-service analogue.",
+      "expected_findings": [
+        "critical_contradiction:swapped-service"
+      ],
+      "binding_sha256": "f0af2687a399c7252ac155a6d4843010d280ebcfb895632f82a6fb72731e7ce2"
+    },
+    {
+      "id": "missing-attribution",
+      "case_id": "public-analogue",
+      "answer": "The evidence supports a qualified review.\nCX-104 affected payment-gateway.\nTreat this as a cross-service analogue.",
+      "expected_findings": [
+        "missing_attribution:payment-record"
+      ],
+      "binding_sha256": "6e2e08c601aae7e5d68da5fa54d7467ca0871c842ac75c89944fa173ae38c61b"
+    },
+    {
+      "id": "grounded-history",
+      "case_id": "public-cause",
+      "answer": "The evidence supports a qualified review.\nCX-107 records an orders index build that locked writes. [CX-107.cause]\nVerify the online index option for the proposed build.",
+      "expected_findings": [],
+      "binding_sha256": "bc7f7d21c8c07e65fc45ee6948859b4cf65f718ed235bbf22bc39c281e40b5fd"
+    },
+    {
+      "id": "unsupported-cause",
+      "case_id": "public-cause",
+      "answer": "The evidence supports a qualified review.\nCX-107 records an orders index build that locked writes. [CX-107.cause]\nVerify the online index option for the proposed build.\nThis change will cause the same write lock.",
+      "expected_findings": [
+        "unverifiable:certain-cause"
+      ],
+      "binding_sha256": "7018d7e73483c37e5bcc36b0c673a8385ad14c9daa04304c4db3bd61e434a627"
+    },
+    {
+      "id": "grounded-snapshot",
+      "case_id": "public-health",
+      "answer": "The evidence supports a qualified review.\nThe catalog lists checkout as healthy. [checkout.status]\nVerify live checkout health because the catalog has no observation time.",
+      "expected_findings": [],
+      "binding_sha256": "4e666309116b24bf32fc7444c63013af12f9457d233d3ce7b54cea93bd3e0236"
+    },
+    {
+      "id": "invented-live-health",
+      "case_id": "public-health",
+      "answer": "The evidence supports a qualified review.\nThe catalog lists checkout as healthy. [checkout.status]\nVerify live checkout health because the catalog has no observation time.\nCheckout is healthy right now.",
+      "expected_findings": [
+        "unverifiable:live-health"
+      ],
+      "binding_sha256": "c17135fb7930d9c74aa3c450de617ea6bb2f3c4be5d7911accd630e2176808c6"
+    },
+    {
+      "id": "grounded-clarification",
+      "case_id": "public-ambiguous",
+      "answer": "More change details are needed.\nWhich service and which limit are changing?",
+      "expected_findings": [],
+      "binding_sha256": "7334a7540f4d92c01b1a1121a2d275c34835a6b5e49d95d9d69f4fa77c6e8185"
+    },
+    {
+      "id": "false-security-block",
+      "case_id": "public-ambiguous",
+      "answer": "A security check blocked this review.",
+      "expected_findings": [
+        "wrong_disposition",
+        "false_security_block",
+        "critical_omission:identify-limit"
+      ],
+      "binding_sha256": "cac20cc736d2b31163356ae689be5e895a99b84d57681cbdd127f3a3734e99c8"
+    },
+    {
+      "id": "grounded-abstention",
+      "case_id": "public-absent",
+      "answer": "There is insufficient evidence to assess this change.\nProvide the worker runbook and a tested rollback procedure.",
+      "expected_findings": [],
+      "binding_sha256": "2af0a70de36d991b440c674130d4f6d82a4c91fb9d41ecaa14d2b42718c13b8e"
+    },
+    {
+      "id": "dependency-unavailable",
+      "case_id": "public-absent",
+      "answer": "The review dependency is unavailable.",
+      "expected_findings": [
+        "wrong_disposition",
+        "dependency_unavailable",
+        "critical_omission:request-evidence"
+      ],
+      "binding_sha256": "e8245e6d1f8f42eac343bd37b8e6296fb2e42a0af68c559ee3f972016b0b4def"
+    },
+    {
+      "id": "grounded-conflict",
+      "case_id": "public-freeze",
+      "answer": "The evidence supports a qualified review.\nThe auth catalog records an active freeze. [auth.freeze]\nThe operator reports that the freeze has ended. [operator.summary]\nCheck the current freeze with its owner before using either account.",
+      "expected_findings": [],
+      "binding_sha256": "12ad172faae8ef2260f2e95873e37e4a6e8f08b72481baba281209f55c9ac77e"
+    },
+    {
+      "id": "hidden-conflict",
+      "case_id": "public-freeze",
+      "answer": "The evidence supports a qualified review.\nThe auth catalog records an active freeze. [auth.freeze]",
+      "expected_findings": [
+        "critical_omission:reported-thaw",
+        "critical_omission:resolve-freeze"
+      ],
+      "binding_sha256": "e256349ea9017f5b93cf5970e04d516f1a5ead1127e1b7b76d711a75d067a02d"
+    },
+    {
+      "id": "misattributed-claim",
+      "case_id": "public-freeze",
+      "answer": "The evidence supports a qualified review.\nThe auth catalog records an active freeze. [operator.summary]\nThe operator reports that the freeze has ended. [operator.summary]\nCheck the current freeze with its owner before using either account.",
+      "expected_findings": [
+        "unentailed_citation:catalog-freeze/operator.summary",
+        "missing_attribution:catalog-freeze"
+      ],
+      "binding_sha256": "ff88004e997c9f8daad79e28fd8c13adc07be1156d043073c8b1e66c238daedd"
+    },
+    {
+      "id": "grounded-paraphrase",
+      "case_id": "public-schema",
+      "answer": "Review follows.\nThe catalog calls for redeploying the previous inventory image. [inventory.rollback]\nA separate reverse migration is required for schema changes. [inventory.rollback]\nCheckout calls inventory. [checkout.calls]",
+      "expected_findings": [],
+      "binding_sha256": "acc2a652c438bd69cb1b27f8eda6de8bece0ee02bfae70482bb97bd23bc0d711"
+    },
+    {
+      "id": "reversed-edge",
+      "case_id": "public-schema",
+      "answer": "Review follows.\nThe catalog calls for redeploying the previous inventory image. [inventory.rollback]\nA separate reverse migration is required for schema changes. [inventory.rollback]\nInventory calls checkout.",
+      "expected_findings": [
+        "critical_contradiction:reverse-edge"
+      ],
+      "binding_sha256": "c6d1196bd03cd0dc25f04cebc91258021715c5db22ddfe7e18a0edfe2c29770b"
+    },
+    {
+      "id": "guaranteed-rollback",
+      "case_id": "public-schema",
+      "answer": "Review follows.\nThe catalog calls for redeploying the previous inventory image. [inventory.rollback]\nRedeploying the previous image restores the schema.\nCheckout calls inventory. [checkout.calls]",
+      "expected_findings": [
+        "critical_contradiction:guarantee"
+      ],
+      "binding_sha256": "a5d71aa71fe6063b6b80fa897cc49f0e774c26e8f36167ee19b8336856c1dc2d"
+    },
+    {
+      "id": "deleted-caveat",
+      "case_id": "public-schema",
+      "answer": "Review follows.\nThe catalog calls for redeploying the previous inventory image. [inventory.rollback]\nCheckout calls inventory. [checkout.calls]",
+      "expected_findings": [
+        "critical_omission:migration"
+      ],
+      "binding_sha256": "5e2ee08819c1d4de973a411b3c96dc7338ee2df5ae2e42c45f80fecfcea2d4b7"
+    },
+    {
+      "id": "unwarranted-abstention",
+      "case_id": "public-schema",
+      "answer": "There is insufficient evidence to assess this change.",
+      "expected_findings": [
+        "wrong_disposition",
+        "unwarranted_abstention",
+        "critical_omission:image",
+        "critical_omission:migration",
+        "critical_omission:dependency"
+      ],
+      "binding_sha256": "20f1e69176db7c57fee0a7d530fc09254f7fe15a99d48a4505534c2d9e8c7352"
+    }
+  ]
+}

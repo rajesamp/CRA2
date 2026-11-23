@@ -1,0 +1,357 @@
+{
+  "schema": "c3-public-signed-browser-v1",
+  "scheduled": 7,
+  "passed": 7,
+  "python": "3.13.15",
+  "candidate": "ec84d8c9a17d921f1b8e9d8801a07c20ae0d510e",
+  "input_sha256": "80bbae42d512fe56702deb85d61fa8dce62b1c8514137caebb9a4beb482c8e1f",
+  "corpus_sha256": {
+    "catalog": "1f92c7525820328fd58b55e3e1226c60aecb0a848a1dc29fb463808e73c0b5ef",
+    "incidents": "1e62a6aa696a9de88c85b3f1f0b4a55262b43ad2ec3838ec0e8ea33302971b2e"
+  },
+  "as_of": "2026-11-22",
+  "access": {
+    "signed_synthetic_owner": true,
+    "unsigned_http": 401,
+    "uninvited_http": 403
+  },
+  "unmatched_callbacks": 0,
+  "independent_pilot": "incomplete",
+  "observations": [
+    {
+      "case": "public-analogue",
+      "entry_point": "chat",
+      "status": "incident_lookup",
+      "checks": {
+        "disposition": true,
+        "admission_allowed": true,
+        "provider_unused": true,
+        "visible_findings": true,
+        "source_fields": true,
+        "required_rails": true,
+        "dated_recovery": true
+      },
+      "matched_signed_session": true,
+      "visible_ms": 2405,
+      "visible_answer": "CX-104 records an incident on payment-gateway. Source: data/incidents.json#CX-104. For checkout-service this is a cross-service analogue. Verify the dependency before applying its findings.\n\nThis is advisory only. The decision to ship requires a human.",
+      "observed_fields": {
+        "CX-104.service": {
+          "source": "data/incidents.json#CX-104",
+          "value": "payment-gateway"
+        }
+      },
+      "binding": {
+        "case_sha256": "c4137ea8de97cee14ef4981b22ed60f3e49a47a8a188f28acd7bc372b14a8017",
+        "rubric_sha256": "32f1392f8b012eb1bee7dfaaedf5fcbfd5d61166278d933c0c81c5c0e5fdf2ac",
+        "answer_sha256": "df72d748db03151aca5872c2db3230be28866499f84cff850053d33c41924c61",
+        "evidence_sha256": "ab19abd8ec59003dc2370f5845173052981439fcedb39a527728f438cee9fc5e"
+      },
+      "rail_outcomes": {
+        "input": "allow",
+        "context": "allow",
+        "output": "allow"
+      },
+      "cache_counts": {
+        "hit": 0,
+        "miss": 0
+      },
+      "passed": true
+    },
+    {
+      "case": "public-cause",
+      "entry_point": "recovery",
+      "status": "ok",
+      "checks": {
+        "disposition": true,
+        "admission_allowed": true,
+        "provider_unused": true,
+        "visible_findings": true,
+        "source_fields": true,
+        "required_rails": true,
+        "dated_recovery": true
+      },
+      "matched_signed_session": true,
+      "visible_ms": 375,
+      "visible_answer": "Recovery evidence is incomplete\n\norder-service \u00b7 Schema migration \u00b7 Recorded evidence only \u00b7 Human decision required\n\nHistorical incident evidence\n\n2 related records shown (limit 5), from 46 eligible records among 46 examined. 0 future-dated records excluded.\n\nCX-107 \u00b7 SEV2\n\n2025-12-05 \u00b7 order-service \u00b7 Same-service history\n\nIndex build on the orders table ran without the online option and locked writes for 6 minutes at peak\n\nsynthetic \u00b7 data/incidents.json#CX-107 \u00b7 Matched words: build, index, order\nCX-108 \u00b7 SEV2\n\n2026-05-12 \u00b7 order-service \u00b7 Same-service history\n\nSplit-shipment flag enabled in every region at once; fulfilment received duplicate requests for 3% of orders\n\nsynthetic \u00b7 data/incidents.json#CX-108 \u00b7 Matched words: order\n\nIncident-only corpus; successful-change denominator unavailable. Matches are not causal proof.\n\nRecorded rollback approach\n\nblue/green switch back (about 2 min); schema changes need a reverse migration\n\ncatalog:order-service.rollback \u00b7 Described timings are not measured recovery estimates.\nPotential rollback exposure\n\nDirect callers: mobile-frontend, web-frontend\n\nAll reachable callers: mobile-frontend, web-frontend\n\nDownstream dependencies to check: auth-service, checkout-service, inventory-service, notification-service, payment-gateway\n\nPotential propagation in the recorded graph, not observed impact. Source: data/checkout_system.json \u00b7 Freshness unknown.\n\nRecovery declarations\nPrevious version compatibility: Unknown \u00b7 unverified declaration\nRecovery rehearsal: Unknown \u00b7 unverified declaration\nState and side effects: Unknown \u00b7 unverified declaration\nClose evidence gaps\nIndex build locking behavior is unverified \u2014 Verify the online option and measure write blocking on a representative database.\nPrevious version compatibility \u2014 Replay the previous binary against the proposed schema, configuration and event contracts.\nRecovery rehearsal \u2014 Run an isolated recovery rehearsal; retain the artifact versions, result and measured recovery duration.\nState and side effects \u2014 Account for writes, payments, emitted events and issued tokens; test reconciliation or document why none is needed.\nCurrent production state and dependency freshness are unknown \u2014 Confirm the graph and current service signals before using this recorded exposure analysis.\nForm answers are declarations, not verified test evidence \u2014 Have a reviewer inspect the compatibility, recovery and reconciliation evidence.\n\nAnalysis only. This report cannot authorize or execute a rollback.",
+      "observed_fields": {
+        "CX-107.cause": {
+          "source": "data/incidents.json#CX-107",
+          "value": "Index build on the orders table ran without the online option and locked writes for 6 minutes at peak"
+        },
+        "CX-108.cause": {
+          "source": "data/incidents.json#CX-108",
+          "value": "Split-shipment flag enabled in every region at once; fulfilment received duplicate requests for 3% of orders"
+        },
+        "order.rollback": {
+          "source": "catalog:order-service.rollback",
+          "value": "blue/green switch back (about 2 min); schema changes need a reverse migration"
+        },
+        "order.calls": {
+          "source": "data/checkout_system.json",
+          "direct": [
+            "checkout-service",
+            "inventory-service"
+          ]
+        },
+        "mobile-frontend.calls": {
+          "source": "data/checkout_system.json",
+          "calls": "order-service"
+        },
+        "web-frontend.calls": {
+          "source": "data/checkout_system.json",
+          "calls": "order-service"
+        }
+      },
+      "binding": {
+        "case_sha256": "4ca0b4ad4635b5e6ff0454d17e931ecfa7fa19635782cc3df2d2ab0fea641136",
+        "rubric_sha256": "32f1392f8b012eb1bee7dfaaedf5fcbfd5d61166278d933c0c81c5c0e5fdf2ac",
+        "answer_sha256": "bc697e56869620772e244420e9f213dbf147b75ad337c0e022416a0a1e8932cf",
+        "evidence_sha256": "46a1aa1e102763eacedfc0474808d3c99b86621edf1266567cd6ba66bfce7b29"
+      },
+      "rail_outcomes": {
+        "input": "allow",
+        "context": "allow",
+        "output": "allow"
+      },
+      "cache_counts": {
+        "hit": 0,
+        "miss": 0
+      },
+      "passed": true
+    },
+    {
+      "case": "public-health",
+      "entry_point": "chat",
+      "status": "tool_evidence",
+      "checks": {
+        "disposition": true,
+        "admission_allowed": true,
+        "provider_unused": true,
+        "visible_findings": true,
+        "source_fields": true,
+        "required_rails": true,
+        "dated_recovery": true
+      },
+      "matched_signed_session": true,
+      "visible_ms": 1912,
+      "visible_answer": "Operational evidence via MCP \u00b7 synthetic snapshot\n\nObservation time and freshness are unknown. Verify live service signals before using this snapshot for a deployment decision. These results do not establish current production state. Active incidents and current freeze applicability remain unconfirmed.\n\nRecorded health for checkout-service: Healthy. Reported freeze status: not_reported. Active incidents: unknown. Evidence: catalog:checkout-service.status, catalog:checkout-service.freeze_window_active.\n\nThis is advisory only. The decision to ship requires a human.",
+      "observed_fields": {
+        "checkout.status": {
+          "source": "catalog:checkout-service.status",
+          "value": "Healthy"
+        }
+      },
+      "binding": {
+        "case_sha256": "791208bcfd62488cdeec991029ea6995d397fa8aaea45ffb4657b70d265c92c0",
+        "rubric_sha256": "32f1392f8b012eb1bee7dfaaedf5fcbfd5d61166278d933c0c81c5c0e5fdf2ac",
+        "answer_sha256": "3d08311af110beece228147c544c345fe95acc156a55b091efe7cf754f2b773f",
+        "evidence_sha256": "b54ed45dce63bf6e42a82fa912c2b05428e48e234db8f75d0794b2495f9f2385"
+      },
+      "rail_outcomes": {
+        "input": "allow",
+        "output": "allow"
+      },
+      "cache_counts": {
+        "hit": 0,
+        "miss": 1
+      },
+      "passed": true
+    },
+    {
+      "case": "public-ambiguous",
+      "entry_point": "chat",
+      "status": "needs_clarification",
+      "checks": {
+        "disposition": true,
+        "admission_allowed": true,
+        "provider_unused": true,
+        "visible_findings": true,
+        "source_fields": true,
+        "required_rails": true,
+        "dated_recovery": true
+      },
+      "matched_signed_session": true,
+      "visible_ms": 343,
+      "visible_answer": "Which service and which limit are changing? Include the current and proposed values.\n\nThis is advisory only. The decision to ship requires a human.",
+      "observed_fields": {},
+      "binding": {
+        "case_sha256": "02d209cfccf8db6879db613f2082da3e5f53230764c3a408981c04e8a51d860a",
+        "rubric_sha256": "32f1392f8b012eb1bee7dfaaedf5fcbfd5d61166278d933c0c81c5c0e5fdf2ac",
+        "answer_sha256": "d459bc49d92721372431a50ff70e8595f6d973da78476f12250a597ea997d8be",
+        "evidence_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "rail_outcomes": {
+        "input": "allow",
+        "output": "allow"
+      },
+      "cache_counts": {
+        "hit": 0,
+        "miss": 0
+      },
+      "passed": true
+    },
+    {
+      "case": "public-absent",
+      "entry_point": "chat",
+      "status": "no_recovery_record",
+      "checks": {
+        "disposition": true,
+        "admission_allowed": true,
+        "provider_unused": true,
+        "visible_findings": true,
+        "source_fields": true,
+        "required_rails": true,
+        "dated_recovery": true
+      },
+      "matched_signed_session": true,
+      "visible_ms": 860,
+      "visible_answer": "The catalog has no recovery record for voucher-worker. Provide its runbook and a tested rollback procedure before assessing recovery.\n\nThis is advisory only. The decision to ship requires a human.",
+      "observed_fields": {},
+      "binding": {
+        "case_sha256": "5edc5b92515141cc87e8aae652625995f01ad38825f8bcdd1684a8b3813684e4",
+        "rubric_sha256": "32f1392f8b012eb1bee7dfaaedf5fcbfd5d61166278d933c0c81c5c0e5fdf2ac",
+        "answer_sha256": "a999dc1a396019ab7867865b09a1fb6807f2d390920b1038e14921460b20347e",
+        "evidence_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "rail_outcomes": {
+        "input": "allow",
+        "output": "allow"
+      },
+      "cache_counts": {
+        "hit": 0,
+        "miss": 0
+      },
+      "passed": true
+    },
+    {
+      "case": "public-freeze",
+      "entry_point": "recovery",
+      "status": "ok",
+      "checks": {
+        "disposition": true,
+        "admission_allowed": true,
+        "provider_unused": true,
+        "visible_findings": true,
+        "source_fields": true,
+        "required_rails": true,
+        "dated_recovery": true
+      },
+      "matched_signed_session": true,
+      "visible_ms": 498,
+      "visible_answer": "Recovery evidence is incomplete\n\nauth-service \u00b7 Config change \u00b7 Recorded evidence only \u00b7 Human decision required\n\nHistorical incident evidence\n\n2 related records shown (limit 5), from 46 eligible records among 46 examined. 0 future-dated records excluded.\n\nCX-116 \u00b7 SEV2\n\n2026-09-08 \u00b7 auth-service \u00b7 Same-service history\n\nClock-skew tolerance for token validation cut to zero; tokens from hosts with small clock drift were rejected\n\nsynthetic \u00b7 data/incidents.json#CX-116 \u00b7 Matched words: auth\nCX-115 \u00b7 SEV1\n\n2025-10-30 \u00b7 auth-service \u00b7 Same-service history\n\nSession store moved to a new cluster without copying live sessions; most signed-in shoppers were logged out mid-checkout\n\nsynthetic \u00b7 data/incidents.json#CX-115 \u00b7 Matched words: auth\n\nIncident-only corpus; successful-change denominator unavailable. Matches are not causal proof.\n\nRecorded rollback approach\n\nredeploy the previous image; tokens already issued stay valid until they expire\n\ncatalog:auth-service.rollback \u00b7 Described timings are not measured recovery estimates.\nPotential rollback exposure\n\nDirect callers: checkout-service, mobile-frontend, web-frontend\n\nAll reachable callers: checkout-service, mobile-frontend, order-service, web-frontend\n\nDownstream dependencies to check: None recorded\n\nPotential propagation in the recorded graph, not observed impact. Source: data/checkout_system.json \u00b7 Freshness unknown.\n\nRecovery declarations\nPrevious version compatibility: Unknown \u00b7 unverified declaration\nRecovery rehearsal: Unknown \u00b7 unverified declaration\nState and side effects: Unknown \u00b7 unverified declaration\nClose evidence gaps\nRecorded freeze flag: active (catalog:auth-service.freeze_window_active) \u2014 Operator declaration (declaration:summary): The operator reports that the auth freeze has ended. Review the config change. Verify current freeze applicability with its owner.\nPrevious version compatibility \u2014 Replay the previous binary against the proposed schema, configuration and event contracts.\nRecovery rehearsal \u2014 Run an isolated recovery rehearsal; retain the artifact versions, result and measured recovery duration.\nState and side effects \u2014 Account for writes, payments, emitted events and issued tokens; test reconciliation or document why none is needed.\nProposed rollback plan is missing \u2014 Specify the exact prior artifact/configuration, recovery trigger, responsible owner and stop conditions.\nCurrent production state and dependency freshness are unknown \u2014 Confirm the graph and current service signals before using this recorded exposure analysis.\nForm answers are declarations, not verified test evidence \u2014 Have a reviewer inspect the compatibility, recovery and reconciliation evidence.\n\nAnalysis only. This report cannot authorize or execute a rollback.",
+      "observed_fields": {
+        "CX-116.cause": {
+          "source": "data/incidents.json#CX-116",
+          "value": "Clock-skew tolerance for token validation cut to zero; tokens from hosts with small clock drift were rejected"
+        },
+        "CX-115.cause": {
+          "source": "data/incidents.json#CX-115",
+          "value": "Session store moved to a new cluster without copying live sessions; most signed-in shoppers were logged out mid-checkout"
+        },
+        "auth.rollback": {
+          "source": "catalog:auth-service.rollback",
+          "value": "redeploy the previous image; tokens already issued stay valid until they expire"
+        },
+        "auth.calls": {
+          "source": "data/checkout_system.json",
+          "direct": []
+        },
+        "checkout.calls": {
+          "source": "data/checkout_system.json",
+          "calls": "auth-service"
+        },
+        "mobile-frontend.calls": {
+          "source": "data/checkout_system.json",
+          "calls": "auth-service"
+        },
+        "web-frontend.calls": {
+          "source": "data/checkout_system.json",
+          "calls": "auth-service"
+        },
+        "auth.freeze": {
+          "source": "catalog:auth-service.freeze_window_active",
+          "value": true
+        },
+        "operator.summary": {
+          "source": "declaration:summary",
+          "value": "The operator reports that the auth freeze has ended. Review the config change."
+        }
+      },
+      "binding": {
+        "case_sha256": "6d4f2c0567eca542368dde09ba4af6496332c9114714d5c33edac71484e0bc98",
+        "rubric_sha256": "32f1392f8b012eb1bee7dfaaedf5fcbfd5d61166278d933c0c81c5c0e5fdf2ac",
+        "answer_sha256": "e8116d34ac415199e06d902789094438167cab754fead8ae88b55047e6fb7f87",
+        "evidence_sha256": "f506fab1b2065b35289bd904e85f68b9f4968ef56e37cdc67ba4c893f81b7323"
+      },
+      "rail_outcomes": {
+        "input": "allow",
+        "context": "allow",
+        "output": "allow"
+      },
+      "cache_counts": {
+        "hit": 0,
+        "miss": 0
+      },
+      "passed": true
+    },
+    {
+      "case": "public-schema",
+      "entry_point": "recovery",
+      "status": "ok",
+      "checks": {
+        "disposition": true,
+        "admission_allowed": true,
+        "provider_unused": true,
+        "visible_findings": true,
+        "source_fields": true,
+        "required_rails": true,
+        "dated_recovery": true
+      },
+      "matched_signed_session": true,
+      "visible_ms": 400,
+      "visible_answer": "Recovery evidence is incomplete\n\ninventory-service \u00b7 Schema migration \u00b7 Recorded evidence only \u00b7 Human decision required\n\nHistorical incident evidence\n\n2 related records shown (limit 5), from 46 eligible records among 46 examined. 0 future-dated records excluded.\n\nCX-109 \u00b7 SEV2\n\n2026-01-22 \u00b7 inventory-service \u00b7 Same-service history\n\nColumn renamed while order-service still read the old name; stock lookups from order-service failed for 15 minutes\n\nsynthetic \u00b7 data/incidents.json#CX-109 \u00b7 Matched words: column, inventory, stock\nCX-110 \u00b7 SEV3\n\n2026-07-03 \u00b7 inventory-service \u00b7 Same-service history\n\nJSON library upgrade changed how decimals were serialised; stock counts arrived as strings and a caller rejected them\n\nsynthetic \u00b7 data/incidents.json#CX-110 \u00b7 Matched words: inventory, stock\n\nIncident-only corpus; successful-change denominator unavailable. Matches are not causal proof.\n\nRecorded rollback approach\n\nredeploy the previous image; schema changes need a reverse migration\n\ncatalog:inventory-service.rollback \u00b7 Described timings are not measured recovery estimates.\nPotential rollback exposure\n\nDirect callers: checkout-service, order-service\n\nAll reachable callers: checkout-service, mobile-frontend, order-service, web-frontend\n\nDownstream dependencies to check: None recorded\n\nPotential propagation in the recorded graph, not observed impact. Source: data/checkout_system.json \u00b7 Freshness unknown.\n\nRecovery declarations\nPrevious version compatibility: Unknown \u00b7 unverified declaration\nRecovery rehearsal: Unknown \u00b7 unverified declaration\nState and side effects: Unknown \u00b7 unverified declaration\nClose evidence gaps\nPrevious version compatibility \u2014 Replay the previous binary against the proposed schema, configuration and event contracts.\nRecovery rehearsal \u2014 Run an isolated recovery rehearsal; retain the artifact versions, result and measured recovery duration.\nState and side effects \u2014 Account for writes, payments, emitted events and issued tokens; test reconciliation or document why none is needed.\nCurrent production state and dependency freshness are unknown \u2014 Confirm the graph and current service signals before using this recorded exposure analysis.\nForm answers are declarations, not verified test evidence \u2014 Have a reviewer inspect the compatibility, recovery and reconciliation evidence.\n\nAnalysis only. This report cannot authorize or execute a rollback.",
+      "observed_fields": {
+        "CX-109.cause": {
+          "source": "data/incidents.json#CX-109",
+          "value": "Column renamed while order-service still read the old name; stock lookups from order-service failed for 15 minutes"
+        },
+        "CX-110.cause": {
+          "source": "data/incidents.json#CX-110",
+          "value": "JSON library upgrade changed how decimals were serialised; stock counts arrived as strings and a caller rejected them"
+        },
+        "inventory.rollback": {
+          "source": "catalog:inventory-service.rollback",
+          "value": "redeploy the previous image; schema changes need a reverse migration"
+        },
+        "inventory.calls": {
+          "source": "data/checkout_system.json",
+          "direct": []
+        },
+        "checkout.calls": {
+          "source": "data/checkout_system.json",
+          "calls": "inventory-service"
+        },
+        "order.calls": {
+          "source": "data/checkout_system.json",
+          "calls": "inventory-service"
+        }
+      },
+      "binding": {
+        "case_sha256": "7520bd07000c62a11eb17d3d4fc6b40b1477927fecad5fbbcb9a5c0aa7169e3b",
+        "rubric_sha256": "32f1392f8b012eb1bee7dfaaedf5fcbfd5d61166278d933c0c81c5c0e5fdf2ac",
+        "answer_sha256": "7c8f7e2d68a52c3778d0f31c700ab753603ad73f0ead6823e00a537f4a00df3c",
+        "evidence_sha256": "b06adf87b363568a07395587d81254d98f2dfd0d136e5fa2f73d0f0bcb0a4217"
+      },
+      "rail_outcomes": {
+        "input": "allow",
+        "context": "allow",
+        "output": "allow"
+      },
+      "cache_counts": {
+        "hit": 0,
+        "miss": 0
+      },
+      "passed": true
+    }
+  ]
+}
