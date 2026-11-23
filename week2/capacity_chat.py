@@ -10,6 +10,23 @@ CAPACITY_HEAD = """<script>
 (() => {
   if (window.cra2CapacityFeedback) return;
   window.cra2CapacityFeedback = true;
+  const draftSelector = "#cra2-chat-draft textarea, #cra2-chat-draft input";
+  let submittedDraft = null;
+  document.addEventListener("input", event => {
+    if (event.target.matches?.(draftSelector)) submittedDraft = null;
+  }, true);
+  window.cra2TrackDraft = (id, text) => {
+    submittedDraft = document.querySelector(draftSelector)?.value === text ? id : null;
+  };
+  window.cra2FinishDraft = id => {
+    if (!id || id !== submittedDraft) return;
+    submittedDraft = null;
+    const box = document.querySelector(draftSelector);
+    if (box) {
+      box.value = "";
+      box.dispatchEvent(new Event("input", {bubbles: true}));
+    }
+  };
   const original = window.fetch.bind(window);
   window.fetch = async function(resource, options) {
     const target = new URL(resource instanceof Request ? resource.url : resource, location.href);
@@ -53,10 +70,12 @@ CAPACITY_HEAD = """<script>
 </script>"""
 
 
-def delivery_js(inputs):
+def delivery_js(inputs, *, track_draft=False):
     """Generate one opaque delivery key per gesture before Gradio sends it."""
+    track = "window.cra2TrackDraft(id, values[0]); " if track_draft else ""
     return ("(...values) => {const notice = document.getElementById('cra2-capacity-message'); "
-            "if (notice) notice.hidden = true; return [{cra2_delivery: crypto.randomUUID().replaceAll('-', ''), "
+            "if (notice) notice.hidden = true; const id = crypto.randomUUID().replaceAll('-', ''); "
+            + track + "return [{cra2_delivery: id, "
             f"value: values[0]}}, ...values.slice(1, {inputs})];}}")
 
 
@@ -64,11 +83,12 @@ class CapacityChat(gr.ChatInterface):
     """Keep the draft intact until the admitted callback successfully returns."""
 
     def _setup_events(self):
+        self.textbox.elem_id = "cra2-chat-draft"
         def deliver(message, history, mode, session, traces, activity, request):
             answer, *extra = self.fn(message, list(history), mode, session, traces, request, activity)
             updated = self._append_message_to_history(message, history, "user")
             updated = self._append_message_to_history(answer, updated, "assistant")
-            return "", updated, updated, *extra
+            return getattr(request.request.state, "cra2_delivery_id", None), updated, updated, *extra
 
         def submit(message, history, mode, session, traces, activity, request: gr.Request):
             return deliver(message, history, mode, session, traces, activity, request)
@@ -81,14 +101,18 @@ class CapacityChat(gr.ChatInterface):
             return deliver(option.value, history, mode, session, traces, activity, request)
 
         inputs = [self.chatbot, *self.additional_inputs]
-        outputs = [self.textbox, self.chatbot, self.chatbot_state, *self.additional_outputs]
+        # Only the originating tab can know whether its draft has since been edited.
+        completed_delivery = gr.Textbox(visible=False)
+        completed_delivery.change(None, completed_delivery, None, js="id => {window.cra2FinishDraft(id);}",
+                                  queue=False, api_name="apply_draft_receipt", api_visibility="private")
+        outputs = [completed_delivery, self.chatbot, self.chatbot_state, *self.additional_outputs]
         # Gradio clears visible output components on a failed queue join. Keep
         # the draft and conversation out of the submission's failure path.
         pending = gr.State()
         events = dict(outputs=pending, concurrency_limit=1, concurrency_id=REVIEW_GROUP,
                       api_visibility="private", show_progress="minimal")
         submitted = self.textbox.submit(submit, [self.textbox, *inputs], api_name="submit_review",
-                                        js=delivery_js(1 + len(inputs)), **events)
+                                        js=delivery_js(1 + len(inputs), track_draft=True), **events)
         retried = self.chatbot.retry(retry, inputs, api_name="retry_review", js=delivery_js(len(inputs)), **events)
         chosen = self.chatbot.option_select(choose, inputs, api_name="choose_review", js=delivery_js(len(inputs)), **events)
         def publish(result):

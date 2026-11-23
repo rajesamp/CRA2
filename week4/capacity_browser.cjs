@@ -161,6 +161,12 @@ async function main() {
       if (await submit(recovery, "recovery", epoch) !== 200) throw new Error("The preserved recovery draft could not retry");
       report.recovery_draft_retried = true;
       await recovery.close();
+      const unchanged = await open(contexts[1], "chat");
+      if (await submit(unchanged, "chat", epoch) !== 200) throw new Error("Unedited chat was refused");
+      await unchanged.waitForFunction(() => document.querySelector("#cra2-chat-draft textarea")?.value === "",
+        null, {timeout: 5000});
+      report.submitted_draft_cleared = true;
+      await unchanged.close();
     } else {
       const epoch = performance.now() + 5000;
       await Promise.all(Array.from({ length: 40 }, async (_, i) => {

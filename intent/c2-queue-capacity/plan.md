@@ -192,6 +192,15 @@ interrupts a read of the result stream and exercises overload feedback in both
 forms. The local mount permits the authenticated Gradio process-ID read used for
 reconnect, and bounds retries of the existing result stream within the grace period.
 
+The follow-up browser regression holds the first answer in transit and types a
+new draft in that tab. The earlier completion cleared the textbox unconditionally
+at baseline `ef2e3af`. A successful publish now returns its validated delivery
+ID. The browser clears only a still-unedited draft from that submission. The
+smoke check covers delayed publication, both overload refusals, recovery retry,
+and normal clearing after an untouched successful submission. The original
+pre-commit refusal mismatch lacked an operation label, so its attribution
+remains open.
+
 Archive the revision, Python/Gradio versions, actual limits, workload mix,
 per-outcome counts, observed maxima, and p50/p95 queue and submission-to-visible
 latencies with sample sizes. Report expected overload separately from unexpected

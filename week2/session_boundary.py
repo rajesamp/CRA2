@@ -37,7 +37,7 @@ class SessionBoundary:
         self.draining = set()
         if capacity is not None:
             heavy = {"submit_review", "retry_review", "choose_review", "ui_response", "recovery"}
-            helpers = {"publish", "publish_1", "publish_2", "unnamed", "unnamed_1",
+            helpers = {"publish", "publish_1", "publish_2", "apply_draft_receipt", "unnamed", "unnamed_1",
                        "_pop_last_user_message", "reset_trace", "undo_trace", "show_identity",
                        "show_identity_1", "clear_activity", "langsmith_view", "langsmith_view_1",
                        "langsmith_view_2", "cooldown", "cooldown_1", "lambda",
@@ -199,6 +199,7 @@ class SessionBoundary:
         receipt = await to_thread.run_sync(capacity.reserve, client, session, operation, delivery)
         handoff = QueuedReview(capacity, receipt, client, session, operation)
         scope["state"]["cra2_queued_review"] = handoff
+        scope["state"]["cra2_delivery_id"] = delivery
         messages = []
         async def capture(message):
             messages.append(message)
