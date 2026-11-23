@@ -232,3 +232,24 @@ def test_failed_publication_keeps_independent_traffic_observation(tmp_path, monk
     result = record.operator_record(args)
     assert result["build"]["result"] == "failed" and result["serving"]["result"] == "observed"
     assert result["browser"]["result"] == "unknown" and result["acceptance"]["result"] == "pending"
+
+
+def test_build_rejects_source_drift_after_export(tmp_path, monkeypatch):
+    from scripts import release_record as records
+    from week2 import release_info as labels
+    # A valid dataset can accompany the wrong application bytes.
+    for filename in labels.dataset_inputs(ROOT):
+        target = tmp_path / filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / filename, target)
+    app = tmp_path / "week2/app.py"
+    app.parent.mkdir()
+    app.write_text("version = 1\n")
+    fields = labels.label_fields(SOURCE, labels.digest(labels.dataset_inputs(tmp_path)))
+    build = {**fields, "dataset_inputs": labels.dataset_inputs(tmp_path),
+             "runtime_sha256": labels.runtime_digest(tmp_path)}
+    records.write(tmp_path / "week2/_build_inputs.json", build)
+    app.write_text("version = 2\n")
+    monkeypatch.setattr(labels, "check_index", lambda *_: pytest.fail("expected application source check first"))
+    with pytest.raises(ValueError, match="runtime source"):
+        labels.package(tmp_path)
