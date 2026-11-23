@@ -59,8 +59,10 @@ jobs:
           # The build verifies the archive and every extracted file before use.
       - name: Build and verify the nonroot image without runtime networking
         run: |
-          podman build --platform linux/amd64 -f Containerfile -t localhost/cra2:ci .
-          python scripts/check_container.py localhost/cra2:ci --out "$RUNNER_TEMP/container-evidence/container.json"
+          python -m scripts.release_record prepare --source "$GITHUB_SHA" --context "$RUNNER_TEMP/build-context" \
+            --encoder week1/.cache/models/fast-bge-small-en-v1.5.tar.gz --out "$RUNNER_TEMP/container-evidence/identity.json"
+          podman build --platform linux/amd64 -f "$RUNNER_TEMP/build-context/Containerfile" -t localhost/cra2:ci "$RUNNER_TEMP/build-context"
+          python scripts/check_container.py localhost/cra2:ci --identity "$RUNNER_TEMP/container-evidence/identity.json" --out "$RUNNER_TEMP/container-evidence/container.json"
           image_id=$(python -c 'import json,os; print(json.load(open(os.environ["RUNNER_TEMP"]+"/container-evidence/container.json"))["image_id"])')
           podman save --format oci-archive --output "$RUNNER_TEMP/cra2.oci" "$image_id"
       - name: Inventory packages, scan vulnerabilities and prove detection

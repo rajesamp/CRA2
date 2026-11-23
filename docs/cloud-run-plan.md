@@ -311,3 +311,62 @@ aggregate request/token limits and measured stream duration remain required.
 Before applying infrastructure, prepare the target-specific IAM/resource diff and
 cost limits. An invite-only service must not gain an unauthenticated invoker
 binding. Treat any irreversible audit-retention lock as its own explicit action.
+
+## C5 release identity and verification
+
+The protected workspace displays a short release, source and dataset label from its image. A local checkout without packaged metadata displays “Local build · Release unverified”. The public intro runs a separate entrypoint with its own static version. The [dated inventory](evidence/releases/2026-11-23-inventory.json) records the observed V1 deployment, a green C3 draft and the C4 candidate. Each entry keeps the date and scope of its original evidence.
+
+### Reproduce a candidate locally
+
+Use a clean checkout at the intended commit, Python 3.13, the approved encoder archive, Node with Playwright and Chrome, and an existing local Podman connection. Place outputs outside the checkout. The prepare command takes files from the named Git commit, calculates full source and dataset identities, and copies only the reviewed model archive into the build cache. The container build verifies the archive, its extracted files and the resulting index against the packaged sources. It writes the compact display label after verification.
+
+```sh
+candidate=$(git rev-parse HEAD)
+evidence_dir=$(mktemp -d)
+uv sync --locked --project week2 --python 3.13
+uv sync --locked --project evaluation --python 3.13
+week2/.venv/bin/python -m scripts.release_record prepare --source "$candidate" \
+  --encoder week1/.cache/models/fast-bge-small-en-v1.5.tar.gz \
+  --context "$evidence_dir/context" --out "$evidence_dir/identity.json"
+week2/.venv/bin/python -m week1.setup_index
+week2/.venv/bin/python -m pytest -q week2/tests week3/tests week4/tests -m 'not live' \
+  --junitxml="$evidence_dir/tests.xml"
+week2/.venv/bin/python -m evaluation.probe_release_browser --identity "$evidence_dir/identity.json" \
+  --out "$evidence_dir/browser.json"
+podman --connection "$CRA2_BUILD_CONNECTION" build --platform linux/amd64 \
+  -f "$evidence_dir/context/Containerfile" -t localhost/cra2:c5 "$evidence_dir/context"
+week2/.venv/bin/python scripts/check_container.py localhost/cra2:c5 --connection "$CRA2_BUILD_CONNECTION" \
+  --identity "$evidence_dir/identity.json" --out "$evidence_dir/container.json"
+week2/.venv/bin/python -m scripts.release_record record --source "$candidate" \
+  --identity "$evidence_dir/identity.json" --out "$evidence_dir/record.json"
+```
+
+The browser probe launches the real protected app on loopback with a signed synthetic owner and disposable storage. It checks packaged, missing and corrupt metadata, then opens the anonymous intro and checks its fixed redirect. Set `CRA2_PLAYWRIGHT_MODULE` if Playwright is installed outside Node's normal module path. Container verification runs with networking disabled. A comparison with `--identity` fails if the tested image lacks the expected label.
+
+### Record release evidence
+
+The Week 2–4 workflow writes `release.json` with the PR head, actual checkout, run link, Python test counts, public controls and frozen retrieval evidence. A PR run may test GitHub's merge commit. When importing it, use the commit that was actually checked out to reproduce those observations. Store the redacted summary with its immutable source reference under `docs/evidence/releases/` when recording a release. The artifact retention period is 14 days. Re-running a local test produces a new observation.
+
+The `record` command accepts an optional `--observations` JSON file. Omitted sections produce unknown or pending results. Dates use UTC, for example `2026-11-23T12:00:00Z`. Fingerprint private evidence and revision names locally with SHA-256. Keep the underlying records in authorized storage. The verifier accepts the following sections.
+
+| Section | Input |
+|---|---|
+| `pr` | Full head, PR number, observation time and draft/open/merged/closed result. |
+| `hosted` | Full PR head, actual checkout, workflow name `week2-4`, GitHub run number, test count, result and observation time. Copy these from the checked run. |
+| `local` | Exact source, observation time, test count, passed/failed result and SHA-256 of the JUnit evidence. |
+| `serving` | Capture time, evidence fingerprint and component arrays named `protected` and `intro`. Each row carries a hashed revision name, integer traffic percent and resolved registry manifest digest. Include all traffic for each component. The output retains positive shares. |
+| `browser` | Observation time, evidence fingerprint, fingerprint of the accompanying traffic capture, actual serving revision fingerprint, displayed label and the three owner, anonymous and unlisted access outcomes. The field names are `at`, `evidence`, `traffic_evidence`, `revision`, `label`, `owner_allowed`, `anonymous_denied` and `unlisted_denied`. Use a null revision when the request cannot be attributed during a split. |
+| `acceptance` | Exact source, bundle, date, SHA-256 of the explicit owner decision and scope (`protected-workspace`, `public-intro` or `both-components`). Earlier sign-offs cannot accept a new bundle. |
+
+For a later authorized promotion, export the original, byte-preserving single-platform registry manifest and image config as `manifest.json` and `config.json`. Record the independent registry manifest digest and UTC observation time in `publication.json` under `manifest` and `at`. Use the existing Podman and scan procedure to produce `container.json`, `summary.json`, `sbom.json`, `scan.json` and `canary-scan.json` for that config. Keep the original files. Reserializing them changes their digests.
+
+Supply the Cosign simple-signing payload as `image-signature.json` and the signed in-toto SLSA v1 statement as `provenance.json`. Their detached base64 signatures are `image.sig` and `provenance.sig`. The signed statement must bind the registry manifest to the full Git source via a resolved dependency with URI `git+https://github.com/rajesamp/CRA2` and a `gitCommit` digest. Use the operator's independently trusted public key. The verifier supports ECDSA/SHA-256 and RSA PKCS#1 v1.5/SHA-256 detached signatures. Historical or differently encoded evidence retains its original scope until it can be verified. Run the following from the checkout matching the image source.
+
+```sh
+week2/.venv/bin/python -m scripts.release_record record --source "$candidate" \
+  --identity "$evidence_dir/identity.json" --observations "$evidence_dir/observations.json" \
+  --publication "$evidence_dir/publication" --key "$CRA2_TRUSTED_PUBLIC_KEY" \
+  --out "$evidence_dir/release.json"
+```
+
+Require the verified manifest, config, fresh scan, signed source and the candidate's current review and test evidence before a promotion decision. After an authorized rollout, inspect positive-traffic revisions for each component, resolve their registry digests, and tie a signed-in browser request and access checks to the same traffic capture. A label or access mismatch is recorded and returns an error. Unknown evidence leaves the corresponding verification open. The record does not change deployment, IAM, invitations or labeling.

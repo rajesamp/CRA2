@@ -120,6 +120,12 @@ jobs:
         run: |
           week2/.venv/bin/python -m evaluation.collect --out "$RUNNER_TEMP/week2-4-evidence/retrieval-ids.json"
           evaluation/.venv/bin/python -m evaluation.score --input "$RUNNER_TEMP/week2-4-evidence/retrieval-ids.json" --out "$RUNNER_TEMP/week2-4-evidence/trulens.json"
+      - name: Bind release identity to the actual checkout and public test evidence
+        env:
+          CRA2_PR_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          week2/.venv/bin/python -m scripts.release_record hosted --source "$GITHUB_SHA" --head "$CRA2_PR_HEAD" \
+            --run "$GITHUB_RUN_ID" --evidence "$RUNNER_TEMP/week2-4-evidence" --out "$RUNNER_TEMP/week2-4-evidence/release.json"
       - name: Preserve bounded synthetic test evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

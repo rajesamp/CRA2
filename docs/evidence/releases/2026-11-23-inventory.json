@@ -1,0 +1,73 @@
+{
+  "access": {
+    "independent_labeling": "on_hold",
+    "invitations": "on_hold",
+    "protected_workspace": "owner_only"
+  },
+  "as_of": "2026-11-23",
+  "c3": {
+    "at": "2026-11-23T06:42:08Z",
+    "evidence": "https://github.com/rajesamp/CRA2/actions/runs/45125461505",
+    "independent_grading": "on_hold",
+    "pr": 35,
+    "serving_observed": false,
+    "source": "d7cba426ea2b86ff796e825458605d77828459e4",
+    "state_on_date": "draft",
+    "week2_4_python313": "passed"
+  },
+  "c4": {
+    "at": "2026-11-23T22:14:07Z",
+    "counts": {
+      "answer_tests": 42,
+      "canaries": 7,
+      "development-validation": 18,
+      "evaluation": 14,
+      "faults": 9,
+      "guarded_callbacks": 7,
+      "public_controls": 19,
+      "reserved": 4,
+      "retrieval_cases": 6,
+      "tests": 540
+    },
+    "evidence": "https://github.com/rajesamp/CRA2/actions/runs/45277105658",
+    "hosted_checkout": "8577e294a8b5e4e3f35524fa94acb733a06a2e78",
+    "image_check": "https://github.com/rajesamp/CRA2/actions/runs/45277104811",
+    "junit_sha256": "11b72dbd473013e36b37640af6d3b01c549c6962b43197ce5f5be66d23546ce8",
+    "local_implementation": "1e4c1cd84e2baf1759821acf72a1294300fa6132",
+    "local_verification": "8bbe8c85e760732169085f74b855eee5c0db2d30:intent/c4-audit-correlation/verification.md",
+    "owner_acceptance": "pending",
+    "pr": 36,
+    "serving_observed": false,
+    "source": "b91783eef0249c5bb919814a571f1f1509afa94a",
+    "state_on_date": "draft",
+    "week2_4_python313": "passed"
+  },
+  "kind": "dated-release-inventory",
+  "schema_version": 1,
+  "v1": {
+    "build": {
+      "at_date": "2026-11-20",
+      "config": "sha256:6b7c2bd99c1d8a248b6d2f5897c60a0ebe22cbbb47a9587f0059937e2482d489",
+      "evidence_sha256": "1f71361744f36de2e82f4cad6eeb25deb25af1526a17053cf57959a37ab3ab44",
+      "manifest": "sha256:494be4149a8cdf5ce736f57a3a5899efc4632a2389ddfac680310cffaa17cdac",
+      "provenance": "verified in V1 build record",
+      "signature": "verified in V1 build record"
+    },
+    "dataset_version": "unknown for this historical build",
+    "owner_acceptance": "pending",
+    "release_label": "predates C5",
+    "review": {
+      "number": 29,
+      "state_on_date": "draft"
+    },
+    "source": "885e0aa93a9508148633fddf3fc4de4a31b47891",
+    "traffic": {
+      "date": "2026-11-23",
+      "evidence": "7319310e8fc9a615031c602c608ef07217444863:intent/c5-release-record/spec.md",
+      "intro_manifest": "sha256:494be4149a8cdf5ce736f57a3a5899efc4632a2389ddfac680310cffaa17cdac",
+      "intro_percent": 100,
+      "protected_manifest": "sha256:494be4149a8cdf5ce736f57a3a5899efc4632a2389ddfac680310cffaa17cdac",
+      "protected_percent": 100
+    }
+  }
+}

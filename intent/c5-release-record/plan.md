@@ -26,3 +26,5 @@ On November 23, 2026 the owner accepted the [C5 spec](spec.md) at `7319310` and 
 | Present an earlier demo sign-off, a C3 public-control result, or a C2 local capacity run | The corresponding owner acceptance, independent grading or cloud capacity assessment stays pending for the new candidate. |
 
 The critical release risk is attributing a valid scan, signature, CI result or browser label to the wrong image. Test each binding independently, including a mixed-version rollout. C5 implementation ends with local and hosted candidate evidence and a procedure for later owner verification. A live deployment, merge, invitations and independent labeling each require separate authorization.
+
+The owner approved local implementation on November 23. The implementation keeps signed image evidence verification in `scripts/release_publication.py` beside the operator CLI, and reuses the existing browser driver from `evaluation/probe_release_browser.py`. The clean build context comes from a Git archive of the named commit. This binds packaged source bytes to the commit before Podman runs.

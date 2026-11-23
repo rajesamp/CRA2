@@ -95,6 +95,7 @@ def main():
     parser.add_argument("image")
     parser.add_argument("--connection", help="Optional Podman connection; does not change its default")
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--identity", type=Path, help="Expected release identity from the clean Podman context")
     args = parser.parse_args()
     prefix = ["podman"] + (["--connection", args.connection] if args.connection else [])
 
@@ -119,6 +120,15 @@ def main():
     report["incident_rollback"] = json.loads(command([
         "run", "--rm", "--network", "none", "--entrypoint", PYTHON, image, "-c", RECOVERY_PROBE,
     ]).stdout)
+    if args.identity:
+        identity = json.loads(args.identity.read_bytes())
+        expected = {key: identity[key] for key in ("bundle", "source", "dataset")}
+        probe = "import json; from week2.release_info import read_label; print(json.dumps(read_label()))"
+        label = json.loads(command(["run", "--rm", "--network", "none", "--entrypoint", PYTHON, image, "-c", probe]).stdout)
+        if label != expected:
+            raise ValueError("Container release identity mismatch")
+        report["release_label"] = label
+
     def verify_http(arguments, ready_probe, http_probe):
         container = command(["run", "-d", "--network", "none", "-e", "PORT=8087", *arguments]).stdout.strip()
         try:
