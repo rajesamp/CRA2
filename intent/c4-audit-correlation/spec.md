@@ -1,6 +1,6 @@
 # C4 · Can the owner tell whether a preference was saved and which recovery checks ran?
 
-**Draft for owner review · November 23, 2026.** C4 covers two paths in the protected app: a chat request that changes a durable preference, and a submission to the Incidents & rollback form. The owner should be able to reconstruct either operation after a restart using metadata alone. C3 commit `d7cba42` is the baseline. Its Python 3.13 CI passed and its seven public browser cases have recorded observations. [Accepted intent](../sdlc-review-2026-11-22/acceptance.md) · [C4 finding](../sdlc-review-2026-11-22/findings.md#c4--important-audit-completioncorrelation-is-incomplete) · [C3 CI](https://github.com/rajesamp/CRA2/actions/runs/45125461505/job/137528661190) · [Browser baseline](../c3-answer-quality/public-signed-browser.json)
+**Implementation authorized · November 23, 2026.** C4 covers two paths in the protected app: a chat request that changes a durable preference, and a submission to the Incidents & rollback form. The owner should be able to reconstruct either operation after a restart using metadata alone. C3 commit `d7cba42` is the baseline. Its Python 3.13 CI passed and its seven public browser cases have recorded observations. [Accepted intent](../sdlc-review-2026-11-22/acceptance.md) · [C4 finding](../sdlc-review-2026-11-22/findings.md#c4--important-audit-completioncorrelation-is-incomplete) · [C3 CI](https://github.com/rajesamp/CRA2/actions/runs/45125461505/job/137528661190) · [Browser baseline](../c3-answer-quality/public-signed-browser.json)
 
 ## What the app records today
 
@@ -13,7 +13,7 @@
 
 The private mutation audit records the schema version, event key, review and mutation IDs, UTC timestamp, event kind, allowlisted service, and bounded outcome or reason. A committed result includes a reference to evidence identifying the exact write. Give each logical event a stable key so a lost acknowledgement can be reconciled without creating a second outcome.
 
-**R2 · Report the state write and the audit confirmation separately.** The following is the proposed contract for the owner's review.
+**R2 · Report the state write and the audit confirmation separately.** The owner authorized the following contract.
 
 | What the application can establish | What the owner sees | What the operator can reconstruct |
 |---|---|---|
@@ -29,7 +29,7 @@ The private mutation audit records the schema version, event key, review and mut
 
 **R4 · Record what executed.** Give each accepted recovery submission a review ID and emit one logical terminal telemetry record tied to its guarded callback. Include a schema version, operation, ID, timestamp, duration, final status and one bounded stage entry for admission, input, context and output. Each entry carries the engine, stage, outcome, reason code and execution flag from the actual decision or rail receipt. Allow, block, unavailable, not reached and not required must remain distinguishable. A missing or malformed receipt cannot count as a pass. A capacity refusal before the callback belongs to queue accounting and contributes zero executed checks. [Existing stage vocabulary](https://github.com/rajesamp/CRA2/blob/d7cba426ea2b86ff796e825458605d77828459e4/week2/guardrail_activity.py) · [Queue boundary](https://github.com/rajesamp/CRA2/blob/d7cba426ea2b86ff796e825458605d77828459e4/week2/capacity.py)
 
-**R5 · Preserve the user's outcome.** A blocked stage withholds the report and the session panel shows where processing stopped. If required telemetry cannot be confirmed for an otherwise successful recovery review, the proposed behavior is to withhold the report and show “The review record could not be confirmed. No recovery conclusion is available.” If a security block already occurred, keep that block visible. Record the missing telemetry as a gap in verification. Recovery remains advisory.
+**R5 · Preserve the user's outcome.** A blocked stage withholds the report and the session panel shows where processing stopped. If required telemetry cannot be confirmed for an otherwise successful recovery review, withhold the report and show “The review record could not be confirmed. No recovery conclusion is available.” If a security block already occurred, keep that block visible. Record the missing telemetry as a gap in verification. Recovery remains advisory.
 
 ## Storage, privacy and compatibility
 
@@ -50,4 +50,4 @@ Use the signed local owner fixture, the restartable object-store fixture and Pyt
 
 **Baseline check.** Six existing offline tests passed on Python 3.13.15 for process restart, concurrent preference updates, retention, pre-write audit failure, recovery NeMo execution and unavailable-stage display. The table above defines the additional proof required for C4.
 
-**Review decision.** Approve or revise the owner-visible failure messages and recovery telemetry rule in R2 and R5 before implementation planning. Scope is application audit and telemetry. Cloud Run stays owner-only, invitations and independent labeling remain on hold, and the release record belongs to C5.
+**Review decision.** The owner directed implementation after review of R2 and R5. The [implementation plan](plan.md) records the scope and verification steps. Scope is application audit and telemetry. Cloud Run stays owner-only, invitations and independent labeling remain on hold, and the release record belongs to C5.

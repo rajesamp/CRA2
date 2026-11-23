@@ -17,7 +17,7 @@
   "chat_insufficient_evidence": "There is not enough supported evidence to assess this change. No risk rating is assigned.",
   "chat_retrieval_unavailable": "Historical evidence is unavailable. No risk rating is assigned.",
   "chat_tools_unavailable": "Operational evidence is unavailable. No combined risk assessment is assigned.",
-  "chat_memory_saved": "Saved the team preference.",
+  "chat_memory_saved": "Preference saved.",
   "chat_memory_unavailable": "Team preferences are unavailable. No combined risk assessment is assigned.",
   "chat_unavailable": "The request could not be assessed. No risk rating is assigned.",
   "chat_timeout_change": "Timeout budget **{direction} by {percent}%**.",

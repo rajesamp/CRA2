@@ -8,7 +8,7 @@ import anyio
 from cra2 import config
 from cra2.incidents import load_incidents, select_incidents
 from week2.tools import _context, _direction, _guard
-from week3.guardrails import LocalRails, RailUnavailable, check_context
+from week3.guardrails import LocalRails, RailUnavailable, check_context, checked_stage
 from week2.guardrail_activity import admission_event
 from week2.capacity import remaining_budget
 
@@ -170,6 +170,7 @@ def guarded_analyze(values, *, gate, client):
     rails = None
     stage = "input"
     checked_html = None
+    context_required = None
     try:
         if len(values) != len(FIELDS) or any(not isinstance(v, str) for v in values) or sum(map(len, values)) > 3900:
             raise ValueError("Invalid input")
@@ -177,19 +178,22 @@ def guarded_analyze(values, *, gate, client):
         # newlines; a service prefix must not conceal an action in another field.
         remaining_budget()
         decision = gate.admit(".\n".join(values), client)
+        if type(decision.get("blocked")) is not bool:
+            raise ValueError("Missing admission verdict")
         admission = admission_event(decision)
         if decision["blocked"]:
             result = {"status": "security_blocked", "message": "Request blocked. Wait for the temporary pause before trying again."}
         else:
             rails = LocalRails()
             async def assess():
-                nonlocal stage
+                nonlocal stage, context_required
                 remaining_budget()
-                if not await rails.check("input", ".\n".join(values)):
+                if not await checked_stage(rails, "input", ".\n".join(values)):
                     raise RailUnavailable("blocked")
                 remaining_budget()
                 report = analyze(*values)
-                if report["status"] == "ok":
+                context_required = report["status"] == "ok"
+                if context_required:
                     stage = "context"
                     # Host-context check covers every value selected for display,
                     # including incident prose, catalog recovery and graph names.
@@ -200,7 +204,7 @@ def guarded_analyze(values, *, gate, client):
                 stage = "output"
                 remaining_budget()
                 html = render(report)
-                if not await rails.check("output", {"answer": html, "trace": {"status": "evidence_only"}}):
+                if not await checked_stage(rails, "output", {"answer": html, "trace": {"status": "evidence_only"}}):
                     raise RailUnavailable("blocked")
                 return report, html
             result, checked_html = anyio.run(assess)
@@ -212,7 +216,7 @@ def guarded_analyze(values, *, gate, client):
     if admission["outcome"] == "allow" and not events:
         events = [{"engine": "nemoguardrails", "stage": stage, "outcome": "unavailable",
                    "code": "rail_unavailable", "executed": False}]
-    result = {**result, "admission": admission, "rails": events}
+    result = {**result, "admission": admission, "rails": events, "context_required": context_required}
     return checked_html if checked_html is not None else render(result), result
 
 

@@ -1,4 +1,7 @@
 """Bounded private metadata only. No questions, notes, prompts or raw outputs."""
+from datetime import datetime
+import math
+import re
 import json
 import os
 import sqlite3
@@ -17,6 +20,19 @@ class TelemetryUnavailable(ValueError):pass
 
 
 def compact(trace):
+    if trace.get('operation') == 'recovery':
+        from week2.guardrail_activity import recovery_stages
+        status = trace['status']
+        duration = trace['duration_ms']
+        if (status not in {'ok', 'invalid_input', 'guardrail_blocked', 'security_blocked', 'unavailable'}
+                or not re.fullmatch(r'[0-9a-f]{32}', trace['request_id'])
+                or type(duration) not in (float, int) or not math.isfinite(duration) or duration < 0
+                or datetime.fromisoformat(trace['created_at']).utcoffset() is None):
+            raise TelemetryUnavailable('invalid_recovery_metadata')
+        return dict(schema_version=2, operation='recovery', request_id=trace['request_id'],
+                    transport='browser', status=status, duration_ms=duration,
+                    created_at=trace['created_at'], stages=recovery_stages(trace))
+
     record={k:trace[k] for k in ('request_id','transport','status','duration_ms')}
     record.update(provider_attempted=bool(trace.get('request_attempted')),
         mcp=trace.get('mcp',{'status':'not_accessed','attempted':0,'failed':0}),

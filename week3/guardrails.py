@@ -88,19 +88,25 @@ def _unavailable_event(stage, started):
 
 async def check_context(rails, hits):
     """Require a fresh, consistent context receipt before releasing this batch."""
+    return await checked_stage(rails, "context", hits)
+
+
+async def checked_stage(rails, stage, payload):
+    """Release this stage only with its own expected NeMo verdict."""
+    block_code = {"input": "protected_action", "context": "untrusted_context", "output": "unsupported_output"}[stage]
     start = len(rails.events)
     started = perf_counter()
     try:
-        allowed = await rails.check("context", hits)
+        allowed = await rails.check(stage, payload)
         receipt, = rails.events[start:]
-        if (type(allowed) is not bool or receipt.get("stage") != "context"
+        if (type(allowed) is not bool or receipt.get("stage") != stage
                 or receipt.get("engine") != "nemoguardrails" or receipt.get("executed") is not True
                 or receipt.get("outcome") != ("allow" if allowed else "block")
-                or receipt.get("code") != ("contract_valid" if allowed else "untrusted_context")):
+                or receipt.get("code") != ("contract_valid" if allowed else block_code)):
             raise RailUnavailable("inconsistent_verdict")
         return allowed
     except Exception:
-        rails.events[start:] = [_unavailable_event("context", started)]
+        rails.events[start:] = [_unavailable_event(stage, started)]
         raise RailUnavailable("rail_unavailable") from None
 
 

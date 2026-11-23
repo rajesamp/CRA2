@@ -2,6 +2,7 @@
 from collections import Counter
 from datetime import datetime, timezone
 from html import escape
+import re
 from threading import RLock
 
 LIMIT = 100
@@ -84,6 +85,39 @@ def project_events(trace):
     return result
 
 
+def recovery_stages(report):
+    """Build four ordered receipts from known stage/engine/decision combinations."""
+    stages = []
+    receipts = [report.get("admission"), *report.get("rails", [])]
+    stopped = False
+    for stage in ("admission", "input", "context", "output"):
+        engine = "admission" if stage == "admission" else "nemoguardrails"
+        matches = [r for r in receipts if isinstance(r, dict) and r.get("stage") == stage]
+        outcome = "not_reached" if stopped else "unavailable"
+        if not matches and not stopped and stage == "context" and report.get("context_required") is False:
+            outcome = "not_required"
+        code = ("admission_unavailable" if stage == "admission" else "rail_unavailable") if outcome == "unavailable" else outcome
+        executed = False
+        if len(matches) == 1:
+            r = matches[0]
+            allow = {"admission_allowed", "invalid_input"} if stage == "admission" else {"contract_valid"}
+            block = {"admission": {"protected_action_contract", "prohibited_action_similarity",
+                                   "sensitive_input", "admission_blocked", "cooldown", "invalid_input"},
+                     "input": {"protected_action"}, "context": {"untrusted_context"},
+                     "output": {"unsupported_output"}}[stage]
+            valid = (r.get("outcome") == "allow" and r.get("code") in allow and r.get("executed") is True
+                     or r.get("outcome") == "block" and r.get("code") in block
+                     and r.get("executed") is (r["code"] != "cooldown"))
+            if r.get("engine") == engine and valid and not stopped:
+                outcome, code, executed = r["outcome"], r["code"], r["executed"]
+            else:
+                outcome = "unavailable"
+                code = "admission_unavailable" if stage == "admission" else "rail_unavailable"
+        stages.append(dict(stage=stage, engine=engine, outcome=outcome, code=code, executed=executed))
+        stopped = stopped or outcome in {"unavailable", "block"}
+    return stages
+
+
 class SessionActivity:
     """One server-side Gradio state per browser session/verified principal.
 
@@ -104,7 +138,9 @@ class SessionActivity:
             self._rows.append({"number": self._sequence,
                                "time": datetime.now(timezone.utc).strftime("%H:%M:%S UTC"),
                                "source": "Chat" if source == "chat" else "Incidents & rollback",
-                               "events": project_events(trace)})
+                               "events": recovery_stages(trace) if source == "recovery" else project_events(trace),
+                               "gap": trace.get("telemetry_status") == "unavailable" and source == "recovery",
+                               "review": trace.get("request_id") if re.fullmatch(r"[0-9a-f]{32}", str(trace.get("request_id"))) else None})
             self._rows = self._rows[-LIMIT:]
             return self.html()
 
@@ -136,7 +172,12 @@ class SessionActivity:
                     parts.append('<li><strong>' + engine + ' / ' + STAGES[event["stage"]] +
                                  ': ' + OUTCOMES[event["outcome"]] + '</strong> — ' +
                                  escape(condition) + '</li>')
-                parts.append('</ul></article>')
+                parts.append('</ul>')
+                if row["review"]:
+                    parts.append('<p>Review ID ' + escape(str(row["review"])) + '</p>')
+                if row["gap"]:
+                    parts.append('<p>Review record confirmation incomplete.</p>')
+                parts.append('</article>')
             parts.append('<p>NeMo runs configured local contract checks. The host submits retrieved context for checking. These checks do not prove resistance to every jailbreak or establish factual correctness.</p></section>')
             return "".join(parts)
 

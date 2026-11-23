@@ -72,11 +72,17 @@ bucket. The application verifies the exact policies.
   restart and are readable from a second instance by the appropriate identity.
   Compare billed API requests and latency with the $10/month demo target.
 
-Preference mutations write an audit attempt before touching state. An attempt
-can remain after a failed update. The app displays success after a conditional
-write succeeds. It re-reads and retries only on a known generation conflict.
-The owner-only route rejects unlisted identities before it resolves state.
-The per-instance abuse cooldown still resets on process restart.
+### C4 candidate and operator reconciliation
+
+The C4 candidate writes a requested audit event before submitting a preference update and a committed or failed event once the outcome is known. Both include the review ID shown in Guardrail activity, a mutation ID and a stable event key. The committed event identifies the exact object generation. Older request-only events have unknown completion. The owner-only route verifies identity before resolving preferences.
+
+Each private journal at `preferences/v1/operations/<review-id>.json` binds the authenticated scope, service and fingerprint of the intended change. It contains bounded metadata. The service record holds one write receipt. A later edit checkpoints its predecessor before replacing that receipt. Journals share preference storage permissions and persistence. Their storage grows by one small object per logical edit. Their presence prevents reuse of an expired review ID. Keep them out of user-facing exports.
+
+For a missing receipt, an authorized operator can run `python -m week2.reconcile_review REVIEW_ID` with the existing bucket environment and a selected gcloud account that has state access and audit read/create access. This command checks retention and repairs only confirmation records. It verifies an existing immutable object against the expected record. A missing measurement is explicitly marked unavailable. An unresolved state write stays unconfirmed until its exact receipt can be established. Investigate a persistent mismatch using the private journal and both generations. Avoid replaying the change as a fresh edit while its status is unknown.
+
+The operator can repair telemetry during the first seven days and audit receipts during the first 30 days after submission. At most four distinct state generations are attempted. The bucket lifecycle remains authoritative for actual deletion. Recovery records live only under the seven-day telemetry prefix and contain four bounded stage decisions. A telemetry outage withholds a successful report. A security block remains visible.
+
+The C4 reader accepts v1 preferences. The earlier binary rejects C4 values containing a receipt. Rolling back to that binary after a C4 write needs a compatible reader or a separately tested migration. Keep the owner-only deployment on the approved revision until release verification.
 
 The cloud prefix starts empty. The local demo retains its SQLite behavior and
 files. For cloud rollback preserve the buckets and `v1` object format, and use a
