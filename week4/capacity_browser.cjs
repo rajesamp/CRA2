@@ -98,14 +98,31 @@ async function main() {
     if (cfg.scenario === "smoke") {
       const page = await open(contexts[0], "chat");
       let interrupted = false;
+      let seenStream, releaseStream;
+      const streamSeen = new Promise(resolve => { seenStream = resolve; });
+      const resume = new Promise(resolve => { releaseStream = resolve; });
       await page.route("**/gradio_api/queue/data*", async route => {
         if (interrupted) return route.fallback();
         interrupted = true;
+        seenStream();
+        await resume;
         return route.fulfill({ status: 503, contentType: "application/json",
           headers: { "Retry-After": "1" }, body: JSON.stringify({detail: "Temporary synthetic stream refusal"}) });
       });
       const epoch = performance.now();
-      if (await submit(page, "chat", epoch) !== 200) throw new Error("Initial chat failed");
+      const firstResult = submit(page, "chat", epoch);
+      const box = page.getByPlaceholder("Type a message...");
+      const nextDraft = "Keep this draft for the next review.";
+      try {
+        await Promise.race([streamSeen, firstResult]);
+        await box.fill(nextDraft);
+      } finally {
+        releaseStream();
+      }
+      if (await firstResult !== 200) throw new Error("Initial chat failed");
+      if (await box.inputValue() !== nextDraft)
+        throw new Error("Completing the previous review overwrote a newer chat draft");
+      report.newer_draft_preserved = true;
       if (!interrupted) throw new Error("Stream reconnect fixture did not run");
       report.interrupted_stream_recovered = true;
       const seeds = await page.evaluate(async () => {
@@ -120,8 +137,6 @@ async function main() {
       });
       if (!seeds.every(code => code === 200)) throw new Error("Quota fixture did not fill");
       report.direct_seed_count = seeds.length;
-      const box = page.getByPlaceholder("Type a message...");
-      await box.fill("Keep this draft for the next review.");
       if (await submit(page, "chat", epoch) !== 429) throw new Error("Expected principal quota refusal");
       await page.getByText(/Your review limit has been reached.*Retry in/).first().waitFor({ timeout: 5000 });
       if (await box.inputValue() !== "Keep this draft for the next review.") throw new Error("Chat draft lost on refusal");
