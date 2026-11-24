@@ -64,7 +64,8 @@ def classify_scope(question, decision, services):
         (named_service or bool(re.search(r"\bservices?\b", text)))
         and bool(
             re.search(
-                r"\bdepend(?:s|ents|encies)?\b|\b(?:current|live)\b.*\b(?:health|status)\b",
+                r"\bdepend(?:s|ents|encies)?\b|\b(?:current|live)\b.*\b(?:health|status)\b|"
+                r"\b(?:deployment|release|change)\s+freeze\b",
                 text,
             )
         )
