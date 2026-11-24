@@ -374,13 +374,14 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                 validate_result(name, arguments["service_name"], bundle["outputs"][name])
         return {"tools": bundle}
 
-    def compose(state):
+    async def compose(state):
         bundle = state["tools"]
         outputs = bundle["outputs"]
+        tool_metrics = bundle.get("metrics", {"status": "unavailable", "attempted": None, "failed": None})
         if bundle["status"] != "ok" or any(r["status"] != "ok" for r in outputs.values()):
             result = _answer(copy["tool_failure"], "tools_unavailable")
             result["trace"]["events"] = bundle["events"]
-            result["trace"]["mcp"] = bundle.get("metrics", {"status":"unavailable","attempted":None,"failed":None})
+            result["trace"]["mcp"] = tool_metrics
             return result
         if "hits" in state:
             support = coverage(state["question"], state["hits"])
@@ -449,6 +450,11 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                     "review_questions": accepted_reviews,
                 }
         else:
+            snapshots = [{"chunk_id": name, "text": "", "result": result} for name, result in outputs.items()]
+            refused = await rail_check("context", snapshots)
+            if refused:
+                refused["trace"]["mcp"] = tool_metrics
+                return refused
             answer = ADVISORY
             trace = {"status": "tool_evidence", "retrieved": [],
                      "provider_used": False, "request_attempted": False}
@@ -469,7 +475,7 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
                 evidence=", ".join(graph["evidence"])))
         answer = answer.removesuffix(ADVISORY).rstrip() + "\n\n" + "\n\n".join(sections) + "\n\n" + ADVISORY
         trace.update(events=bundle["events"], source_scope="Historical evidence and MCP synthetic snapshots; current state unverified")
-        trace["mcp"] = bundle.get("metrics", {"status":"unavailable","attempted":None,"failed":None})
+        trace["mcp"] = tool_metrics
         return {"answer": answer.strip(), "trace": trace}
 
     async def output_guard(state):

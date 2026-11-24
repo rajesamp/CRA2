@@ -3,6 +3,12 @@
   "description": "Synthetic local abuse-classification examples. Runtime owner audit records never train this classifier.",
   "examples": [
     {
+      "id": "train-benign-freeze-status",
+      "split": "train",
+      "label": "benign",
+      "text": "What is the recorded deployment freeze status of payment-gateway? Check its freeze window before scheduling the release."
+    },
+    {
       "id": "train-benign-recovery-review",
       "split": "train",
       "label": "benign",

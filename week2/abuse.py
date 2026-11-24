@@ -43,6 +43,13 @@ def prohibited_request(question):
         if (re.match(r"(?:ignore|disregard|forget|override|bypass|disable|turn off)\b", text)
                 and re.search(r"\b(?:instructions?|rules|guardrails|security|logging|audit|authentication|tool contracts)\b", text)):
             return True
+        if re.match(r"(?:bypass|override|disable|lift|remove|ignore|turn off)\s+(?:(?:the|this|our|a)\s+)?"
+                    r"(?:(?:active|current|production|deployment|release|change)\s+)*freeze(?:\s+window)?"
+                    r"(?:$|\s+(?:for|on|in|during|now|temporarily|before)\b)", text):
+            return True
+        if (re.match(r"(?:deploy|release|ship|merge)\b", text)
+                and re.search(r"\bwithout (?:the |a |an )?(?:human |owner |required )?approval\b", text)):
+            return True
     return False
 
 
