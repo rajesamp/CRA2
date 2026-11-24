@@ -213,3 +213,15 @@ def test_recovery_gates_decoded_nested_fields_before_success_render(monkeypatch)
     html, result = recovery.guarded_analyze(VALUES, gate=admitted_gate(), client="principal")
     assert [c.args[0]["status"] for c in render.call_args_list] == ["guardrail_blocked"]
     assert "history" not in result and "fixture" not in repr((html, result))
+
+
+def test_checkout_risk_categories_are_cited_and_unknowns_are_visible():
+    report = recovery.analyze("checkout-service", "Config change", "Reduce checkout timeout from 4 s to 400 ms.",
+                              "", "Unknown", "Unknown", "Unknown", as_of=date(2026, 11, 20))
+    assert report["status"] == "ok"
+    html = recovery.render(report)
+    assert "Risk by category" in html
+    for heading in ("Technical", "Operational", "Business", "Security and compliance"):
+        assert f"<h4>{heading}</h4>" in html
+    assert html.count("Evidence gap</strong>") == 2
+    assert "catalog:checkout-service.depends_on" in html and "catalog:checkout-service.monitors" in html
