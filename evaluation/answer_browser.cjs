@@ -65,7 +65,7 @@ async function main() {
     const {cra2_delivery: delivery, value} = request.data[0];
     if (!delivery || typeof value !== "string") throw new Error("Missing submitted delivery receipt");
     const output = chat ? page.locator("#agent-chat [data-testid=bot] .message-content") :
-      page.locator("#recovery-report section");
+      page.locator("#recovery-report section.cra-recovery, #recovery-report section[role=status]");
     await output.waitFor({state: "visible", timeout: 45000});
     const text = await output.innerText();
     if (!text.trim()) throw new Error("Empty visible answer");

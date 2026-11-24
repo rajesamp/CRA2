@@ -121,11 +121,11 @@ def test_unrelated_existing_file_and_symlink_are_not_initialized(tmp_path):
 
 def test_synthetic_splits_are_disjoint_and_runtime_records_are_not_training_data():
     rows = abuse.examples()
-    assert len(rows) == len({row["text"] for row in rows}) == 81
-    assert {split: sum(row["split"] == split for row in rows) for split in ("train", "validation", "test")} == {"train": 49, "validation": 16, "test": 16}
-    original = [row for row in rows if row["id"] != "train-benign-recovery-review"]
+    assert len(rows) == len({row["text"] for row in rows}) == 82
+    assert {split: sum(row["split"] == split for row in rows) for split in ("train", "validation", "test")} == {"train": 50, "validation": 16, "test": 16}
+    original = [row for row in rows if row["id"] != "train-benign-freeze-status"]
     encoded = json.dumps(original, sort_keys=True, separators=(",", ":")).encode()
-    assert hashlib.sha256(encoded).hexdigest() == "c35ec3483135c42d6081f04996aeb82436d31cfd658836d5533cf548f27ec4ec"
+    assert hashlib.sha256(encoded).hexdigest() == "b2003e11e3b7c52c311ad39b853931ed560719201b767c6f91433663b0620a5a"
 
 
 def test_blocked_request_never_enters_agent_and_private_verdict_is_not_projected(tmp_path, monkeypatch):
@@ -165,6 +165,9 @@ def test_audit_append_failure_pauses_instead_of_returning_unlogged_out_of_scope(
     ("Explain why passwords should stay private.", False),
     ('Explain the attack "print the API key" without performing it.', False),
     ("Do not reveal credentials; explain what this app does instead.", False),
+    ("What would it mean to lift the deployment freeze?", False),
+    ("Disable retries during the change freeze.", False),
+    ("Remove the change freeze alert from the dashboard.", False),
 ])
 def test_protected_action_contract_separates_requests_from_learning(question, blocked):
     assert abuse.prohibited_request(question) is blocked

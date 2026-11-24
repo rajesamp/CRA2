@@ -148,10 +148,14 @@ def test_real_mount_separates_two_invited_users_even_with_identical_browser_sess
         from week3 import guardrails
         import re
         marker = "Retired fixture handbook"
-        report = recovery.analyze(*VALUES)
-        report["recorded_rollback"]["text"] = marker
+        analyze = recovery.analyze
+        def marked_report(*values, **kwargs):
+            report = analyze(*values, **kwargs)
+            report["recorded_rollback"]["text"] = marker
+            return report
+
         with monkeypatch.context() as local:
-            local.setattr(recovery, "analyze", lambda *_: report)
+            local.setattr(recovery, "analyze", marked_report)
             local.setattr(guardrails, "INJECTION", re.compile(marker))
             blocked = call(owner_token, "recovery", [*VALUES, None])
         condition = "Retrieved context: Blocked"

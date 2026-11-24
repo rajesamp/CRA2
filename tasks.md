@@ -1,4 +1,20 @@
-# CRA2 task alignment: Week 1
+# CRA2 task tracker
+
+## Current status · November 24, 2026
+
+**All 34 tasks are complete for the agreed scope.** The project owner accepted
+Week 1 tasks 1–11 and closed task 34 on November 24. The dated entries below
+preserve the original evidence and the status recorded at each milestone.
+
+| Tasks | Status | Basis |
+| --- | --- | --- |
+| 1–11 · Week 1 | Complete | Owner acceptance of all Week 1 deliverables |
+| 12–18 · Week 2 | Complete | [Tools, memory and browser verification](docs/evidence/week2-task-18.md) |
+| 19–25 · Week 3 | Complete | [Guardrails, caching and evaluation](docs/evidence/week3-task-25.md) |
+| 26–33 · Week 4 | Complete | [Local verification](docs/evidence/week4-task-34.md) |
+| 34 · Final demo | Complete | Owner acceptance of the [local launch and rehearsal](docs/evidence/week4-task-34.md) |
+
+## Historical task alignment · Week 1
 
 Source: [ChangeRiskAdvisor task plan](https://github.com/abhineer/Sep-Projects/blob/3e52f28ae1f430211d2df6098ab366f38ebdb86e/ChangeRiskAdvisor/tasks.md),
 upstream commit `3e52f28ae1f430211d2df6098ab366f38ebdb86e`, blob

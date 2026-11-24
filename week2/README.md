@@ -49,9 +49,10 @@ flags them. This does not admit appended actions or change classifier training.
 
 ## Private out-of-scope collection and abuse cooldown
 
-Chat requests are screened locally before agent execution. A fixed collection
-of 81 synthetic examples supports the installed BGE semantic classifier;
-explicit protected-resource actions have a separate contract check. Ordinary
+CRA2 screens chat and recovery requests locally. Its BGE classifier uses 82
+synthetic examples, including a read-only deployment freeze lookup. A separate
+rule blocks explicit protected actions such as overriding a freeze or deploying
+without human approval. Ordinary
 unrelated questions are privately recorded without a block. Flagged requests
 hide chat controls, show a centered 15-second countdown, and restore chat
 automatically. Clear/refresh/new sessions do not reset the server cooldown.

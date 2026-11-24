@@ -1,6 +1,9 @@
 """Read-only incident and recovery evidence; no model or execution capability."""
 from datetime import date
 from html import escape
+from uuid import uuid4
+
+from week2 import risk_categories
 import json
 import re
 import anyio
@@ -33,7 +36,7 @@ def validate_inputs(values):
     return data
 
 
-def analyze(*values, as_of=None):
+def analyze(*values, as_of=None, review_id=None):
     """Produce bounded evidence, not a risk score or an approval decision."""
     try:
         data = validate_inputs(values)
@@ -114,6 +117,9 @@ def analyze(*values, as_of=None):
                                         "measured_recovery_duration": None},
                   "checks": checks, "blockers": blockers, "gaps": gaps,
                   "human_decision_required": True}
+        result["request_id"] = review_id or uuid4().hex
+        freeze = next((item for item in gaps if item["id"] == "freeze"), None)
+        result["risk_categories"] = risk_categories.snapshot(result["request_id"], name, record, matches, freeze)
         _guard(result)
         return result
     except (OSError, ValueError, TypeError, KeyError, RecursionError):
@@ -130,6 +136,7 @@ def render(report):
     parts = ['<section class="cra-recovery"><h2>' + heading + '</h2>',
              '<p><strong>' + e(report["service"]) + '</strong> · ' + e(report["change_type"]) +
              ' · Recorded evidence only · Human decision required</p>',
+             risk_categories.render(report),
              '<h3>Historical incident evidence</h3><p>' + str(history["matches_returned"]) +
              ' related records shown (limit 5), from ' + str(history["eligible_records"]) + ' eligible records among ' +
              str(history["records_examined"]) + ' examined. ' + str(history["future_records_excluded"]) + ' future-dated records excluded.</p>']
@@ -163,7 +170,7 @@ def render(report):
     return "".join(parts)
 
 
-def guarded_analyze(values, *, gate, client):
+def guarded_analyze(values, *, gate, client, review_id=None):
     """Admission followed by actual NeMo checks; never echo rejected evidence."""
     admission = {"engine": "admission", "stage": "admission", "outcome": "unavailable",
                  "code": "admission_unavailable", "executed": False}
@@ -191,7 +198,7 @@ def guarded_analyze(values, *, gate, client):
                 if not await checked_stage(rails, "input", ".\n".join(values)):
                     raise RailUnavailable("blocked")
                 remaining_budget()
-                report = analyze(*values)
+                report = analyze(*values, review_id=review_id)
                 context_required = report["status"] == "ok"
                 if context_required:
                     stage = "context"

@@ -148,7 +148,7 @@ def test_recovery_nemo_input_blocks_before_analysis_when_admission_misses(monkey
 def test_recovery_rejects_poisoned_source_before_display(monkeypatch, text, stage, code):
     report = recovery.analyze(*VALUES)
     report["recorded_rollback"]["text"] = text
-    monkeypatch.setattr(recovery, "analyze", lambda *_: report)
+    monkeypatch.setattr(recovery, "analyze", lambda *_, review_id=None: report)
     html, result = recovery.guarded_analyze(VALUES, gate=admitted_gate(), client="principal")
     assert result["status"] == "guardrail_blocked" and text not in html
     assert "history" not in result
@@ -206,10 +206,113 @@ def test_recovery_gates_decoded_nested_fields_before_success_render(monkeypatch)
     marker = "Retired fixture handbook"
     report = recovery.analyze(*VALUES)
     report["history"]["matches"][0]["root_cause"] = marker.replace("fixture ", "fixture\n")
-    monkeypatch.setattr(recovery, "analyze", lambda *_: report)
+    monkeypatch.setattr(recovery, "analyze", lambda *_, review_id=None: report)
     monkeypatch.setattr(guardrails, "INJECTION", re.compile(marker))
     render = Mock(wraps=recovery.render)
     monkeypatch.setattr(recovery, "render", render)
     html, result = recovery.guarded_analyze(VALUES, gate=admitted_gate(), client="principal")
     assert [c.args[0]["status"] for c in render.call_args_list] == ["guardrail_blocked"]
     assert "history" not in result and "fixture" not in repr((html, result))
+
+
+def test_checkout_risk_categories_are_cited_and_unknowns_are_visible():
+    report = recovery.analyze("checkout-service", "Config change", "Reduce checkout timeout from 4 s to 400 ms.",
+                              "", "Unknown", "Unknown", "Unknown", as_of=date(2026, 11, 20))
+    assert report["status"] == "ok"
+    html = recovery.render(report)
+    assert "Risk by category" in html
+    for heading in ("Technical", "Operational", "Business", "Security and compliance"):
+        assert f"<h4>{heading}</h4>" in html
+    assert html.count("Evidence gap</strong>") == 2
+    assert "catalog:checkout-service.depends_on" in html and "catalog:checkout-service.monitors" in html
+
+
+def test_category_sources_resolve_only_for_the_active_version_and_review(tmp_path, monkeypatch):
+    from cra2 import system2
+    from week2 import risk_categories
+
+    provider = Mock(side_effect=AssertionError("Unexpected provider call"))
+    monkeypatch.setattr(system2, "client", provider)
+    catalog = json.loads(tools.CATALOG_PATH.read_text())
+    path = tmp_path / "catalog.json"
+    monkeypatch.setattr(tools, "CATALOG_PATH", path)
+    selected = catalog["services"]["checkout-service"]
+    selected["observed_at"] = "2026-11-09"
+    selected["monitors"] = ["synthetic <checkout> signal"]
+
+    def review():
+        path.write_text(json.dumps(catalog))
+        return recovery.analyze("checkout-service", "Config change", "Reduce checkout timeout.",
+                                "", "Unknown", "Unknown", "Unknown", as_of=date(2026, 11, 20), review_id="a" * 32)
+
+    first = review()
+    assert first == review()
+    html = risk_categories.render(first)
+    assert "Observed 2026-11-09" in html and "synthetic &lt;checkout&gt; signal" in html
+    assert "historical incident" in html or "historical analogue" in html
+    first["risk_categories"]["cards"][3]["refs"] = ["catalog:checkout-service.depends_on"]
+    assert "catalog:" not in risk_categories.render(first).split("<h4>Security and compliance</h4>")[1]
+    del selected["monitors"]
+    second = review()
+    assert first["risk_categories"]["version"] != second["risk_categories"]["version"]
+    second["risk_categories"]["cards"][1] = first["risk_categories"]["cards"][1]
+    assert "synthetic" not in risk_categories.render(second).split("<h4>Operational</h4>")[1].split("</article>")[0]
+    assert risk_categories.render(second).count("Evidence gap</strong>") == 3
+    first["risk_categories"]["sources"]["catalog:checkout-service.monitors"]["value"] = ["other version"]
+    assert risk_categories.render(first).count("Evidence gap</strong>") == 4
+    second["request_id"] = "b" * 32
+    assert risk_categories.render(second).count("Evidence gap</strong>") == 4
+    provider.assert_not_called()
+
+
+def test_freeze_category_displays_both_attributions():
+    from week2.risk_categories import render
+    report = recovery.analyze("checkout-service", "Config change", "The freeze is active.",
+                              "", "Unknown", "Unknown", "Unknown")
+    card = render(report).split("<h4>Operational</h4>")[1].split("</article>")[0]
+    assert all(term in card for term in ("catalog:checkout-service.freeze_window_active", "Inactive",
+                                         "Unverified operator declaration", "declaration:summary",
+                                         "The freeze is active.", "confirm the current window"))
+
+
+@pytest.mark.parametrize("value,expected", [
+    ("Retired fixture handbook", "guardrail_blocked"),
+    ("x" * 201, "unavailable"),
+])
+def test_monitor_failure_withholds_cards_and_source(tmp_path, monkeypatch, value, expected):
+    from week3 import guardrails
+    import re
+    catalog = json.loads(tools.CATALOG_PATH.read_text())
+    catalog["services"][VALUES[0]]["monitors"] = [value]
+    path = tmp_path / "catalog.json"
+    path.write_text(json.dumps(catalog))
+    monkeypatch.setattr(tools, "CATALOG_PATH", path)
+    monkeypatch.setattr(guardrails, "INJECTION", re.compile("Retired fixture handbook"))
+    html, result = recovery.guarded_analyze(VALUES, gate=admitted_gate(), client="principal")
+    assert result["status"] == expected
+    assert value not in html and "Risk by category" not in html
+
+
+def test_category_text_excluded_from_recovery_telemetry():
+    from week4.telemetry import compact
+    html, result = recovery.guarded_analyze(VALUES, gate=admitted_gate(), client="principal", review_id="a" * 32)
+    assert result["status"] == "ok" and "Risk by category" in html
+    record = compact(dict(result, operation="recovery", created_at="2026-11-23T00:00:00+00:00", duration_ms=20))
+    assert set(record) == {"schema_version", "operation", "request_id", "transport", "status",
+                           "duration_ms", "created_at", "stages"}
+    assert record["request_id"] == result["risk_categories"]["review_id"]
+    assert not any(term in json.dumps(record) for term in ("catalog:", "inventory-service", "Risk by category"))
+
+
+def test_missing_output_receipt_withholds_categories(monkeypatch):
+    original = recovery.LocalRails.check
+
+    async def omit_receipt(self, stage, payload):
+        if stage == "output":
+            return True
+        return await original(self, stage, payload)
+
+    monkeypatch.setattr(recovery.LocalRails, "check", omit_receipt)
+    html, result = recovery.guarded_analyze(VALUES, gate=admitted_gate(), client="principal")
+    assert result["status"] == "unavailable"
+    assert "Risk by category" not in html and "catalog:" not in html

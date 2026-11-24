@@ -25,7 +25,8 @@ from week2.preferences import parse_command
 from week2.workflow import load_copy, respond
 from week2.abuse import AbuseGate
 from week2.capacity import Busy, CapacityUnavailable, MAX_WAITING, QueuedReview, REVIEW_GROUP
-from week2.capacity_chat import CapacityChat, delivery_js
+from week2.capacity_chat import CapacityChat
+from week2 import recovery_view
 from week2.owner_audit import OwnerAuditStore
 from week2.guardrail_activity import (SessionActivity, admission_event, record_activity,
                                      clear_activity, recovery_stages, CSS as GUARDRAIL_CSS)
@@ -337,9 +338,9 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
         try:
             client = identity(request)
         except (ValueError, AttributeError):
-            return render_recovery(RECOVERY_EMPTY), *record_activity(activity, "recovery", RECOVERY_EMPTY)
+            return recovery_view.delivery(render_recovery(RECOVERY_EMPTY), request), *record_activity(activity, "recovery", RECOVERY_EMPTY)
         html, report = guarded_analyze((service, kind, summary, plan, compatibility, rehearsal, reconciliation),
-                                      gate=gate, client=client)
+                                      gate=gate, client=client, review_id=review)
         report = dict(report, request_id=review, operation="recovery",
                       duration_ms=round((perf_counter() - started) * 1000, 3),
                       created_at=datetime.now(timezone.utc).isoformat())
@@ -353,7 +354,7 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
             if report["status"] == "ok":
                 html = render_recovery({"status": "unavailable", "message":
                     "The review record could not be confirmed. No recovery conclusion is available."})
-        return html, *record_activity(activity, "recovery", report)
+        return recovery_view.delivery(html, request), *record_activity(activity, "recovery", report)
 
     def reset_trace():
         display, poll = langsmith_view()
@@ -399,21 +400,22 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
                             "**Prototype · bundled records only.** Find related incidents, inspect potential caller exposure "
                             "and identify recovery evidence gaps. All form answers are unverified declarations. "
                             "This workspace cannot execute a rollback or approve a deployment.")
-                with gr.Row():
-                    recovery_service = gr.Dropdown(choices=sorted(CATALOG),
-                                                  value="inventory-service", label="Service")
-                    recovery_kind = gr.Dropdown(choices=list(CHANGE_TYPES), value="Schema migration", label="Change type")
-                recovery_summary = gr.Textbox(label="Proposed change", lines=2, max_length=2000,
-                    value="Rename the stock column and update order-service readers.")
-                recovery_plan = gr.Textbox(label="Proposed rollback plan", lines=2, max_length=1500,
-                    placeholder="Prior artifact/configuration, recovery trigger, responsible owner and stop conditions")
-                with gr.Row():
-                    recovery_compatibility = gr.Dropdown(choices=list(CHECK_VALUES), value="Unknown", label="Previous version compatibility")
-                    recovery_rehearsal = gr.Dropdown(choices=list(CHECK_VALUES), value="Unknown", label="Recovery rehearsal")
-                    recovery_reconciliation = gr.Dropdown(choices=list(RECONCILIATION_VALUES), value="Unknown", label="State and side-effect reconciliation")
+                with gr.Column(elem_classes=["cra2-recovery-field"]):
+                    with gr.Row():
+                        recovery_service = gr.Dropdown(choices=sorted(CATALOG),
+                                                      value="inventory-service", label="Service")
+                        recovery_kind = gr.Dropdown(choices=list(CHANGE_TYPES), value="Schema migration", label="Change type")
+                    recovery_summary = gr.Textbox(label="Proposed change", lines=2, max_length=2000,
+                        value="Rename the stock column and update order-service readers.")
+                    recovery_plan = gr.Textbox(label="Proposed rollback plan", lines=2, max_length=1500,
+                        placeholder="Prior artifact/configuration, recovery trigger, responsible owner and stop conditions")
+                    with gr.Row():
+                        recovery_compatibility = gr.Dropdown(choices=list(CHECK_VALUES), value="Unknown", label="Previous version compatibility")
+                        recovery_rehearsal = gr.Dropdown(choices=list(CHECK_VALUES), value="Unknown", label="Recovery rehearsal")
+                        recovery_reconciliation = gr.Dropdown(choices=list(RECONCILIATION_VALUES), value="Unknown", label="State and side-effect reconciliation")
                 recovery_run = gr.Button("Analyze recorded evidence", variant="primary")
-                recovery_result = gr.HTML("<p>Run the analysis to inspect incident sources and recovery gaps.</p>",
-                                          css_template=RECOVERY_CSS, js_on_load=None, elem_id="recovery-report")
+                recovery_receipt = gr.Textbox(visible=False)
+                gr.HTML(recovery_view.VIEW, css_template=RECOVERY_CSS, js_on_load=None, elem_id="recovery-report")
             with gr.Tab("Guardrail activity", id="guardrails"):
                 guardrail_display = gr.HTML(SessionActivity().html(), css_template=GUARDRAIL_CSS,
                                             js_on_load=None, elem_id="guardrail-activity")
@@ -450,10 +452,14 @@ def build_app(*, memory_store=None, abuse_gate=None, identity_resolver=None, mem
         open_dashboard.click(lambda: gr.Tabs(selected="langsmith"),outputs=app_tabs,queue=False,api_visibility="private")
         start_review.click(lambda: gr.Tabs(selected="review"), outputs=app_tabs, queue=False, api_visibility="private")
         identity_refresh.click(show_identity, outputs=identity_display, queue=False, api_visibility="private")
-        recovery_run.click(recovery, inputs=[recovery_service, recovery_kind, recovery_summary, recovery_plan,
-            recovery_compatibility, recovery_rehearsal, recovery_reconciliation, guardrail_state],
-            outputs=[recovery_result, guardrail_state, guardrail_display], api_visibility="private", concurrency_limit=1,
-            js=delivery_js(8) if local_capacity is not None else None)
+        recovery_fields = [recovery_service, recovery_kind, recovery_summary, recovery_plan,
+                           recovery_compatibility, recovery_rehearsal, recovery_reconciliation]
+        recovery_receipt.change(None, inputs=recovery_receipt, outputs=None,
+                                js="value => window.cra2Recovery.deliver(value)", queue=False,
+                                api_name="apply_recovery_receipt", api_visibility="private")
+        recovery_run.click(recovery, inputs=[*recovery_fields, guardrail_state],
+            outputs=[recovery_receipt, guardrail_state, guardrail_display], api_visibility="private", concurrency_limit=1,
+            js=recovery_view.submit_js(local_capacity is not None))
         guardrail_clear.click(clear_activity, inputs=guardrail_state, outputs=[guardrail_state, guardrail_display],
                               queue=False, api_visibility="private")
         demo.load(show_identity, outputs=identity_display, queue=False, api_visibility="private")
@@ -497,7 +503,7 @@ def main(argv=None):
     if selected:
         blocked.append(str(Path(selected).expanduser().resolve()))
     gate = AbuseGate(store=OwnerAuditStore(args.audit_file)) if args.audit_file is not None else None
-    build_app(memory_store=store, abuse_gate=gate).launch(server_name=args.host, server_port=args.port,
+    build_app(memory_store=store, abuse_gate=gate).launch(server_name=args.host, server_port=args.port, head=recovery_view.HEAD,
         theme=gr.themes.Soft(primary_hue="teal", neutral_hue="slate"),
         share=False, inbrowser=False, blocked_paths=blocked, show_error=False,
         enable_monitoring=False, run_history=False, mcp_server=False,
