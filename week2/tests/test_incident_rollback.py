@@ -148,7 +148,7 @@ def test_recovery_nemo_input_blocks_before_analysis_when_admission_misses(monkey
 def test_recovery_rejects_poisoned_source_before_display(monkeypatch, text, stage, code):
     report = recovery.analyze(*VALUES)
     report["recorded_rollback"]["text"] = text
-    monkeypatch.setattr(recovery, "analyze", lambda *_: report)
+    monkeypatch.setattr(recovery, "analyze", lambda *_, review_id=None: report)
     html, result = recovery.guarded_analyze(VALUES, gate=admitted_gate(), client="principal")
     assert result["status"] == "guardrail_blocked" and text not in html
     assert "history" not in result
@@ -206,7 +206,7 @@ def test_recovery_gates_decoded_nested_fields_before_success_render(monkeypatch)
     marker = "Retired fixture handbook"
     report = recovery.analyze(*VALUES)
     report["history"]["matches"][0]["root_cause"] = marker.replace("fixture ", "fixture\n")
-    monkeypatch.setattr(recovery, "analyze", lambda *_: report)
+    monkeypatch.setattr(recovery, "analyze", lambda *_, review_id=None: report)
     monkeypatch.setattr(guardrails, "INJECTION", re.compile(marker))
     render = Mock(wraps=recovery.render)
     monkeypatch.setattr(recovery, "render", render)

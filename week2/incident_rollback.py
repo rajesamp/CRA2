@@ -198,7 +198,7 @@ def guarded_analyze(values, *, gate, client, review_id=None):
                 if not await checked_stage(rails, "input", ".\n".join(values)):
                     raise RailUnavailable("blocked")
                 remaining_budget()
-                report = analyze(*values, review_id=review_id) if review_id is not None else analyze(*values)
+                report = analyze(*values, review_id=review_id)
                 context_required = report["status"] == "ok"
                 if context_required:
                     stage = "context"
