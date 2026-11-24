@@ -93,7 +93,11 @@ async function verify({origin, assertion, markers, capacity}) {
     await report(a).getByText(/Request blocked/).waitFor();
     assert.equal(await cards.count(), 0, "The blocked review retained categories.");
     assert.ok((await report(b).innerText()).includes(markers[1]));
-    return {four_cards: true, session_isolation: true, edit_then_revert: true,
+    await b.route("**/gradio_api/info", route => route.continue());
+    const status = await b.evaluate(async () => (await fetch("/gradio_api/info")).status);
+    assert.equal(status, 401);
+    assert.equal(await report(b).locator(".cra-risk-categories").count(), 0);
+    return {four_cards: true, session_isolation: true, expired_sign_in: true, edit_then_revert: true,
       late_after_newer_result: true, edited_fields: 7, blocked_replacement: true};
   } finally {
     await browser.close();

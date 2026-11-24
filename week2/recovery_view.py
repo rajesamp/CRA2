@@ -33,6 +33,7 @@ HEAD = """<script>
   for (const type of ["input", "change", "pointerdown", "keydown"]) {
     document.addEventListener(type, edited, true);
   }
+  window.addEventListener("pagehide", clear);
   function begin() {
     clear();
     current = crypto.randomUUID().replaceAll("-", "");
@@ -42,6 +43,7 @@ HEAD = """<script>
     if (!current || typeof value !== "string") return;
     const prefix = "<!--cra2-view:" + current + "-->";
     if (value.startsWith(prefix) && view()) {
+      current = null;
       view().innerHTML = value.slice(prefix.length);
     }
   }
@@ -50,7 +52,7 @@ HEAD = """<script>
   // receipt to a header on this request only. The capacity mount already
   // transports the receipt with its existing idempotent delivery envelope.
   const send = window.fetch.bind(window);
-  window.fetch = (resource, options) => {
+  window.fetch = async (resource, options) => {
     const url = new URL(resource instanceof Request ? resource.url : resource, location.href);
     if (url.origin === location.origin && url.pathname.endsWith("/gradio_api/queue/join") &&
         typeof options?.body === "string") {
@@ -60,10 +62,13 @@ HEAD = """<script>
         body.data[0] = first.value;
         const headers = new Headers(options.headers);
         headers.set("X-Cra2-View", first.cra2_view);
-        return send(resource, {...options, body: JSON.stringify(body), headers});
+        options = {...options, body: JSON.stringify(body), headers};
       }
     }
-    return send(resource, options);
+    const response = await send(resource, options);
+    if (url.origin === location.origin && url.pathname.startsWith("/gradio_api/") &&
+        (response.status === 401 || response.status === 403)) clear();
+    return response;
   };
 })();
 </script>"""
