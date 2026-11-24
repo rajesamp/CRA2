@@ -60,6 +60,7 @@ def test_signed_recovery_withholds_report_when_telemetry_fails(tmp_path, identit
         report, _, activity = response.json()['data']
         assert 'review record could not be confirmed' in report
         assert 'Recovery evidence is incomplete' not in report
+        assert 'Risk by category' not in report
         assert 'confirmation incomplete' in activity.lower()
         assert fixture.count(STATE, 'telemetry/v1/') == 0
 

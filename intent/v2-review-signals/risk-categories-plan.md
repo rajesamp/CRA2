@@ -50,3 +50,9 @@ Add the focused tests to existing pytest discovery. Keep the Week 2–4 workflow
 ## Approval boundary
 
 This draft is ready for plan review. Implementation starts after plan approval. Testing uses synthetic local identities and fixtures. The Cloud Run app stays owner-only. Invitations and independent labeling remain on hold.
+
+## Implementation record
+
+The owner authorized local implementation on November 23, 2026. The first regression failed because a successful checkout report lacked the category section. The citation rules are in `week2/risk_categories.py`. The request and source snapshot are passed through the existing recovery guardrails and telemetry contract. `week2/recovery_view.py` binds the checked response to the originating form submission and invalidates it on edits. The capacity callback inventory includes the private browser receipt handler. Both the normal protected mount and the local capacity mount use the same display rule.
+
+The signed browser probe uses the existing local server and public-intro fixtures alongside `evaluation/risk_categories_browser.cjs`. Its two browser contexts check the visible result and replay a delayed delivery carrying its original receipt. The dedicated driver leaves the existing single-input evaluation driver available for its original checks.
