@@ -33,6 +33,7 @@ from week2.memory import MemoryStore, MemoryUnavailable
 from week2.preferences import parse_command, effective_policy
 from week2.preference_journal import MutationStatus, MESSAGES
 from week2.help import capability_lines, help_answer, help_topic
+from week2.presentation import freeze_window_summary
 from week2.review_questions import incident_field, named_services, review_intent
 from week3.guardrails import LocalRails, check_context
 from week3.support import coverage, approval_request, advisory_question
@@ -463,7 +464,8 @@ def build_workflow(*, retriever=None, reviewer=None, tool_runner=None, index_pat
             health = outputs[NAMES[0]]
             sections.append(copy["health"].format(
                 service=state["service"], health=health["health"],
-                freeze=health["freeze_window"]["status"], evidence=", ".join(health["evidence"])))
+                freeze=freeze_window_summary(health["freeze_window"]["reported_active"]),
+                evidence=", ".join(health["evidence"])))
         if NAMES[1] in outputs:
             graph = outputs[NAMES[1]]
             sections.append(copy["graph"].format(

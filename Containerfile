@@ -6,7 +6,7 @@ USER 0
 # Direct and resolved package versions from the verified Wolfi candidate.
 RUN ["/sbin/apk", "add", "--no-cache", \
     "gdbm=1.26-r10", "glibc-2.44=2.44-r20", \
-    "libbz2-1=1.0.8-r31", "libexpat1=2.10.0-r1", \
+    "libbz2-1=1.0.8-r31", "libexpat1=2.11.0-r0", \
     "libffi=3.8.1-r0", "libgomp=16.2.0-r4", \
     "libstdc++=16.2.0-r4", "libuuid=2.42.4-r3", \
     "mpdecimal=4.0.1-r6", "ncurses-terminfo-base=6.6.20261114-r0", \

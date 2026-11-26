@@ -30,7 +30,7 @@ from week2 import recovery_view
 from week2.owner_audit import OwnerAuditStore
 from week2.guardrail_activity import (SessionActivity, admission_event, record_activity,
                                      clear_activity, recovery_stages, CSS as GUARDRAIL_CSS)
-from week2.presentation import review_summary
+from week2.presentation import freeze_window_summary, review_summary
 from week2.welcome import INTRO, ROADMAP, CSS, LOCAL_IDENTITY, EXAMPLE
 from week2.incident_rollback import (CHANGE_TYPES, CHECK_VALUES, RECONCILIATION_VALUES,
                                     guarded_analyze, render as render_recovery, EMPTY as RECOVERY_EMPTY,
@@ -100,7 +100,8 @@ def trace_summary(trace):
         lines.append(f"- `{event['tool']}({event['input']['service_name']})` → **{result['status']}**")
         if result["status"] == "ok":
             if "health" in result:
-                lines.append(f"  Recorded health: {result['health']}; freeze: {result['freeze_window']['status']}.")
+                freeze = freeze_window_summary(result["freeze_window"]["reported_active"])
+                lines.append(f"  Recorded health: {result['health']}. Freeze window · {freeze}")
             else:
                 lines.append("  Direct dependencies: " + (", ".join(result["dependencies"]["direct"]) or "[]"))
         else:

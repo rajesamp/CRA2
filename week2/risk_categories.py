@@ -3,6 +3,7 @@ from datetime import date
 from html import escape
 
 from week2.release_info import digest
+from week2.presentation import freeze_window_summary
 
 
 CATEGORIES = (
@@ -40,8 +41,8 @@ def snapshot(review_id, service, record, matches, freeze):
                 else "Cross-service historical analogue")
         add("Technical", row["evidence_ref"], kind, row["service"] + " · " + row["incident_id"], row["date"])
     if freeze:
-        add("Operational", catalog + "freeze_window_active", "Recorded freeze flag",
-            "Active" if freeze["recorded_flag"] else "Inactive", observed)
+        add("Operational", catalog + "freeze_window_active", "Freeze window",
+            freeze_window_summary(freeze["recorded_flag"]), observed)
         add("Operational", "declaration:summary", "Unverified operator declaration", freeze["declaration"])
 
     # Include the selected incident records in the version even if the card
