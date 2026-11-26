@@ -1,10 +1,24 @@
 """Anonymous introduction cannot expose identity, private APIs or an open redirect."""
+from html.parser import HTMLParser
+
 import pytest
 from fastapi.testclient import TestClient
 
 from week2.landing import create_app
 
 TARGET = "https://protected-synthetic.a.run.app/"
+
+
+def test_start_screen_offers_only_the_configured_google_flow():
+    class Screen(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            elements.append((tag, dict(attrs)))
+
+    elements = []
+    Screen().feed(TestClient(create_app(TARGET)).get("/").text)
+    assert [attrs.get("href") for tag, attrs in elements if tag == "a"] == ["/signin"]
+    assert [attrs.get("href") for tag, attrs in elements if tag == "link"] == ["/styles.css"]
+    assert all(tag not in {"form", "input", "script", "iframe"} for tag, _ in elements)
 
 
 def test_public_intro_and_fixed_signin_have_no_private_content():
