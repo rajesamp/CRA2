@@ -36,13 +36,14 @@ Read authoritative time **after acquiring the write lock** and use it in the con
 
 ## Python 3.13 verification
 
-Run from the feature checkout with the locked Week 2 environment. For the full suite, follow the existing CI encoder provisioning step and build the synthetic index first. Use offline settings from the workflow, loopback fixtures and a temporary writable test directory. All commands below describe post-implementation checks.
+Run from the feature checkout with each module’s own locked environment. For the full suite, follow the existing CI encoder provisioning step and build the synthetic index first. Use offline settings from the workflow, loopback fixtures and a temporary writable test directory. All commands below describe post-implementation checks.
 
 ```sh
 uv sync --locked --project week2 --python 3.13
 week2/.venv/bin/python -c 'import sys; assert sys.version_info[:2] == (3, 13)'
-week2/.venv/bin/python -m pytest -q invitations/tests
-week2/.venv/bin/python -m pytest -q invitations/tests/test_browser.py
+uv sync --locked --project invitations --python 3.13
+# The invitation CI workflow sets CRA2_PLAYWRIGHT_MODULE to its installed Playwright package.
+INVITATION_BROWSER=1 invitations/.venv/bin/python -m pytest -q invitations/tests --junitxml=/tmp/cra2-invitation-pilot.xml
 week2/.venv/bin/python -m pytest -q -m "not live" week2/tests week3/tests week4/tests --junitxml=/tmp/cra2-invitation-tests.xml
 ```
 
