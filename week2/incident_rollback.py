@@ -11,6 +11,7 @@ import anyio
 from cra2 import config
 from cra2.incidents import load_incidents, select_incidents
 from week2.tools import _context, _direction, _guard
+from week2.presentation import freeze_window_summary
 from week3.guardrails import LocalRails, RailUnavailable, check_context, checked_stage
 from week2.guardrail_activity import admission_event
 from week2.capacity import remaining_budget
@@ -70,10 +71,10 @@ def analyze(*values, as_of=None, review_id=None):
                 incoming[dependency].add(caller)
         blockers, gaps, checks = [], [], []
         if re.search(r"\bfreeze\b", data["summary"], re.IGNORECASE):
-            flag = "active" if record["freeze_window_active"] else "inactive"
-            gaps.append({"id": "freeze", "catalog_ref": f"catalog:{name}.freeze_window_active",
+            catalog_ref = f"catalog:{name}.freeze_window_active"
+            gaps.append({"id": "freeze", "catalog_ref": catalog_ref,
                          "recorded_flag": record["freeze_window_active"], "declaration": data["summary"],
-                         "label": f"Recorded freeze flag: {flag} (catalog:{name}.freeze_window_active)",
+                         "label": f"{freeze_window_summary(record['freeze_window_active'])} ({catalog_ref})",
                          "next_check": f"Operator declaration (declaration:summary): {data['summary']} "
                                        "Verify current freeze applicability with its owner."})
         if data["change_type"] == "Schema migration" and re.search(r"\bindex\b", data["summary"], re.IGNORECASE):

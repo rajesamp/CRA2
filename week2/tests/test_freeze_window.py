@@ -53,13 +53,20 @@ def test_owner_freeze_recovery_shows_recorded_evidence(owner_client, service, su
     assert "Freshness unknown" in html
 
 
-def test_owner_freeze_chat_shows_recorded_evidence(owner_client):
+@pytest.mark.parametrize("service,flag", [("checkout-service", "inactive"), ("auth-service", "active")])
+def test_owner_freeze_wording_matches_in_chat_and_review(owner_client, service, flag):
+    question = f"Is a deployment freeze active for {service}?"
+    wording = f"The recorded flag is {flag}, and current production status is unknown."
     answer, activity = submit(owner_client, "ui_response", [
-        "Is a deployment freeze active for checkout-service?", [], None, None, None, None,
+        question, [], None, None, None, None,
     ])
     assert_passed(activity)
-    assert "catalog:checkout-service.freeze_window_active" in answer
-    assert "freshness" in answer.lower() and "unknown" in answer.lower()
+    report, activity = submit(owner_client, "recovery", recovery(service, question))
+    assert_passed(activity)
+    for output in (answer, report):
+        assert wording in output
+        assert f"catalog:{service}.freeze_window_active" in output and "freshness" in output.lower()
+        assert "not_reported" not in output
 
 
 def test_owner_freeze_chat_withholds_flagged_snapshot(owner_client, monkeypatch):

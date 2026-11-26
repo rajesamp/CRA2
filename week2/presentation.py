@@ -14,6 +14,11 @@ RETRY_PAIR = re.compile(r"\bfrom\s+(\d{1,6})\s+to\s+(\d{1,6})(?![\d.])\b")
 DIAGNOSTIC = re.compile(r"(?:catalog|graph|memory):|:chunk-|\b(?:week[12]|cra2)/|/Users/|/tmp/", re.I)
 
 
+def freeze_window_summary(recorded_active: bool) -> str:
+    flag = "active" if recorded_active else "inactive"
+    return f"The recorded flag is {flag}, and current production status is unknown."
+
+
 def _seconds(number, unit):
     scale = Decimal(".001") if unit.startswith("m") and not unit.startswith("min") else (
         Decimal(60) if unit.startswith("min") else Decimal(1))

@@ -270,7 +270,8 @@ def test_freeze_category_displays_both_attributions():
     report = recovery.analyze("checkout-service", "Config change", "The freeze is active.",
                               "", "Unknown", "Unknown", "Unknown")
     card = render(report).split("<h4>Operational</h4>")[1].split("</article>")[0]
-    assert all(term in card for term in ("catalog:checkout-service.freeze_window_active", "Inactive",
+    assert all(term in card for term in ("catalog:checkout-service.freeze_window_active",
+                                         "The recorded flag is inactive, and current production status is unknown.",
                                          "Unverified operator declaration", "declaration:summary",
                                          "The freeze is active.", "confirm the current window"))
 

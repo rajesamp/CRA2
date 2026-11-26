@@ -27,8 +27,9 @@ CHECKS = {
     "public-ambiguous": ("needs_clarification", ["Which service", "which limit", "current and proposed"]),
     "public-absent": ("no_recovery_record", ["no recovery record", "voucher-worker", "runbook", "tested rollback"]),
     "public-cause": ("ok", ["data/incidents.json#CX-107", "locked writes", "Verify the online option", "not causal proof"]),
-    "public-freeze": ("ok", ["Recorded freeze flag: active", "catalog:auth-service.freeze_window_active",
-                             "declaration:summary", "freeze has ended", "Verify current freeze applicability with its owner"]),
+    "public-freeze": ("ok", ["The recorded flag is active, and current production status is unknown.",
+                             "catalog:auth-service.freeze_window_active", "declaration:summary",
+                             "freeze has ended", "Verify current freeze applicability with its owner"]),
     "public-schema": ("ok", ["previous image", "reverse migration", "catalog:inventory-service.rollback",
                              "Direct callers: checkout-service, order-service", "Downstream dependencies to check: None recorded"]),
 }
