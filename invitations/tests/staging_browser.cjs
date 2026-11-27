@@ -1,6 +1,24 @@
 const { chromium } = require(process.env.CRA2_PLAYWRIGHT_MODULE || "playwright");
 const assert = require("node:assert/strict");
 
+async function rehearse(page) {
+  await page.getByRole("link", {name:"Open synthetic invitation rehearsal"}).click();
+  await page.getByRole("button", {name:"Create synthetic request"}).click();
+  await page.getByRole("button", {name:"Approve synthetic request"}).click();
+  await page.getByText("Synthetic deliveries: 0").waitFor();
+  await page.getByRole("button", {name:"Send synthetic invitation"}).click();
+  await page.getByText("Synthetic deliveries: 1").waitFor();
+  const code = await page.locator("code").textContent();
+  await page.getByLabel("Invitation code").fill(code);
+  await page.getByRole("button", {name:"Redeem synthetic invitation"}).click();
+  await page.getByRole("link", {name:"Check simulated recipient access"}).click();
+  await page.getByRole("heading", {name:"Simulated recipient access granted"}).waitFor();
+  await page.getByRole("link", {name:"Return to rehearsal"}).click();
+  await page.getByRole("button", {name:"Revoke synthetic access"}).click();
+  await page.getByRole("link", {name:"Check simulated recipient access"}).click();
+  await page.getByRole("heading", {name:"Simulated recipient access denied"}).waitFor();
+}
+
 async function main() {
   const origin = new URL(process.argv[2]);
   assert.equal(origin.hostname, "127.0.0.1");
@@ -25,6 +43,10 @@ async function main() {
     await page.getByRole("heading",{name:"Enrolled owner verified"}).waitFor();
     assert.equal((await page.goto(origin.origin+"/owner")).status(),200);
     await page.goto(origin.origin);
+    if (process.argv[3] === "--rehearsal") {
+      await rehearse(page);
+      await page.goto(origin.origin);
+    }
     await page.getByText("End identity session").click();
     assert.equal((await page.goto(origin.origin+"/owner")).status(),403);
   } finally {

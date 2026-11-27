@@ -450,10 +450,7 @@ def test_untrusted_signature_with_expected_key_id(browser, provider, kind):
     assert browser.get("/owner").status_code == 403
 
 
-@pytest.mark.skipif(
-    os.environ.get("INVITATION_BROWSER") != "1", reason="opt-in installed Chrome/Playwright probe"
-)
-def test_staging_cross_site_https_browser(tmp_path, state, provider):
+def run_staging_browser(tmp_path, provider, factory, *browser_args):
     cert, key = tmp_path / "cert.pem", tmp_path / "key.pem"
     subprocess.run(
         [
@@ -481,7 +478,7 @@ def test_staging_cross_site_https_browser(tmp_path, state, provider):
         origin = f"https://127.0.0.1:{port}"
         settings = replace(SETTINGS, origin=origin)
         provider.callback = settings.callback
-        stage = create_app(settings, state, transport=httpx.MockTransport(provider.http))
+        stage = factory(settings)
 
         # Chrome resolves the Google hostname to this loopback TLS listener.
         # The fake edge signs IAP requests only for the staging origin.
@@ -525,7 +522,7 @@ def test_staging_cross_site_https_browser(tmp_path, state, provider):
                     pytest.fail("Loopback HTTPS fixture did not start")
                 time.sleep(0.05)
             result = subprocess.run(
-                ["node", str(Path(__file__).with_name("staging_browser.cjs")), origin],
+                ["node", str(Path(__file__).with_name("staging_browser.cjs")), origin, *browser_args],
                 capture_output=True,
                 text=True,
                 timeout=45,
@@ -535,6 +532,17 @@ def test_staging_cross_site_https_browser(tmp_path, state, provider):
         finally:
             server.should_exit = True
             thread.join(8)
+
+
+@pytest.mark.skipif(
+    os.environ.get("INVITATION_BROWSER") != "1", reason="opt-in installed Chrome/Playwright probe"
+)
+def test_staging_cross_site_https_browser(tmp_path, state, provider):
+    run_staging_browser(
+        tmp_path, provider, lambda settings: create_app(
+            settings, state, transport=httpx.MockTransport(provider.http),
+        ),
+    )
 
 
 def test_staging_factory_is_independent_and_serves_identity_only(tmp_path, monkeypatch):

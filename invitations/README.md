@@ -83,6 +83,24 @@ FIRESTORE_EMULATOR_HOST=127.0.0.1:8791 \
 
 The tests use synthetic identities and isolated `demo-` projects. They replace Python processes against the same emulator, exercise expiry while records still exist, and race two callbacks against shared storage.
 
+### Owner-only synthetic rehearsal
+
+The rehearsal is an opt-in application entry point, `python -m invitations.staging.rehearsal`, or the `rehearsal` target of the staging Containerfile. The default image remains identity-only. The rehearsal entry point requires the durable staging database and `INVITATION_STAGE_MODE=enrolled` with the owner's verified pin. The owner signs in through both Google and IAP before the application shows the rehearsal link.
+
+1. Create a synthetic request and bookmark its case page if you want to reopen it after restarting.
+2. Approve the request and confirm the report still shows zero deliveries. Select **Send synthetic invitation** to create one mailbox receipt.
+3. Copy the code from the synthetic mailbox and redeem it while acting as the simulated recipient. A different simulated actor, an expired code, or replay is rejected. The original receipt starts the 600-second redemption window.
+4. Check simulated recipient access, revoke it, then confirm the workspace check returns a denial.
+
+Case records are scoped to the enrolled owner and identity configuration. Configure Firestore TTL on `expires_at` for collection group `cra2_invitation_rehearsals` before using it in the cloud. The app hides expired records even before TTL deletion. It keeps only simulated state and does not connect to mail, Sheets, production storage, or IAM grant services.
+
+Run the rehearsal tests with the loopback emulator:
+
+```sh
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8791 \
+  invitations/.venv/bin/python -m pytest -q invitations/tests/test_staging_rehearsal.py
+```
+
 ### Build and test the identity-only image
 
 From the repository root:

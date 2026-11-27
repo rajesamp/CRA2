@@ -111,9 +111,12 @@ def verify_signed_owner(settings):
 
 if __name__ == "__main__":
     assert sys.version_info[:2] == (3, 13) and os.getuid() == os.getgid() == 65532
-    excluded = ("__main__", "fixtures", "identity", "web", "worker", "service", "staging.__main__", "tests")
+    excluded = (
+        "__main__", "fixtures", "identity", "web", "worker", "service", "staging.__main__",
+        "staging.rehearsal", "staging.rehearsal_store", "tests",
+    )
     assert not any(find_spec(f"invitations.{name}") for name in excluded)
-    print(f"Python {sys.version.split()[0]}, UID/GID 65532. Eight excluded modules absent.")
+    print(f"Python {sys.version.split()[0]}, UID/GID 65532. {len(excluded)} excluded modules absent.")
     settings = Settings.from_env()
     verify_entrypoint(settings)
     verify_signed_owner(settings)

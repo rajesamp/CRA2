@@ -10,3 +10,5 @@
 !staging/sessions.py
 !staging/firestore_sessions.py
 !staging/serve.py
+!staging/rehearsal.py
+!staging/rehearsal_store.py
