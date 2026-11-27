@@ -12,3 +12,12 @@ Python 3.13.15 ran the standalone pilot from its own locked environment. All 37 
 | CRA2 isolation | Existing offline tests passed with 502 in the root suite, 494 in Week 1 and 577 in Weeks 2–4. CRA2's fast evaluation passed across 20 cases repeated five times. No existing application, container, dependency lock or workflow was edited. |
 
 The separate invitation workflow repeats the module suite on Python 3.13 and archives its JUnit results. The local pilot uses test doubles for Google identity, email, Sheets and membership provisioning. Production remains owner-only. Real invitations and independent labeling are on hold.
+
+
+## Staging identity adapter · local verification, 2026-11-27
+
+Plan commit `44934ca` covers the first identity milestone. Python 3.13.15 ran all 87 invitation tests, including 50 staging identity cases, with zero skips or failures. The test client emitted its existing HTTP library deprecation warning.
+
+Chrome completed the cross-site HTTPS authorization-code round trip against loopback services, reached the enrolled-owner status and lost access on logout. Separate synthetic keys signed the IAP and Google proofs. Tests denied a different subject with the same email, invalid signatures, incorrect audiences or authorized party, unverified email, stale assertions, replay and an unenrolled session. A callback race across two app instances performed one code exchange. Expired key caches denied access during outages and recovered with rotated keys. Verify-only mode required private operator action and a fresh sign-in before owner status became available.
+
+The local Week 2–4 suite passed all 577 tests and all 56 evaluator tests. C1 recorded zero misses in eight blocking cases and zero false blocks in five benign cases. The required C2 cases ran, all 19 C3 public controls passed, and six frozen retrieval cases passed the TruLens gate. The root suite passed 502 offline tests and its five-repeat fast evaluation. The hosted workflow and a live owner sign-in with Google-issued tokens remain separate checks.
