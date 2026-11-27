@@ -27,15 +27,19 @@ def set_cookie(response, sid, lifetime):
     return response
 
 
-def screen(title, action=None, button=None):
+def screen(title, action=None, button=None, *, rehearsal=False):
     form = f'<form method="post" action="{action}"><button>{button}</button></form>' if action else ""
+    link = '<p><a href="/rehearsal">Open synthetic invitation rehearsal</a></p>' if rehearsal else ""
     return HTMLResponse(
         f'<!doctype html><html lang="en"><meta charset="utf-8"><title>{title}</title>'
-        f"<main><h1>{title}</h1>{form}</main></html>"
+        f"<main><h1>{title}</h1>{form}{link}</main></html>"
     )
 
 
-def create_app(settings: Settings, sessions: SessionStore, *, transport=None, key_clock=time.monotonic):
+def create_app(
+    settings: Settings, sessions: SessionStore, *, transport=None, key_clock=time.monotonic,
+    owner_routes=None,
+):
     client = httpx.Client(transport=transport, trust_env=False, follow_redirects=False, timeout=5)
     identity = GoogleIdentity(settings, client, clock=key_clock)
 
@@ -83,6 +87,11 @@ def create_app(settings: Settings, sessions: SessionStore, *, transport=None, ke
             raise Denied()
         return identity.iap(assertions[0])
 
+    def enrolled_owner(request: Request, principal=Depends(current_iap)):
+        if settings.mode != "enrolled" or not sessions.bound(get_cookie(request), principal, scope):
+            raise Denied()
+        return principal
+
     @app.get("/healthz")
     def health():
         return {"status": "ok"}
@@ -95,7 +104,10 @@ def create_app(settings: Settings, sessions: SessionStore, *, transport=None, ke
                 if settings.mode == "enrolled"
                 else "Binding verified for private enrollment"
             )
-            return screen(message, "/auth/logout", "End identity session")
+            return screen(
+                message, "/auth/logout", "End identity session",
+                rehearsal=owner_routes is not None and settings.mode == "enrolled",
+            )
         return screen("Verify your Google account", "/auth/start", "Sign in with Google")
 
     @app.post("/auth/start")
@@ -127,9 +139,7 @@ def create_app(settings: Settings, sessions: SessionStore, *, transport=None, ke
         return set_cookie(RedirectResponse("/", 303), fresh, SESSION_SECONDS)
 
     @app.get("/owner")
-    def owner_status(request: Request, principal=Depends(current_iap)):
-        if settings.mode != "enrolled" or not sessions.bound(get_cookie(request), principal, scope):
-            raise Denied()
+    def owner_status(principal=Depends(enrolled_owner)):
         return {"owner_verified": True}
 
     @app.post("/auth/logout")
@@ -137,6 +147,8 @@ def create_app(settings: Settings, sessions: SessionStore, *, transport=None, ke
         sessions.forget(get_cookie(request))
         return set_cookie(RedirectResponse("/", 303), "", 0)
 
+    if owner_routes is not None:
+        app.include_router(owner_routes(enrolled_owner, scope))
     return app
 
 

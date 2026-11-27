@@ -5,10 +5,10 @@ import os
 import uvicorn
 
 
-def main():
+def serve(factory="invitations.staging.app:from_env"):
     os.umask(0o077)
     uvicorn.run(
-        "invitations.staging.app:from_env",
+        factory,
         factory=True,
         host="0.0.0.0",
         port=int(os.environ.get("PORT", "8080")),
@@ -18,4 +18,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    serve()

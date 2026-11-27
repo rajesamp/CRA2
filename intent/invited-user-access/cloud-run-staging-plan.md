@@ -37,6 +37,8 @@ The current [invitation login](../../invitations/identity.py) issues local Ed255
 
 ## 3. Rehearse the invitation flow after the identity check passes
 
+The local rehearsal uses a separate application and image target. Run it with synthetic identity proofs and a loopback Firestore emulator for development. Live use remains gated by owner sign-in verification and deployment approval. [Local setup and verification](../../invitations/README.md#owner-only-synthetic-rehearsal)
+
 - Add an owner-only rehearsal view. The owner remains the single authenticated human. Distinct synthetic applicants and recipients are records in an isolated test scenario. All role simulation stays inside that scenario and confers no Google or CRA2 workspace access.
 - Persist staging invitation state, original synthetic mail receipts, and one-use redemptions transactionally. Use an owner-only synthetic mailbox and reporting copy. Drive dispatch/provisioning with a bounded, idempotent rehearsal operation so progress survives request-based CPU suspension or scale-to-zero. Keep real mail, Google Sheets writes, IAM grant workers, and independent labeling disabled. The runtime needs no mail-sending privilege, production storage access or IAM policy-writing role.
 - Rehearse request → owner approval → explicit synthetic send → matching synthetic redemption. Prove approval alone gives zero deliveries, a duplicate send produces one receipt, the code expires exactly 600 seconds after that receipt, revocation denies the synthetic workspace on its next request, and restart preserves each outcome. Record synthetic delivery count separately from real sends and external grants, both of which must be zero.
