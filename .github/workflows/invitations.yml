@@ -27,11 +27,63 @@ jobs:
           if ! command -v google-chrome >/dev/null; then
             "$RUNNER_TEMP/invitation-browser/node_modules/.bin/playwright" install chrome
           fi
-      - name: Check classifier, browser, capacity and isolation
+      - name: Run all invitation tests with Firestore and Chrome
+        shell: bash
         run: |
           export INVITATION_BROWSER=1
           export CRA2_PLAYWRIGHT_MODULE="$RUNNER_TEMP/invitation-browser/node_modules/playwright"
-          invitations/.venv/bin/python -m pytest -q invitations/tests --junitxml="$RUNNER_TEMP/invitations.xml"
+          export FIRESTORE_EMULATOR_HOST=127.0.0.1:8791
+          emulator="$RUNNER_TEMP/firestore-emulator.jar"
+          emulator_log="$RUNNER_TEMP/firestore-emulator.log"
+          pilot_python=invitations/.venv/bin/python
+
+          # The Firebase Tools release metadata publishes this SHA-256.
+          curl --fail --silent --show-error --location --retry 3 --max-time 120 \
+            --output "$emulator" \
+            https://storage.googleapis.com/firebase-preview-drop/emulator/cloud-firestore-emulator-v1.22.0.jar
+          printf '%s  %s\n' '9b6498b7f62714d67f48f59b3818883cd682dbcd46b9f59511de81c97bb5166c' "$emulator" \
+            | sha256sum -c -
+          "${JAVA_HOME_21_X64:?Java 21 is required}/bin/java" -jar "$emulator" \
+            --host=127.0.0.1 --port=8791 >"$emulator_log" 2>&1 &
+          emulator_pid=$!
+          cleanup() {
+            local status=$?
+            kill "$emulator_pid" 2>/dev/null || true
+            wait "$emulator_pid" 2>/dev/null || true
+            if [ "$status" -ne 0 ]; then
+              tail -60 "$emulator_log"
+            fi
+          }
+          trap cleanup EXIT
+
+          "$pilot_python" - <<'PY'
+          import socket
+          import time
+
+          deadline = time.monotonic() + 30
+          while time.monotonic() < deadline:
+              try:
+                  with socket.create_connection(("127.0.0.1", 8791), timeout=0.5):
+                      break
+              except OSError:
+                  time.sleep(0.25)
+          else:
+              raise SystemExit("Firestore emulator did not become ready")
+          PY
+          kill -0 "$emulator_pid"
+          "$pilot_python" -m pytest -q invitations/tests --junitxml="$RUNNER_TEMP/invitations.xml"
+          "$pilot_python" - "$RUNNER_TEMP/invitations.xml" <<'PY'
+          import sys
+          from xml.etree import ElementTree
+
+          cases = list(ElementTree.parse(sys.argv[1]).iter("testcase"))
+          skipped = [case.attrib["name"] for case in cases if case.find("skipped") is not None]
+          if skipped:
+              raise SystemExit("Invitation tests skipped: " + ", ".join(skipped))
+          if not any(case.attrib["name"] == "test_owner_rehearsal_in_chrome" for case in cases):
+              raise SystemExit("The rehearsal Chrome test did not run")
+          print(f"Verified {len(cases)} invitation tests with zero skips")
+          PY
       - name: Preserve synthetic evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
