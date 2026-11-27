@@ -4,8 +4,8 @@ import argparse
 import os
 import sqlite3
 
-from .google import Settings
-from .sessions import enrollment_candidate
+from .google import Settings, Unavailable
+from .sessions import enrollment_candidate, session_store_from_env
 
 
 def main():
@@ -13,8 +13,13 @@ def main():
     parser.add_argument("command", choices=["candidate-pin"])
     parser.parse_args()
     try:
-        pin = enrollment_candidate(Settings.from_env(), os.environ["INVITATION_STAGE_STATE_DIR"])
-    except (ValueError, KeyError, OSError, sqlite3.Error):
+        settings = Settings.from_env()
+        firestore_settings = ("INVITATION_STAGE_FIRESTORE_PROJECT", "INVITATION_STAGE_FIRESTORE_DATABASE")
+        if any(os.environ.get(name) for name in firestore_settings):
+            pin = session_store_from_env().candidate(settings)
+        else:
+            pin = enrollment_candidate(settings, os.environ["INVITATION_STAGE_STATE_DIR"])
+    except (ValueError, KeyError, OSError, sqlite3.Error, Unavailable):
         parser.exit(
             1, "A private verify-only configuration with one current verified candidate is required.\n"
         )

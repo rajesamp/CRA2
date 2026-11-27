@@ -1,7 +1,6 @@
 """Identity-only ASGI app. No invitation workers, fixture login or workspace routes."""
 
 from contextlib import asynccontextmanager
-import os
 import sqlite3
 import time
 from urllib.parse import urlsplit
@@ -11,7 +10,7 @@ from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 import httpx
 
 from .google import Denied, GOOGLE_ISSUERS, GoogleIdentity, Settings, Unavailable
-from .sessions import Sessions
+from .sessions import ATTEMPT_SECONDS, SESSION_SECONDS, SessionStore, session_store_from_env
 
 COOKIE = "__Host-cra2-staging-auth"
 
@@ -36,7 +35,7 @@ def screen(title, action=None, button=None):
     )
 
 
-def create_app(settings: Settings, sessions: Sessions, *, transport=None, key_clock=time.monotonic):
+def create_app(settings: Settings, sessions: SessionStore, *, transport=None, key_clock=time.monotonic):
     client = httpx.Client(transport=transport, trust_env=False, follow_redirects=False, timeout=5)
     identity = GoogleIdentity(settings, client, clock=key_clock)
 
@@ -103,7 +102,7 @@ def create_app(settings: Settings, sessions: Sessions, *, transport=None, key_cl
     def start(request: Request, principal=Depends(current_iap)):
         sid, attempt = sessions.start(get_cookie(request), principal, scope)
         destination = identity.authorization_url(attempt.state, attempt.nonce, attempt.challenge)
-        return set_cookie(RedirectResponse(destination, 303), sid, 300)
+        return set_cookie(RedirectResponse(destination, 303), sid, ATTEMPT_SECONDS)
 
     @app.get("/auth/callback")
     def callback(request: Request, principal=Depends(current_iap)):
@@ -125,7 +124,7 @@ def create_app(settings: Settings, sessions: Sessions, *, transport=None, key_cl
             raise Denied()
         identity.bind_code(codes[0], verifier, nonce, principal)
         fresh = sessions.establish(sid, principal, scope)
-        return set_cookie(RedirectResponse("/", 303), fresh, 900)
+        return set_cookie(RedirectResponse("/", 303), fresh, SESSION_SECONDS)
 
     @app.get("/owner")
     def owner_status(request: Request, principal=Depends(current_iap)):
@@ -142,6 +141,6 @@ def create_app(settings: Settings, sessions: Sessions, *, transport=None, key_cl
 
 
 def from_env():
-    """Explicit local ASGI factory. Absent or invalid configuration prevents startup."""
+    """Explicit identity-only ASGI factory. Invalid configuration prevents startup."""
     settings = Settings.from_env()
-    return create_app(settings, Sessions(os.environ["INVITATION_STAGE_STATE_DIR"]))
+    return create_app(settings, session_store_from_env())

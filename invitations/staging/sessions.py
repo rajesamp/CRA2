@@ -1,15 +1,22 @@
-"""Local transactional sign-in state. No production or invitation tables are opened."""
+"""Transactional sign-in state contract and the local SQLite implementation."""
 
 import base64
 from contextlib import closing, contextmanager
 from dataclasses import dataclass
 from hashlib import sha256
+import os
 from pathlib import Path
+import re
 import secrets
 import sqlite3
 import time
+from typing import Protocol
 
 from .google import Denied
+
+ATTEMPT_SECONDS = 300
+SESSION_SECONDS = 900
+STAGING_DATABASE = re.compile(r"[a-z][a-z0-9-]{0,54}-staging")
 
 
 def digest(value):
@@ -25,6 +32,32 @@ class Attempt:
     @property
     def challenge(self):
         return base64.urlsafe_b64encode(sha256(self.verifier.encode()).digest()).rstrip(b"=").decode()
+
+
+class SessionStore(Protocol):
+    def start(self, previous: str, principal: str, scope: str) -> tuple[str, Attempt]: ...
+    def consume(self, sid: str, state: str, principal: str, scope: str) -> tuple[str, str]: ...
+    def establish(self, previous: str, principal: str, scope: str) -> str: ...
+    def bound(self, sid: str, principal: str, scope: str) -> bool: ...
+    def forget(self, sid: str) -> None: ...
+
+
+def session_store_from_env() -> SessionStore:
+    directory = os.environ.get("INVITATION_STAGE_STATE_DIR")
+    project = os.environ.get("INVITATION_STAGE_FIRESTORE_PROJECT")
+    database = os.environ.get("INVITATION_STAGE_FIRESTORE_DATABASE")
+    emulator = os.environ.get("FIRESTORE_EMULATOR_HOST")
+    if os.environ.get("K_SERVICE") and (directory or emulator):
+        raise ValueError("Cloud Run requires staging Firestore without a local or emulator store")
+    if project or database:
+        if directory or not project or not STAGING_DATABASE.fullmatch(database or ""):
+            raise ValueError("Configure the Firestore project and a named database ending in -staging")
+        from .firestore_sessions import FirestoreSessions
+
+        return FirestoreSessions.connect(project, database)
+    if directory:
+        return Sessions(directory)
+    raise ValueError("Configure private SQLite or the dedicated staging Firestore database")
 
 
 def enrollment_candidate(settings, directory):
@@ -78,7 +111,7 @@ class Sessions:
                     digest(sid),
                     principal,
                     scope,
-                    now + 300,
+                    now + ATTEMPT_SECONDS,
                     digest(attempt.state),
                     attempt.nonce,
                     attempt.verifier,
@@ -116,7 +149,7 @@ class Sessions:
                 raise Denied()
             db.execute(
                 "INSERT INTO auth(sid,principal,scope,expires) VALUES(?,?,?,?)",
-                (digest(sid), principal, scope, now + 900),
+                (digest(sid), principal, scope, now + SESSION_SECONDS),
             )
         return sid
 

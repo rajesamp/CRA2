@@ -62,7 +62,54 @@ The factory reads these explicit settings. Keep OAuth secrets, email addresses a
 |---|---|
 | `ORIGIN`, `IAP_AUDIENCE` | Exact HTTPS origin without a trailing slash and exact direct-IAP audience for the dedicated service ending in `-staging`. Supply actual values through private operator configuration. The registered redirect is `ORIGIN/auth/callback`. |
 | `CLIENT_ID`, `CLIENT_SECRET`, `OWNER_EMAIL` | Application web OAuth client credentials and the privately confirmed full Google account. |
-| `STATE_DIR` | Dedicated private local directory (mode 0700) for pending attempts and sessions. Use a fresh directory for a new enrollment exercise. |
+| `STATE_DIR` | Local SQLite only. Use a dedicated private directory (mode 0700) for pending attempts and sessions. |
+| `FIRESTORE_PROJECT`, `FIRESTORE_DATABASE` | Shared staging store. Set both through private operator configuration and leave `STATE_DIR` unset. Use a dedicated named database ending in `-staging` and Application Default Credentials outside the emulator. |
 | `MODE`, `OWNER_PIN` | Start in `verify-only` with the pin unset. After the operator confirms the account and matching proofs, use `enrolled` with the explicitly approved pin. |
 
-The sign-in transaction expires after five minutes. A successful callback rotates the cookie and establishes a fifteen-minute session bound to the same IAP identity and configuration. During private enrollment, run `invitations/.venv/bin/python -m invitations.staging candidate-pin` locally with the same verify-only settings. It reads the unique current verified candidate, prints its pseudonymous pin to the private terminal, and never enrolls it. Enrolled mode requires a fresh Google sign-in. Keep the terminal result out of shared evidence. Live Google sign-in, Cloud Run, IAM changes and real invitations are outside this local slice. [Approved staging plan](../intent/invited-user-access/cloud-run-staging-plan.md)
+The sign-in transaction expires after five minutes. A successful callback rotates the cookie and establishes a fifteen-minute session bound to the same IAP identity and configuration. During private enrollment, run `invitations/.venv/bin/python -m invitations.staging candidate-pin` from a private operator terminal with the same verify-only settings and access to the selected store. It reads the unique current verified candidate and prints its pseudonymous pin to the private terminal. Enrolled mode requires a fresh Google sign-in. Keep the terminal result out of shared evidence. [Approved staging plan](../intent/invited-user-access/cloud-run-staging-plan.md)
+
+### Durable staging sessions
+
+Cloud Run requires the named Firestore database. The app refuses SQLite and the emulator when `K_SERVICE` is present. Firestore persists pending and authenticated sessions across instance replacement. A conditional write claims a callback once and removes its nonce and PKCE verifier before code exchange. A single atomic batch rotates the session after successful sign-in. If an instance stops after claiming a callback, start a fresh sign-in.
+
+Before rollout, provision the dedicated database, scope the staging runtime's data access to it, and configure Firestore TTL on `expires_at` for collection group `cra2_identity_sessions`. The app enforces the five- and fifteen-minute boundaries even while expired records await background deletion. [Firestore TTL](https://docs.cloud.google.com/firestore/native/docs/ttl)
+
+With a Firestore emulator running on loopback, run the integration suite:
+
+```sh
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8791 \
+  invitations/.venv/bin/python -m pytest -q invitations/tests/test_staging_firestore.py
+```
+
+The tests use synthetic identities and isolated `demo-` projects. They replace Python processes against the same emulator, exercise expiry while records still exist, and race two callbacks against shared storage.
+
+### Build and test the identity-only image
+
+From the repository root:
+
+```sh
+podman build --platform linux/amd64 --ignorefile invitations/staging/container.ignore \
+  -f invitations/staging/Containerfile -t localhost/invitations-identity:local invitations
+```
+
+The non-root image listens on `0.0.0.0:$PORT` and exposes five identity endpoints plus `GET /healthz`. Its file list excludes fixture sign-in, invitation routes, workers, and both command-line tools. The smoke test streams its probe into the running image and exercises it offline with synthetic credentials.
+
+```sh
+(
+  set -eu
+  stage_container=$(podman run --pull never --rm -d --network none --read-only \
+    -e PORT=8183 -e INVITATION_STAGE_MODE=verify-only \
+    -e INVITATION_STAGE_ORIGIN=https://staging.example.test \
+    -e INVITATION_STAGE_IAP_AUDIENCE=/projects/123456789/locations/example-region1/services/identity-staging \
+    -e INVITATION_STAGE_CLIENT_ID=local-stage.apps.googleusercontent.com \
+    -e INVITATION_STAGE_CLIENT_SECRET=synthetic-secret \
+    -e INVITATION_STAGE_OWNER_EMAIL=owner@example.test \
+    -e INVITATION_STAGE_STATE_DIR=/tmp/identity-stage \
+    localhost/invitations-identity:local)
+  trap 'podman stop "$stage_container" >/dev/null' EXIT
+  podman exec -i "$stage_container" /app/.venv/bin/python - < invitations/tests/staging_image_probe.py
+  stage_logs=$(podman logs "$stage_container" 2>&1)
+  case "$stage_logs" in *synthetic-callback-log-marker*) exit 1;; esac
+  case "$stage_logs" in *'Uvicorn running'*) ;; *) exit 1;; esac
+)
+```
