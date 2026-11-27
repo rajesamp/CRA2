@@ -1,45 +1,18 @@
 """Public introduction only: no Gradio, identity, workflow or storage imports."""
 import os
 import re
+from pathlib import Path
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 import uvicorn
 
-from week2.welcome import INTRO, ROADMAP, CSS
+from week2.welcome import ROADMAP
 
-STYLE = """
-* { box-sizing: border-box; }
-body { margin: 0; background: #111621; color: #eef4f1; font-family: ui-sans-serif,system-ui,-apple-system,sans-serif; }
-header,main,footer { max-width: 1180px; margin: auto; padding: 24px; }
-header { display:flex; align-items:center; justify-content:space-between; gap:20px; }
-header strong { font-size:18px; letter-spacing:-.03em; }
-header a { color:#9fd4c4; text-decoration:none; font-size:14px; }
-main { padding-top:8px; }
-.intro-grid { display:grid; grid-template-columns:minmax(0,3fr) minmax(240px,1fr); gap:28px; align-items:start; }
-.signin { background:#fff; color:#163a3a; border-radius:22px; padding:28px; }
-.signin h2 { font-size:23px; line-height:1.25; margin:0 0 15px; }
-.signin p { color:#49625c; font-size:14px; line-height:1.7; }
-.signin a { display:block; background:#28765e; color:#fff; padding:15px 16px; border-radius:9px; font-weight:650; text-align:center; text-decoration:none; margin-top:24px; }
-.signin small { display:block; margin-top:14px; color:#49625c; line-height:1.6; }
-a:focus-visible { outline:3px solid #6bd8bb; outline-offset:5px; }
-footer { color:#a8b9b1; font-size:12px; padding-top:0; }
-@media (max-width:760px) { .intro-grid { grid-template-columns:1fr; } header,main,footer { padding:18px; } }
-""" + CSS[CSS.index(".cra-welcome"):]
-
-PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Understand service changes with recorded incident evidence, dependencies and review checks.">
-<title>CRA · Change Risk Advisor</title><link rel="stylesheet" href="/styles.css"></head><body>
-<header><strong>CRA · Change Risk Advisor</strong><a href="/signin">Sign in →</a></header>
-<main><div class="intro-grid">""" + INTRO + """
-<aside class="signin"><h2>Start with the evidence.</h2>
-<p>Bring a proposed service change. Explore the supporting records and the questions to resolve before deployment.</p>
-<a href="/signin">Sign in with Google</a>
-<small>Access is by invitation. The introduction is public; your review workspace requires an authorized Google account.</small>
-</aside></div>""" + ROADMAP + """</main>
-<footer>CRA Version 1 · Synthetic evidence · Human approval required</footer></body></html>"""
+ASSETS = Path(__file__).with_name("signin")
+STYLE = (ASSETS / "screen.css").read_text(encoding="utf-8")
+PAGE = (ASSETS / "index.html").read_text(encoding="utf-8").replace("<!-- roadmap -->", ROADMAP)
 
 
 def app_url(value):

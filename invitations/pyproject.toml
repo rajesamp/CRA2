@@ -1,0 +1,19 @@
+[project]
+name = "cra2-invitations"
+version = "0.1.0"
+description = "Isolated local invitation pilot for CRA2"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "cryptography>=46",
+    "fastapi>=0.143,<1",
+    "google-cloud-firestore>=2.34,<3",
+    "httpx>=0.28,<1",
+    "pyjwt>=2.15,<3",
+    "uvicorn>=0.54,<1",
+]
+
+[dependency-groups]
+dev = ["pytest>=8,<10"]
+
+[tool.uv]
+package = false

@@ -1,0 +1,41 @@
+name: Invitation pilot
+on:
+  pull_request:
+    paths:
+      - 'invitations/**'
+      - '.github/workflows/invitations.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-invitations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
+        with:
+          python-version: '3.13'
+      - name: Install the isolated pilot environment
+        run: |
+          python -m venv "$RUNNER_TEMP/invitation-tools"
+          "$RUNNER_TEMP/invitation-tools/bin/pip" install uv==0.12.16
+          "$RUNNER_TEMP/invitation-tools/bin/uv" sync --locked --project invitations --python 3.13
+          npm install --prefix "$RUNNER_TEMP/invitation-browser" --ignore-scripts playwright@1.61.1
+          if ! command -v google-chrome >/dev/null; then
+            "$RUNNER_TEMP/invitation-browser/node_modules/.bin/playwright" install chrome
+          fi
+      - name: Check classifier, browser, capacity and isolation
+        run: |
+          export INVITATION_BROWSER=1
+          export CRA2_PLAYWRIGHT_MODULE="$RUNNER_TEMP/invitation-browser/node_modules/playwright"
+          invitations/.venv/bin/python -m pytest -q invitations/tests --junitxml="$RUNNER_TEMP/invitations.xml"
+      - name: Preserve synthetic evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: invitation-pilot-python313
+          path: ${{ runner.temp }}/invitations.xml
+          retention-days: 14

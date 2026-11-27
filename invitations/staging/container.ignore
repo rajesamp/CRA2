@@ -1,0 +1,14 @@
+**
+!pyproject.toml
+!uv.lock
+!__init__.py
+!policy.py
+!staging/
+!staging/__init__.py
+!staging/app.py
+!staging/google.py
+!staging/sessions.py
+!staging/firestore_sessions.py
+!staging/serve.py
+!staging/rehearsal.py
+!staging/rehearsal_store.py
